@@ -1,6 +1,7 @@
 // 테디 (제3자 곰) 캐릭터 파츠 — 생성 파일이라 직접 고치지 말고 scripts/split-character-parts.mjs를 고쳐 다시 생성한다
 import { type ReactElement, type SVGProps } from 'react';
 
+import type { Area } from './layer-box';
 import type { PartLayer } from './part-layer';
 import type { FaceLandmarks } from './stage-frame';
 
@@ -12,6 +13,14 @@ export const TEDDY_FACE: FaceLandmarks = {
   eyeY: 341,
   chinY: 537,
   centerX: 454.5,
+};
+
+/** 층마다 그림이 차지하는 영역(원본 좌표, 여유 포함) — 층 상자를 이만큼만 잡아 레이어 메모리를 줄인다 */
+export const TEDDY_LAYER_AREAS: Partial<Record<PartLayer, Area>> = {
+  torso: { x: -2, y: 60, width: 911, height: 1491 },
+  'head-back': { x: 325, y: 251, width: 256, height: 304 },
+  mouth: { x: 394, y: 439, width: 125, height: 79 },
+  'head-front': { x: 411, y: 449, width: 88, height: 58 },
 };
 
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */

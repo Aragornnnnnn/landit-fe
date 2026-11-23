@@ -1,6 +1,7 @@
 // 마르코 캐릭터 파츠 — 생성 파일이라 직접 고치지 말고 scripts/split-character-parts.mjs를 고쳐 다시 생성한다
 import { type ReactElement, type SVGProps } from 'react';
 
+import type { Area } from './layer-box';
 import type { PartLayer } from './part-layer';
 import type { FaceLandmarks } from './stage-frame';
 
@@ -12,6 +13,16 @@ export const MARCO_FACE: FaceLandmarks = {
   eyeY: 292,
   chinY: 403,
   centerX: 500,
+};
+
+/** 층마다 그림이 차지하는 영역(원본 좌표, 여유 포함) — 층 상자를 이만큼만 잡아 레이어 메모리를 줄인다 */
+export const MARCO_LAYER_AREAS: Partial<Record<PartLayer, Area>> = {
+  torso: { x: 295, y: 385, width: 425, height: 1035 },
+  'head-back': { x: 315, y: 66, width: 365, height: 392 },
+  mouth: { x: 444, y: 323, width: 112, height: 70 },
+  'head-front': { x: 401, y: 214, width: 195, height: 188 },
+  'arm-right': { x: 608, y: 596, width: 105, height: 386 },
+  'arm-left': { x: 302, y: 596, width: 106, height: 387 },
 };
 
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */

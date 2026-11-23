@@ -6,12 +6,15 @@ import type { ComponentType, SVGProps } from 'react';
 import type { Partner } from '../../model/character-look';
 import {
   CHLOE_FACE,
+  CHLOE_LAYER_AREAS,
   CHLOE_LIMBS,
   CHLOE_VIEWBOX,
   ChloeParts,
 } from './ChloeParts';
+import type { Area } from './layer-box';
 import {
   MARCO_FACE,
+  MARCO_LAYER_AREAS,
   MARCO_LIMBS,
   MARCO_VIEWBOX,
   MarcoParts,
@@ -20,6 +23,7 @@ import type { PartLayer } from './part-layer';
 import { toStageViewBox } from './stage-frame';
 import {
   TEDDY_FACE,
+  TEDDY_LAYER_AREAS,
   TEDDY_LIMBS,
   TEDDY_VIEWBOX,
   TeddyParts,
@@ -45,6 +49,13 @@ export const LIMBS: Record<Partner, readonly PartLayer[]> = {
   marco: MARCO_LIMBS,
   chloe: CHLOE_LIMBS,
   teddy: TEDDY_LIMBS,
+};
+
+/** 캐릭터별 층 그림 영역(원본 좌표) — 층 상자를 제 그림만큼만 잡을 때 쓴다 */
+export const LAYER_AREAS: Record<Partner, Partial<Record<PartLayer, Area>>> = {
+  marco: MARCO_LAYER_AREAS,
+  chloe: CHLOE_LAYER_AREAS,
+  teddy: TEDDY_LAYER_AREAS,
 };
 
 /** 캐릭터별 상반신 크롭 — 소비처가 viewBox를 안 넘기면 이걸 쓴다 */

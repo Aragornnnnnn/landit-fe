@@ -6,7 +6,8 @@
 //
 // 그림은 움직임이 다른 덩어리(몸·머리·입·팔)마다 SVG를 따로 그려 상자째 움직인다.
 // SVG 안쪽 그룹은 합성 레이어가 못 돼서, 숨쉬기·입 하나만 움직여도 매 프레임 캐릭터 전체를 다시 그리기 때문이다.
-// 상자는 CSS 픽셀 세계라 SVG 단위 길이는 상자 높이 대비 %로 바꿔 쓴다(상자 높이 = viewBox 높이).
+// 상자는 저마다 제 그림 영역만큼만 잡는다(layer-box.ts) — 상자가 곧 합성 레이어라 크기가 GPU 메모리다.
+// 상자는 CSS 픽셀 세계라 SVG 단위 길이는 그 상자 높이 대비 %로 바꿔 쓴다(--box-height = 상자 영역 높이).
 //
 // 값은 전부 아래 사양표(BLINKING·NODDING·MIMING)에 모아 두고, 함수는 "언제 쏘는가"만 말한다.
 import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
@@ -21,8 +22,22 @@ import {
   toVisemes,
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
+import {
+  clipArea,
+  placeArea,
+  readArea,
+  toViewBox,
+  unionAreas,
+  type Area,
+} from './layer-box';
 import styles from './PartnerCharacter.module.css';
-import { LIMBS, PARTS, VIEWBOX, type PartLayer } from './parts-by-partner';
+import {
+  LAYER_AREAS,
+  LIMBS,
+  PARTS,
+  VIEWBOX,
+  type PartLayer,
+} from './parts-by-partner';
 
 /**
  * partner — 누구를 그릴지. 서버가 내려주는 characterId다.
@@ -102,19 +117,54 @@ const ACCENT = { easing: 'ease-in-out', composite: 'add' } as const;
 type ToBoxY = (length: number) => string;
 
 const toBoxY =
-  (viewBoxHeight: number): ToBoxY =>
+  (boxHeight: number): ToBoxY =>
   (length) =>
-    `${((length / viewBoxHeight) * 100).toFixed(3)}%`;
+    `${((length / boxHeight) * 100).toFixed(3)}%`;
 
-const readViewBox = (viewBox: string) => {
-  const [x, y, width, height] = viewBox
-    .trim()
-    .split(/[\s,]+/)
-    .map(Number);
-  return { x, y, width, height };
+/** 움직임을 쏘는 두 상자(머리·입)의 길이 환산 — 상자마다 높이가 달라 따로 바꾼다 */
+interface BoxUnits {
+  head: ToBoxY;
+  mouth: ToBoxY;
+}
+
+const HEAD_LAYERS: readonly PartLayer[] = ['head-back', 'mouth', 'head-front'];
+
+/**
+ * 상자마다 차지할 영역. 그릴 영역(frame) 밖은 잘라 버린다 — 상반신만 그리는 소비처에서
+ * 다리까지 레이어를 잡지 않게. 머리는 세 층을 한 상자에 겹쳐 함께 돌리므로 셋을 합친 영역이고,
+ * 입은 머리 상자 안에 놓인다. 그릴 게 없는 상자는 null이다
+ */
+const layoutBoxes = (partner: Partner, viewBox: string) => {
+  const areas = LAYER_AREAS[partner];
+  const frame = readArea(viewBox);
+  const within = (area: Area | undefined, parent: Area | null) =>
+    area && parent ? clipArea(area, parent) : null;
+  const headParts = HEAD_LAYERS.flatMap((layer) => areas[layer] ?? []);
+  const head = headParts.length ? clipArea(unionAreas(headParts), frame) : null;
+  return {
+    frame,
+    torso: within(areas.torso, frame),
+    head,
+    mouth: within(areas.mouth, head),
+    limbs: LIMBS[partner].map(
+      (layer) => [layer, within(areas[layer], frame)] as const,
+    ),
+  };
 };
 
-type ViewBox = ReturnType<typeof readViewBox>;
+type Boxes = ReturnType<typeof layoutBoxes>;
+
+const unitsOf = ({ head, mouth }: Boxes): BoxUnits => ({
+  head: toBoxY(head?.height ?? 1),
+  mouth: toBoxY(mouth?.height ?? 1),
+});
+
+/** 상자를 부모 상자 안 제자리에 놓고, 상자 안 CSS 길이 환산에 쓸 높이를 함께 건넨다 */
+const boxStyle = (area: Area, parent: Area) =>
+  ({
+    ...placeArea(area, parent),
+    '--box-height': area.height,
+  }) as CSSProperties;
 
 /** 눈을 감았다 뜬다. 눈꺼풀을 그리지 않고 세로로 눌러 흉내낸다 */
 const blink = (eye: Element) =>
@@ -235,17 +285,19 @@ const keepBlinking = (eyes: CharacterParts['eyes'], accents: Accents) => {
 };
 
 /** 듣는 동안 도는 맞장구 */
-const keepNodding = (parts: CharacterParts, accents: Accents, y: ToBoxY) => {
+const keepNodding = (parts: CharacterParts, accents: Accents, y: BoxUnits) => {
   const { head, brows } = parts;
   if (!head) return;
 
   const nodAgain = () =>
     accents.play(
-      nod(head, pick(NODDING.twiceDepth), NODDING.twiceDurationMs, y),
+      nod(head, pick(NODDING.twiceDepth), NODDING.twiceDurationMs, y.head),
     );
 
   accents.later(() => {
-    accents.play(nod(head, pick(NODDING.depth), pick(NODDING.durationMs), y));
+    accents.play(
+      nod(head, pick(NODDING.depth), pick(NODDING.durationMs), y.head),
+    );
     if (chance(NODDING.twiceChance))
       accents.later(nodAgain, NODDING.twiceDelayMs);
     if (chance(NODDING.browChance))
@@ -255,7 +307,7 @@ const keepNodding = (parts: CharacterParts, accents: Accents, y: ToBoxY) => {
 };
 
 /** 맞출 소리가 없을 때 도는 입 흉내 */
-const keepMiming = (parts: CharacterParts, accents: Accents, y: ToBoxY) => {
+const keepMiming = (parts: CharacterParts, accents: Accents, y: BoxUnits) => {
   const { head, mouth } = parts;
   if (!mouth) return;
 
@@ -269,14 +321,14 @@ const keepMiming = (parts: CharacterParts, accents: Accents, y: ToBoxY) => {
             pick(MIMING.openness),
             pick(MIMING.drop),
             pick(MIMING.durationMs),
-            y,
+            y.mouth,
           ),
         ),
       index * pick(MIMING.strideMs),
     );
   }
   if (head && chance(MIMING.nodChance))
-    accents.play(nod(head, MIMING.nodDepth, MIMING.nodDurationMs, y));
+    accents.play(nod(head, MIMING.nodDepth, MIMING.nodDurationMs, y.head));
 
   const pause = pick(
     chance(MIMING.longPauseChance) ? MIMING.longPauseMs : MIMING.pauseMs,
@@ -348,7 +400,7 @@ const driveMouth = (
 
 /**
  * 층 상자의 변형 기준점. 원래 SVG 안에서 각 그룹 자기 영역(fill-box)의 비율로 잡던 점을
- * 같은 자리의 상자 기준 %로 옮긴다. 머리는 머리 층 그림 전체를 합친 영역이 기준이다.
+ * 같은 자리의 상자 기준 %로 옮긴다(상자 = 제 그림 영역). 머리는 머리 층 그림 전체를 합친 영역이 기준이다.
  * 숨긴 채 그려지면 영역이 0이라 잴 수 없어서, 보이게 될 때(크기가 생길 때) 다시 잰다
  */
 const PIVOTS: Array<[layer: string, part: string, at: [number, number]]> = [
@@ -368,9 +420,17 @@ const unionOf = (boxes: DOMRect[]) => {
   return { x: left, y: top, width: right - left, height: bottom - top };
 };
 
-const placePivots = (root: HTMLElement, frame: ViewBox) => {
+const placePivots = (root: HTMLElement, boxes: Boxes) => {
+  const areaOf = new Map<string, Area | null>([
+    ['torso', boxes.torso],
+    ['head-pose', boxes.head],
+    ['mouth', boxes.mouth],
+    ...boxes.limbs,
+  ]);
   for (const [layer, part, [atX, atY]] of PIVOTS) {
     const box = root.querySelector<HTMLElement>(`[data-layer="${layer}"]`);
+    const frame = areaOf.get(layer);
+    if (!frame) continue;
     const shapes = [...(box?.querySelectorAll<SVGGraphicsElement>(part) ?? [])];
     if (!box || !shapes.length || !('getBBox' in shapes[0])) continue;
     // 숨긴 조각(display:none)은 0,0 점으로 잡혀 영역을 늘린다 — 원래 기준(fill-box)처럼 뺀다
@@ -396,12 +456,13 @@ export const PartnerCharacter = ({
   // 1겹은 CSS가 접지만 3겹은 여기서 판단해야 한다. 입모양은 소리를 따라가는 정보라 남긴다
   const stillness = useReducedMotion() ?? false;
   const frameBox = viewBox ?? VIEWBOX[partner];
+  const boxes = layoutBoxes(partner, frameBox);
 
   // 첫 페인트 전에 기준점을 놓는다 — 늦으면 쉬는 입이 엉뚱한 축으로 눌린 채 한 번 그려진다.
   // 표정이 바뀔 때도 다시 잰다 — 찡그린 입 대신 숨은 입은 잴 수 없어, 찡그린 채 처음 그려지면 입 기준점이 비어 있다
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (root) placePivots(root, readViewBox(frameBox));
+    if (root) placePivots(root, layoutBoxes(partner, frameBox));
   }, [partner, frameBox, posture, expression]);
 
   // 숨긴 채 그려졌다가 보이게 되면(크기가 생기면) 그때 잰다
@@ -409,8 +470,8 @@ export const PartnerCharacter = ({
     const root = rootRef.current;
     if (!root || typeof ResizeObserver === 'undefined') return;
 
-    const frame = readViewBox(frameBox);
-    const observer = new ResizeObserver(() => placePivots(root, frame));
+    const measured = layoutBoxes(partner, frameBox);
+    const observer = new ResizeObserver(() => placePivots(root, measured));
     observer.observe(root);
     return () => observer.disconnect();
   }, [partner, frameBox]);
@@ -430,7 +491,7 @@ export const PartnerCharacter = ({
     if (!root || stillness) return;
 
     const parts = readParts(root);
-    const y = toBoxY(readViewBox(frameBox).height);
+    const y = unitsOf(layoutBoxes(partner, frameBox));
     const accents = createAccents();
     if (posture === 'listening') keepNodding(parts, accents, y);
     if (posture === 'speaking' && !speech) keepMiming(parts, accents, y);
@@ -444,19 +505,24 @@ export const PartnerCharacter = ({
     );
     if (!mouth || !speech) return;
 
-    return driveMouth(mouth, speech, toBoxY(readViewBox(frameBox).height));
-  }, [speech, frameBox]);
+    return driveMouth(
+      mouth,
+      speech,
+      unitsOf(layoutBoxes(partner, frameBox)).mouth,
+    );
+  }, [speech, partner, frameBox]);
 
   const Parts = PARTS[partner];
-  // 층 SVG는 모두 같은 영역을 같은 크기로 그린다 — 겹쳐 놓으면 원래 한 장과 같은 자리에 맞물린다
-  const draw = (layer: PartLayer) => (
+  // 층 SVG는 제 상자 영역만 그린다 — 상자가 원래 한 장 안 같은 자리에 놓여 있어 그대로 맞물린다
+  const draw = (layer: PartLayer, area: Area) => (
     <Parts
       layer={layer}
-      viewBox={frameBox}
+      viewBox={toViewBox(area)}
       className={styles.art}
       aria-hidden
     />
   );
+  const { frame, torso, head, mouth } = boxes;
 
   return (
     <div
@@ -464,33 +530,53 @@ export const PartnerCharacter = ({
       className={[styles.root, styles[posture], styles[expression]]
         .filter(Boolean)
         .join(' ')}
-      // 상자에 거는 CSS 길이도 SVG 단위를 % 로 바꿔야 해서 viewBox 높이를 넘긴다
-      style={
-        {
-          '--frame-height': readViewBox(frameBox).height,
-        } as CSSProperties
-      }
     >
       <div className={styles.sway}>
         {/* 크기를 잡는 빈 그림 — 원래 SVG 한 장이 차지하던 자리를 그대로 차지해 바깥 배치가 달라지지 않는다 */}
         <svg viewBox={frameBox} className={styles.sizer} aria-hidden />
-        <div data-layer="torso" className={styles.torso}>
-          {draw('torso')}
-        </div>
-        <div data-layer="head" className={styles.head}>
-          <div data-layer="head-pose" className={styles.headPose}>
-            {draw('head-back')}
-            <div data-layer="mouth" className={styles.mouth}>
-              {draw('mouth')}
+        {torso && (
+          <div
+            data-layer="torso"
+            className={styles.torso}
+            style={boxStyle(torso, frame)}
+          >
+            {draw('torso', torso)}
+          </div>
+        )}
+        {head && (
+          <div
+            data-layer="head"
+            className={styles.head}
+            style={boxStyle(head, frame)}
+          >
+            <div data-layer="head-pose" className={styles.headPose}>
+              {draw('head-back', head)}
+              {mouth && (
+                <div
+                  data-layer="mouth"
+                  className={styles.mouth}
+                  style={boxStyle(mouth, head)}
+                >
+                  {draw('mouth', mouth)}
+                </div>
+              )}
+              {draw('head-front', head)}
             </div>
-            {draw('head-front')}
           </div>
-        </div>
-        {LIMBS[partner].map((limb) => (
-          <div key={limb} data-layer={limb} className={styles.limb}>
-            {draw(limb)}
-          </div>
-        ))}
+        )}
+        {boxes.limbs.map(
+          ([limb, area]) =>
+            area && (
+              <div
+                key={limb}
+                data-layer={limb}
+                className={styles.limb}
+                style={boxStyle(area, frame)}
+              >
+                {draw(limb, area)}
+              </div>
+            ),
+        )}
       </div>
     </div>
   );
