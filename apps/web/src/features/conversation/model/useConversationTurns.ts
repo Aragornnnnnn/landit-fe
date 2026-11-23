@@ -368,6 +368,9 @@ export const useConversationTurns = ({
     speech: aiSpeech.speech,
     // 상대 차례인데 소리가 아직 안 났다 — 음성을 준비하는 중이다
     waitingForSound: aiSpeech.waitingForSound,
+    // 상대가 대답을 준비하는 중 — 답을 기다리거나, 대답은 왔지만 소리가 아직 안 났다.
+    // 화면은 이 동안 점 말풍선을 띄우고 캐릭터를 생각하는 자세로 둔다
+    preparingAnswer: state.phase === 'AI_THINKING' || aiSpeech.waitingForSound,
     replay,
     interruptible,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다

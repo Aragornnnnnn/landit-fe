@@ -453,8 +453,9 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.gauge.lastQuestion).toBe(true);
   });
 
-  it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 된다', async () => {
+  it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 되고, 상대가 대답을 준비하는 중으로 본다', async () => {
     const { result } = await renderUserFirst();
+    expect(result.current.preparingAnswer).toBe(false);
     let resolve: (value: ScenarioTalkSubmitResponse) => void = () => {};
     submitScenarioTalkMessage.mockReturnValue(
       new Promise((r) => {
@@ -473,6 +474,7 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.phase).toBe('AI_THINKING');
+    expect(result.current.preparingAnswer).toBe(true);
 
     await act(async () => resolve(submitResponse()));
   });

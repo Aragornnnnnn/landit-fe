@@ -46,6 +46,7 @@ export type TalkScreenFlow = Pick<
   | 'expressedThought'
   | 'speech'
   | 'waitingForSound'
+  | 'preparingAnswer'
   | 'replay'
   | 'interruptible'
   | 'input'
@@ -99,6 +100,7 @@ export const TalkScreen = ({
     expressedThought,
     speech,
     waitingForSound,
+    preparingAnswer,
     replay,
     interruptible,
     input,
@@ -128,10 +130,6 @@ export const TalkScreen = ({
   } = input;
 
   const ended = phase === 'DONE';
-  const thinking = phase === 'AI_THINKING';
-  // 상대가 대답을 준비하는 중 — 답을 기다리거나, 대답은 왔지만 소리가 아직 안 났다.
-  // 그동안 대화 칸엔 점 말풍선을 띄운다. 소리 없이 글자나 입부터 움직이면 어색하다
-  const preparingAnswer = thinking || waitingForSound;
   // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();

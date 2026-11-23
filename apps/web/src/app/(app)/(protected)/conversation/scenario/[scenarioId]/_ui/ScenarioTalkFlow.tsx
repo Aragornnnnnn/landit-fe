@@ -66,6 +66,7 @@ export const ScenarioTalkFlow = ({
     expressedThought,
     speech,
     waitingForSound,
+    preparingAnswer,
     replay,
     interruptible,
     input,
@@ -138,8 +139,6 @@ export const ScenarioTalkFlow = ({
     const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
     return () => clearTimeout(timer);
   }, [showUserFirstIntro]);
-  // 상대가 대답을 준비하는 중 — 답을 기다리거나, 대답은 왔지만 소리가 아직 안 났다. 그동안 대화 칸엔 점 말풍선을 띄운다
-  const preparingAnswer = phase === 'AI_THINKING' || waitingForSound;
   // 캐릭터 자세 — 평소엔 단계를 따르고(대답 준비 중엔 생각하는 자세), 속마음이 말풍선에 뜨면 그 감정 표정이 잠깐 얹힌다
   const characterLook = toCharacterLook(
     preparingAnswer ? 'AI_THINKING' : phase,
