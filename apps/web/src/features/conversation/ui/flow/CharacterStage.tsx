@@ -30,6 +30,7 @@ interface CharacterStageProps {
  * - 자리 — 화면 흐름 안에서 턱 선 높이만큼 차지해, 뒤따르는 대화 칸이 턱 바로 아래에서 시작한다.
  *   키보드가 올라와 자리가 모자랄 때만 먼저 줄어든다(줄어드는 비율 1000). 닫기(X)가 위에 떠 있어 그 높이 밑으로는 줄지 않는다.
  * - 배경 — 자리에서 화면 바닥까지 뻗는 그림. 대화 칸 뒤로 깔리도록 -z로 둔다(화면 루트가 isolate여야 앱 배경 위에 그려진다).
+ *   크기가 화면으로 정해져 있어 contain: strict로 가둔다 — 대화 칸 글자가 바뀌어도 무대는 다시 배치·페인트하지 않는다.
  *   자리가 줄어도 캐릭터는 그대로다 — 화면 위 끝 기준으로 놓이기 때문이다.
  */
 export const CharacterStage = ({
@@ -46,7 +47,7 @@ export const CharacterStage = ({
   >
     <div
       aria-hidden
-      className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-dvh overflow-hidden ${STAGE_BACKGROUND_CLASS}`}
+      className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-dvh overflow-hidden [contain:strict] ${STAGE_BACKGROUND_CLASS}`}
       // 전신이라 흔들림 각도를 줄인다(STAGE_SWAY_TURN 참고) — 캐릭터 상자까지 상속된다
       style={{ '--sway-turn': STAGE_SWAY_TURN } as CSSProperties}
     >
