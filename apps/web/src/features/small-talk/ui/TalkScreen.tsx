@@ -18,6 +18,7 @@ import type { FloatingThought } from '@/features/conversation/model/thought';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
+import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
@@ -42,6 +43,7 @@ export type TalkScreenFlow = Pick<
   | 'phase'
   | 'turnIndex'
   | 'turn'
+  | 'log'
   | 'finishedThought'
   | 'speech'
   | 'waitingForSound'
@@ -97,6 +99,7 @@ export const TalkScreen = ({
     phase,
     turnIndex,
     turn,
+    log,
     finishedThought,
     speech,
     waitingForSound,
@@ -191,62 +194,53 @@ export const TalkScreen = ({
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
-      {/* 질문과 답변 칸이 무대 아래 높이를 나눠 쓴다 — 둘 다 글 길이만큼 서고, 모자라면 질문이 최소 높이까지 먼저 줄어(줄어드는 비율 1000) 안에서 스크롤된다. 지금 읽고 고칠 건 내 답이다.
-          키보드가 없을 땐 무대 높이를 건드리지 않고, 키보드가 올라오면 무대가 먼저 줄어 입력창에 자리를 내준다 */}
+      {/* 대화 칸과 내 답변 칸이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
+          키보드가 올라오면 대화 칸을 접고 무대가 먼저 줄어 입력창에 자리를 내준다 */}
       <div
-        className={`flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
+        className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        {/* 질문은 글자 크기와 상관없이 한 줄은 온전히 보이게 남긴다(카드 여백·버튼 4.75rem + 17px 글 한 줄). 더 크게 잡으면 짧은 질문 밑이 빈다.
-          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
-        <section
-          className={
-            keyboardLifted
-              ? 'hidden'
-              : 'flex min-h-[calc(4.75rem+1.46rem*var(--font-scale))] flex-auto shrink-[1000] flex-col px-5'
-          }
+        <ConversationLog
+          entries={log}
+          latestKey={turnIndex}
+          hidden={keyboardLifted}
         >
-          {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다.
-            끝난 뒤엔 남는 높이를 통계 시트 아래로 넘긴다 — 시트가 작별 인사에 붙어야 이 대화의 결과로 읽힌다 */}
-          <div
-            className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}
-          >
-            {waitingForAnswer ? (
-              <ThinkingBubble />
-            ) : (
-              <PartnerBubble
-                question={turn.aiMessage}
-                translation={turn.aiTranslation}
-                speaking={phase === 'AI_SPEAKING'}
-                instruction={turn.isUserOpening}
-                onTranslationToggled={(opened) =>
-                  track(EVENTS.TRANSLATION_TOGGLED, {
-                    session_id: sessionId,
-                    turn_index: turnIndex,
-                    opened,
-                  })
-                }
-                replay={replay}
-                textHidden={display.textHidden}
-                onTextToggled={(visible) =>
-                  track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                    session_id: sessionId,
-                    turn_index: turnIndex,
-                    hidden: !visible,
-                  })
-                }
-                translationDefaultOpen={display.translationDefaultOpen}
-              />
-            )}
-          </div>
-          {ended && (
-            <>
-              <TalkSummary {...summary} />
-              <div className="flex-1" />
-            </>
+          {waitingForAnswer ? (
+            <ThinkingBubble />
+          ) : (
+            <PartnerBubble
+              question={turn.aiMessage}
+              translation={turn.aiTranslation}
+              speaking={phase === 'AI_SPEAKING'}
+              instruction={turn.isUserOpening}
+              onTranslationToggled={(opened) =>
+                track(EVENTS.TRANSLATION_TOGGLED, {
+                  session_id: sessionId,
+                  turn_index: turnIndex,
+                  opened,
+                })
+              }
+              replay={replay}
+              textHidden={display.textHidden}
+              onTextToggled={(visible) =>
+                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                  session_id: sessionId,
+                  turn_index: turnIndex,
+                  hidden: !visible,
+                })
+              }
+              translationDefaultOpen={display.translationDefaultOpen}
+            />
           )}
-        </section>
+        </ConversationLog>
 
-        {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+        {/* 끝난 뒤엔 대화 칸 아래에 이 대화의 기록을 붙인다 — 작별 인사 바로 밑이라 이 대화의 결과로 읽힌다 */}
+        {ended && (
+          <div className="px-5">
+            <TalkSummary {...summary} />
+          </div>
+        )}
+
+        {/* 답변 칸은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
         {!ended && (
           <div className="flex min-h-0 shrink flex-col px-5">
             <UserTranscript

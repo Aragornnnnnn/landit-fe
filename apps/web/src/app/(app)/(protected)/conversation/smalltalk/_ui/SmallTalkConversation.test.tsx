@@ -65,6 +65,7 @@ vi.mock('../_model/useSmallTalkFlow', () => ({
   useSmallTalkFlow: () => ({
     phase: mocks.phase,
     turnIndex: 0,
+    log: [],
     turn: {
       aiMessage: 'How was your day?',
       aiTranslation: '오늘 하루 어땠어?',

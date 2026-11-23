@@ -2,6 +2,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { LogEntry } from '@/features/conversation/model/conversation-log';
 import type { ConversationPhase } from '@/features/conversation/model/conversation-machine';
 import { runBackPress } from '@/shared/bridge/back-press';
 
@@ -23,11 +24,16 @@ vi.mock('../model/useSpeakingLimit', () => ({
 
 afterEach(() => cleanup());
 
-const toFlow = (phase: ConversationPhase, waitingForSound = false) =>
+const toFlow = (
+  phase: ConversationPhase,
+  waitingForSound = false,
+  log: LogEntry[] = [],
+) =>
   ({
     phase,
     waitingForSound,
     turnIndex: 1,
+    log,
     turn: {
       aiMessage: 'How was your day?',
       aiTranslation: null,
@@ -65,6 +71,28 @@ const renderTalk = (
       hasInnerThought={hasInnerThought}
     />,
   );
+
+describe('TalkScreen 대화 칸', () => {
+  it('끝난 턴의 상대 말과 내 말을 지금 상대 말 위에 쌓아 보여 준다', () => {
+    render(
+      <TalkScreen
+        sessionId={1}
+        partner="teddy"
+        flow={toFlow('USER_READY', false, [
+          { id: 0, speaker: 'PARTNER', text: 'Hi! How are you?' },
+          { id: 1, speaker: 'ME', text: 'Pretty good, thanks.' },
+        ])}
+        summaryPath="/summary"
+        onShowSummary={vi.fn()}
+        onExitRequested={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Hi! How are you?')).toBeInTheDocument();
+    expect(screen.getByText('Pretty good, thanks.')).toBeInTheDocument();
+    expect(screen.getByText('How was your day?')).toBeInTheDocument();
+  });
+});
 
 describe('TalkScreen 답 대기', () => {
   it('속마음이 있는 대화는 답을 기다리는 동안 화면을 덮는 연출을 띄운다', () => {
