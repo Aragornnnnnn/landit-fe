@@ -38,7 +38,7 @@ export const ConversationWaiting = ({
     onExit();
   };
   return (
-    <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main className="relative isolate mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <ExitHeader label={t('exitButton')} onExit={leave} disabled={leaving} />
 
       <CharacterStage

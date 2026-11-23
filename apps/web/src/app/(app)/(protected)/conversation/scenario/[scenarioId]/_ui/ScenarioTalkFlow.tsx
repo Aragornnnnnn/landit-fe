@@ -170,7 +170,7 @@ export const ScenarioTalkFlow = ({
 
   return (
     <main
-      className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      className="relative isolate mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
       style={keyboardLifted ? { paddingBottom: keyboardInset } : undefined}
     >
