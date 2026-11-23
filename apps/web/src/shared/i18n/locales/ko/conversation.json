@@ -72,7 +72,8 @@
     "exitButton": "대화 나가기"
   },
   "conversationTurns": {
-    "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요"
+    "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요",
+    "unsentToast": "연결이 불안정해 답변을 보내지 못했어요"
   },
   "conversationInput": {
     "notRecognizedToast": "말이 인식되지 않았어요. 다시 말해볼까요?",

@@ -72,7 +72,8 @@
     "exitButton": "会話をやめる"
   },
   "conversationTurns": {
-    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください"
+    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください",
+    "unsentToast": "接続が不安定で回答を送信できませんでした"
   },
   "conversationInput": {
     "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",

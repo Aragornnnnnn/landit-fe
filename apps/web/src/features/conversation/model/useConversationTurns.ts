@@ -320,6 +320,7 @@ export const useConversationTurns = ({
       send('AI_RESPONSE_FAILED'); // → USER_READY (다시 보내기 대기)
       // 보낸 답변을 그 자리에 남겨 두고, 마이크 대신 다시 보내기를 띄운다
       setUnsent({ content, inputType, utteranceDurationMs });
+      showToast(t('unsentToast'), 'error');
       input.resetForNextTurn();
       input.setTranscript(content);
       track(EVENTS.TURN_FAILED, {
