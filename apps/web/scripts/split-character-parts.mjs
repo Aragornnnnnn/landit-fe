@@ -238,12 +238,10 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     new URL(`../assets/character/${cfg.src}`, import.meta.url),
     'utf8',
   );
-  // 좌표를 소수 둘째 자리로 줄인다 — 눈에 안 보이는 차이로 파일이 꽤 작아진다
+  // 좌표를 소수 첫째 자리로 줄인다 — 0.05단위 오차는 가장 크게 그려도 0.05px이 안 돼 눈에 안 보이고, 파일은 꽤 작아진다
   const paths = (src.match(/<path\b[^>]*?(?:\/>|>\s*<\/path>)/g) ?? []).map(
     (p) =>
-      p.replace(/-?\d+\.\d+/g, (m) =>
-        String(Math.round(Number(m) * 100) / 100),
-      ),
+      p.replace(/-?\d+\.\d+/g, (m) => String(Math.round(Number(m) * 10) / 10)),
   );
 
   const sliceOf = new Map();
