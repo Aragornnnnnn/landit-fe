@@ -10,8 +10,9 @@ export type Partner = 'marco' | 'chloe' | 'teddy';
 /** 몸이 무엇을 하는 중인가 */
 export type CharacterPosture = 'idle' | 'listening' | 'speaking';
 
-/** 얼굴이 무엇을 말하는가. neutral은 표정을 얹지 않는다는 뜻이다 */
-export type CharacterExpression = 'neutral' | 'happy' | 'frown';
+/** 얼굴이 무엇을 말하는가. neutral은 표정을 얹지 않는다는 뜻이다 — 이름은 표정 데이터(expressions/*.json)의 표정 키와 같다 */
+export type CharacterExpression =
+  'neutral' | 'happy' | 'frown' | 'angry' | 'sad' | 'love' | 'sulky' | 'shy';
 
 export interface CharacterLook {
   posture: CharacterPosture;
