@@ -30,6 +30,10 @@
     "showTextButton": "英文を表示",
     "hideTextButton": "英文を隠す"
   },
+  "conversationLog": {
+    "jumpToLatestButton": "最新の会話へ",
+    "newReplyLabel": "新しい返事があります"
+  },
   "userTranscript": {
     "editLabel": "回答を直す：{text}",
     "headerLabel": "あなたの回答",

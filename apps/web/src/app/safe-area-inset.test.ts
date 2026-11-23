@@ -110,6 +110,8 @@ const SCROLL_EXCEPTIONS = new Set([
   'features/survey/ui/steps/TextStep.tsx',
   'features/onboarding/ui/common/AccentForm.tsx',
   'features/conversation/ui/flow/QuestionCard.tsx',
+  // 대화 칸 — 마이크·답변 칸 위에서 끝나 바닥에 닿지 않는다
+  'features/conversation/ui/flow/ConversationLog.tsx',
   'app/(app)/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',
   'app/(app)/(protected)/roleplay/new/_ui/CreateRoleplayFlow.tsx',
   // 바깥 스크롤 상자 — 안쪽 내용이 safe-area 여백을 맡는다

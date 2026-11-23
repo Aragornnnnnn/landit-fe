@@ -30,6 +30,10 @@
     "showTextButton": "영어 문장 보기",
     "hideTextButton": "영어 문장 가리기"
   },
+  "conversationLog": {
+    "jumpToLatestButton": "최신 대화로",
+    "newReplyLabel": "새 답변이 있어요"
+  },
   "userTranscript": {
     "editLabel": "답변 고치기: {text}",
     "headerLabel": "내 답변",
