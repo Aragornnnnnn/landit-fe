@@ -35,13 +35,6 @@
     "jumpToLatestButton": "최신 대화로",
     "newReplyLabel": "새 답변이 있어요"
   },
-  "userTranscript": {
-    "editLabel": "답변 고치기: {text}",
-    "headerLabel": "내 답변",
-    "unsentError": "연결이 불안정해요",
-    "editBadge": "수정",
-    "editHint": "말한 내용과 다르면 눌러서 고칠 수 있어요"
-  },
   "transcriptEditor": {
     "headerLabel": "내 답변",
     "cancelButton": "입력 취소",
@@ -127,8 +120,7 @@
     "homeButton": "홈으로"
   },
   "answerGuideChip": {
-    "openButton": "예시 볼래요",
-    "hint": "말이 안 떠오르면 눌러 봐요"
+    "openButton": "예시 볼래요"
   },
   "answerGuideCard": {
     "regionLabel": "답변 예시",

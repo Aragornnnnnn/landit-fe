@@ -1,5 +1,5 @@
 // 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(X·■) ↔ 말한 뒤 확인(다시 말하기·보내기)을 전환한다.
-// 키보드 입력창도, 듣는 중이라는 안내도 내 답변 박스(UserTranscript)가 맡는다 — 같은 말을 두 군데서 하지 않는다
+// 키보드 입력창(TranscriptEditor)과 듣는 중이라는 안내(내 말풍선)는 따로 있다 — 같은 말을 두 군데서 하지 않는다
 'use client';
 
 import { motion } from 'motion/react';
@@ -192,7 +192,7 @@ export const MicControl = ({
           transition={{ duration: 0.18 }}
           className="relative flex flex-col items-center gap-2"
         >
-          {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 내 답변 박스가 입력창으로 바뀐다 */}
+          {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 대화 칸 아래에 입력창이 열린다 */}
           {onKeyboard && (
             <button
               onClick={onKeyboard}

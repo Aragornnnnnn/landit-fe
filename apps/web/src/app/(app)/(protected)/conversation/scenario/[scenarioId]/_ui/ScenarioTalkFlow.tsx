@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
+import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
@@ -16,10 +17,11 @@ import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmShe
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
+import { MyBubble } from '@/features/conversation/ui/flow/MyBubble';
 import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
 import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
-import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
+import { TranscriptEditor } from '@/features/conversation/ui/flow/TranscriptEditor';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
@@ -32,7 +34,7 @@ import { ProgressBar } from '@/shared/ui/ProgressBar';
 
 import { useAnswerGuideToggle } from '../_model/useAnswerGuideToggle';
 import { useScenarioTalkFlow } from '../_model/useScenarioTalkFlow';
-import { AnswerGuideChip, AnswerGuideSlot } from './AnswerGuide';
+import { AnswerGuide } from './AnswerGuide';
 
 export const ScenarioTalkFlow = ({
   scenario,
@@ -98,18 +100,25 @@ export const ScenarioTalkFlow = ({
   } = input;
 
   const ended = phase === 'DONE';
-  // 키보드 입력 중 — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  // 키보드 입력 중 — 대화 칸 아래에 입력창을 열고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
+  const myBubble = toMyBubbleState({
+    phase,
+    reviewing,
+    typing,
+    unsent: resend != null,
+    text: transcript,
+  });
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
   // 입력하는 동안 iOS가 문서를 밀어 화면이 두 번 올라가지 않게 맨 위에 붙잡는다
   useDocumentScrollPin(typing);
-  // 답변 가이드 — 내 차례(대기·말하는 중)에만 내 답변 칸과 같은 자리를 번갈아 쓴다.
-  // 키보드로 쓰는 중엔 그 칸이 입력창이라, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
+  // 답변 가이드 — 내 차례(대기·말하는 중)에만 대화 칸의 내 다음 말 자리에 선다. 말하는 동안엔 내 말풍선이 그 아래에 붙는다.
+  // 키보드로 쓰는 중엔 대화 칸이 접히고, 답을 낸 뒤엔 방금 한 말을 보여야 해서 비켜 준다
   const myTurn = phase === 'USER_READY' || phase === 'USER_SPEAKING';
   // 답변이 전달되지 못한 동안은 다시 보내기가 먼저라 가이드를 비켜 준다 — 펼쳐 둔 카드가 실패한 답변을 덮지 않게.
-  // 말한 뒤 확인 중에도 비켜 준다 — 인식된 문장을 봐야 하고, 칸 머리 자리는 고치기 표시가 쓴다
+  // 말한 뒤 확인 중에도 비켜 준다 — 인식된 문장을 고칠지 보내는 데 집중하게
   const guideShown =
     answerGuide != null && myTurn && !typing && !reviewing && resend == null;
   const guideChipRef = useRef<HTMLButtonElement>(null);
@@ -187,7 +196,7 @@ export const ScenarioTalkFlow = ({
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
-      {/* 대화 칸과 내 답변 칸이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
+      {/* 대화 칸과 키보드 입력창이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
           키보드가 올라오면 대화 칸을 접고 무대가 먼저 줄어 입력창에 자리를 내준다 */}
       <div
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
@@ -225,49 +234,44 @@ export const ScenarioTalkFlow = ({
               thought={turn.thought}
             />
           )}
-          {preparingAnswer && <ThinkingBubble />}
-        </ConversationLog>
-
-        {/* 답변 칸은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
-        <div className="flex min-h-0 shrink flex-col px-5">
-          {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다.
-              가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
-          {!ended && (
-            <AnswerGuideSlot
+          {guideShown && answerGuide && (
+            <AnswerGuide
               guide={answerGuide}
-              open={guideShown && guide.open}
+              open={guide.open}
+              onOpen={guide.openGuide}
               onClose={() => {
                 guide.closeGuide();
-                // 다시 나타난 칩으로 포커스를 돌려준다 — 칩은 이번 렌더가 끝난 뒤에 붙는다
+                // 다시 나타난 알약으로 포커스를 돌려준다 — 알약은 이번 렌더가 끝난 뒤에 붙는다
                 requestAnimationFrame(() =>
                   guideChipRef.current?.focus({ preventScroll: true }),
                 );
               }}
-            >
-              <UserTranscript
-                text={transcript}
-                speechPending={speechPending}
-                phase={phase}
-                editing={typing}
-                onChange={setTranscript}
-                onSubmit={submitText}
-                onCancel={closeTyping}
-                onEdit={reviewing && !typing ? editTranscript : undefined}
-                unsent={resend != null}
-                headerAction={
-                  guideShown &&
-                  !guide.open && (
-                    <AnswerGuideChip
-                      ref={guideChipRef}
-                      onOpen={guide.openGuide}
-                      hintVisible={guide.hintVisible}
-                    />
-                  )
-                }
-              />
-            </AnswerGuideSlot>
+              hintVisible={guide.hintVisible}
+              chipRef={guideChipRef}
+            />
           )}
-        </div>
+          {myBubble && (
+            <MyBubble
+              state={myBubble}
+              text={transcript}
+              speechPending={speechPending}
+              onEdit={editTranscript}
+            />
+          )}
+          {preparingAnswer && <ThinkingBubble />}
+        </ConversationLog>
+
+        {/* 키보드 입력창은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+        {typing && (
+          <div className="flex min-h-0 shrink flex-col px-5">
+            <TranscriptEditor
+              text={transcript}
+              onChange={setTranscript}
+              onSubmit={submitText}
+              onCancel={closeTyping}
+            />
+          </div>
+        )}
       </div>
 
       <footer

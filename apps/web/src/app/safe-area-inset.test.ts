@@ -122,8 +122,6 @@ const SCROLL_EXCEPTIONS = new Set([
   'app/(app)/(auth)/_ui/LoginScreen.tsx',
   // 카드 뒷면 안쪽 스크롤 — 바닥에 닿지 않는다
   'features/scenario/ui/card/ScenarioCardBack.tsx',
-  // 높이가 고정된 내 답변 칸 안쪽 스크롤 — 바닥에 닿지 않는다
-  'features/conversation/ui/flow/UserTranscript.tsx',
   // 개발자 전용
   'app/(app)/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
   'app/(app)/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',

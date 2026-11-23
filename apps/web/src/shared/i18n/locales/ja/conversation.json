@@ -35,13 +35,6 @@
     "jumpToLatestButton": "最新の会話へ",
     "newReplyLabel": "新しい返事があります"
   },
-  "userTranscript": {
-    "editLabel": "回答を直す：{text}",
-    "headerLabel": "あなたの回答",
-    "unsentError": "接続が不安定です",
-    "editBadge": "修正",
-    "editHint": "話した内容と違ったらタップして直せます"
-  },
   "transcriptEditor": {
     "headerLabel": "あなたの回答",
     "cancelButton": "入力をキャンセル",
@@ -115,8 +108,7 @@
     "homeButton": "ホームへ"
   },
   "answerGuideChip": {
-    "openButton": "例を見ます",
-    "hint": "思いつかないときはタップしてみてください"
+    "openButton": "例を見ます"
   },
   "answerGuideCard": {
     "regionLabel": "回答の例",
