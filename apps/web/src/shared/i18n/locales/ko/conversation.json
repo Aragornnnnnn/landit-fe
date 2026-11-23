@@ -22,7 +22,6 @@
   },
   "partnerBubble": {
     "lastQuestionBadge": "마지막 질문이에요",
-    "instructionCaption": "내가 먼저 말해보는 상황",
     "replayButton": "다시 듣기",
     "stopReplayButton": "다시 듣기 멈추기",
     "showTranslationButton": "해석 보기",
@@ -62,6 +61,9 @@
   "conversationWaiting": {
     "exitButton": "대화 나가기"
   },
+  "situationCard": {
+    "label": "내가 먼저 말해보는 상황"
+  },
   "myBubble": {
     "editLabel": "답변 고치기: {text}",
     "editBadge": "수정",
@@ -83,7 +85,6 @@
     "completeFailedToast": "연결에 문제가 생겨 대화를 마무리하지 못했어요"
   },
   "smallTalkConversation": {
-    "userFirstHint": "편하게 인사부터 건네 보세요!",
     "exitButton": "대화 나가기",
     "feedbackButton": "피드백 보러가기",
     "remainingTimeLabel": "남은 말하기 시간 <emphasis>{time}</emphasis>"
@@ -126,7 +127,6 @@
     "closeButton": "접기"
   },
   "scenarioTalkFlow": {
-    "userFirstHint": "상황을 잘 읽고 먼저 말을 걸어보세요!",
     "progressLabel": "대화 진행도",
     "exitButton": "대화 나가기",
     "feedbackButton": "상세 분석 보러갈래요"

@@ -127,29 +127,6 @@ describe('PartnerBubble', () => {
     expect(onTranslationToggled.mock.calls).toEqual([[true], [false]]);
   });
 
-  it('선발화 안내 카드에는 해석·다시 듣기 자리를 두지 않는다', () => {
-    // 선발화 안내는 상대 발화가 아니다 — 해석·다시 듣기를 줘도 카드가 자리를 내주지 않는다
-    render(
-      <PartnerBubble
-        question="먼저 인사를 건네보세요"
-        translation="Say hello first"
-        speaking={false}
-        instruction
-        replay={{ toggle: vi.fn(), playing: false, enabled: true }}
-      />,
-    );
-
-    expect(
-      screen.queryByRole('button', { name: '해석 보기' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '다시 듣기' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '영어 문장 가리기' }),
-    ).not.toBeInTheDocument();
-  });
-
   it('다시 듣기를 누르면 그 발화를 다시 재생한다', () => {
     const toggle = vi.fn();
     render(

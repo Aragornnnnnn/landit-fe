@@ -24,8 +24,6 @@ interface PartnerBubbleProps {
   question: string;
   translation: string | null;
   speaking: boolean;
-  // USER 선발화 안내 — 발화가 아니라 '내가 먼저 말해보는 상황' 라벨 + 설명 구조로 그린다
-  instruction?: boolean;
   // 해석을 펼치거나 접은 순간 — 계측은 세션·턴을 아는 화면이 맡는다
   onTranslationToggled?: (opened: boolean) => void;
   // 다시 듣기 — 주면 스피커 버튼이 붙는다
@@ -101,7 +99,6 @@ export const PartnerBubble = ({
   question,
   translation,
   speaking,
-  instruction = false,
   onTranslationToggled,
   replay,
   lastQuestion = false,
@@ -180,7 +177,7 @@ export const PartnerBubble = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 위와 같은 이유
   }, [speaking]);
 
-  // 발화 중이 아니면 무조건 전문 — 유저 선발화 안내, 그리고 rAF가 끊긴 채(백그라운드 탭) 발화가 끝난 경우의 복구
+  // 발화 중이 아니면 무조건 전문 — rAF가 끊긴 채(백그라운드 탭) 발화가 끝난 경우의 복구
   const spokenCount = speaking ? count : question.length;
   // 버튼이 나오는 때는 가림과 상관없이 발화를 따른다
   const done = spokenCount >= question.length;
@@ -199,48 +196,36 @@ export const PartnerBubble = ({
       className="self-start"
     >
       <PartnerBubbleShell>
-        {!instruction && thought && <ThoughtLine thought={thought} />}
+        {thought && <ThoughtLine thought={thought} />}
         {lastQuestion && (
           <p className="text-xs font-bold text-primary">
             {t('lastQuestionBadge')}
           </p>
         )}
-        {instruction ? (
-          // 선발화 안내 — 상대 발화처럼 굵게 꽂지 않고, 라벨 + 차분한 상황 설명으로 정리한다
-          <>
-            <p className="text-sm font-bold text-primary">
-              {t('instructionCaption')}
-            </p>
-            <p className="text-16 leading-[1.35] font-semibold text-foreground">
-              {question}
-            </p>
-          </>
-        ) : (
-          <p
-            data-hidden={blurred}
-            // 가린 동안엔 화면 낭독기도 읽지 않는다 — 눈 버튼("영어 문장 보기")으로 같은 동작을 할 수 있다
-            aria-hidden={blurred || undefined}
-            onClick={blurred ? toggleText : undefined}
-            // 흐림은 filter가 아니라 글자 그림자로 만든다 — iOS는 filter를 그때그때 다른 경로로 그려 흐린 정도가 번쩍이고 경계가 네모로 잘린다
-            className={`text-16 leading-[1.35] font-bold break-words transition-[color,text-shadow] duration-200 ${
-              blurred
-                ? 'cursor-pointer text-transparent select-none [text-shadow:0_0_10px_var(--color-foreground)]'
-                : 'text-foreground'
-            }`}
-          >
-            {question.slice(0, visibleCount)}
-            {typing && <TypingCursor ref={cursorRef} />}
-            {/* 아직 안 나온 글자를 투명하게 깔아 첫 프레임부터 최종 크기를 잡는다 —
+        <p
+          data-hidden={blurred}
+          // 가린 동안엔 화면 낭독기도 읽지 않는다 — 눈 버튼("영어 문장 보기")으로 같은 동작을 할 수 있다
+          aria-hidden={blurred || undefined}
+          onClick={blurred ? toggleText : undefined}
+          // 흐림은 filter가 아니라 글자 그림자로 만든다 — iOS는 filter를 그때그때 다른 경로로 그려 흐린 정도가 번쩍이고 경계가 네모로 잘린다
+          className={`text-16 leading-[1.35] font-bold break-words transition-[color,text-shadow] duration-200 ${
+            blurred
+              ? 'cursor-pointer text-transparent select-none [text-shadow:0_0_10px_var(--color-foreground)]'
+              : 'text-foreground'
+          }`}
+        >
+          {question.slice(0, visibleCount)}
+          {typing && <TypingCursor ref={cursorRef} />}
+          {/* 아직 안 나온 글자를 투명하게 깔아 첫 프레임부터 최종 크기를 잡는다 —
                 말풍선이 글자 따라 커지면 발화 내내 대화 칸이 계속 달라진다 */}
-            {typing && (
-              <span className="text-transparent">
-                {question.slice(visibleCount)}
-              </span>
-            )}
-          </p>
-        )}
+          {typing && (
+            <span className="text-transparent">
+              {question.slice(visibleCount)}
+            </span>
+          )}
+        </p>
         <AnimatePresence initial={false}>
-          {!instruction && translation && done && translationOpen && (
+          {translation && done && translationOpen && (
             <motion.div
               key="translation"
               ref={translationRef}
@@ -259,43 +244,39 @@ export const PartnerBubble = ({
           )}
         </AnimatePresence>
         {/* 눈 버튼은 가린 동안에도 늘 누를 수 있어야 해서 이 줄은 발화가 끝나길 기다리지 않는다 */}
-        {!instruction && (
-          <div className="-mr-1.5 flex justify-end gap-1.5">
-            {done && replay && (
-              <BubbleIconButton
-                on={replay.playing}
-                disabled={!replay.enabled}
-                label={
-                  replay.playing ? t('stopReplayButton') : t('replayButton')
-                }
-                onClick={replay.toggle}
-              >
-                <SpeakerIcon size={14} />
-              </BubbleIconButton>
-            )}
-            {done && translation && (
-              <BubbleIconButton
-                on={translationOpen}
-                label={
-                  translationOpen
-                    ? t('hideTranslationButton')
-                    : t('showTranslationButton')
-                }
-                onClick={toggleTranslation}
-              >
-                <TranslateIcon size={14} />
-              </BubbleIconButton>
-            )}
-            {/* 이 말풍선의 글자 보기 스위치 — 글자가 보이면 칠한다. 아이콘은 하나로 둔다 */}
+        <div className="-mr-1.5 flex justify-end gap-1.5">
+          {done && replay && (
             <BubbleIconButton
-              on={!blurred}
-              label={blurred ? t('showTextButton') : t('hideTextButton')}
-              onClick={toggleText}
+              on={replay.playing}
+              disabled={!replay.enabled}
+              label={replay.playing ? t('stopReplayButton') : t('replayButton')}
+              onClick={replay.toggle}
             >
-              <EyeIcon size={14} />
+              <SpeakerIcon size={14} />
             </BubbleIconButton>
-          </div>
-        )}
+          )}
+          {done && translation && (
+            <BubbleIconButton
+              on={translationOpen}
+              label={
+                translationOpen
+                  ? t('hideTranslationButton')
+                  : t('showTranslationButton')
+              }
+              onClick={toggleTranslation}
+            >
+              <TranslateIcon size={14} />
+            </BubbleIconButton>
+          )}
+          {/* 이 말풍선의 글자 보기 스위치 — 글자가 보이면 칠한다. 아이콘은 하나로 둔다 */}
+          <BubbleIconButton
+            on={!blurred}
+            label={blurred ? t('showTextButton') : t('hideTextButton')}
+            onClick={toggleText}
+          >
+            <EyeIcon size={14} />
+          </BubbleIconButton>
+        </div>
       </PartnerBubbleShell>
     </motion.div>
   );

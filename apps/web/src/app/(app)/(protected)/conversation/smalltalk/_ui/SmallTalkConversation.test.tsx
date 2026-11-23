@@ -35,12 +35,9 @@ vi.mock('@/shared/analytics', () => ({ track: vi.fn() }));
 vi.mock('@/features/small-talk/model/useSpeakingLimit', () => ({
   useSpeakingLimit: () => ({ unlimited: mocks.unlimited }),
 }));
-// 무대·오버레이·시트는 이 테스트 관심사가 아니다 — 마이크 주변만 본다
+// 무대·시트는 이 테스트 관심사가 아니다 — 마이크 주변만 본다
 vi.mock('@/features/conversation/ui/flow/CharacterStage', () => ({
   CharacterStage: () => null,
-}));
-vi.mock('@/features/conversation/ui/flow/ThoughtOverlay', () => ({
-  ThoughtOverlay: () => null,
 }));
 vi.mock('@/features/conversation/ui/flow/MicPermissionSheet', () => ({
   MicPermissionSheet: () => null,

@@ -4,7 +4,7 @@
 // 대화마다 다른 것(흐름 훅·종료 시트·내가 먼저 걸 때의 안내)은 화면을 쓰는 쪽이 넣는다
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -14,7 +14,6 @@ import {
   type Partner,
 } from '@/features/conversation/model/character-look';
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
-import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
@@ -24,8 +23,8 @@ import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { MyBubble } from '@/features/conversation/ui/flow/MyBubble';
 import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
+import { SituationCard } from '@/features/conversation/ui/flow/SituationCard';
 import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
-import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { TranscriptEditor } from '@/features/conversation/ui/flow/TranscriptEditor';
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
@@ -72,8 +71,6 @@ interface TalkScreenProps {
   onShowSummary: () => void;
   // X로 종료 시트를 열어야 할 때 — 시트는 화면을 쓰는 쪽이 children으로 넣는다
   onExitRequested: () => void;
-  // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
-  userFirstHint?: string;
   children?: React.ReactNode;
 }
 
@@ -84,7 +81,6 @@ export const TalkScreen = ({
   summaryPath,
   onShowSummary,
   onExitRequested,
-  userFirstHint,
   children,
 }: TalkScreenProps) => {
   const t = useTranslations('conversation.smallTalkConversation');
@@ -93,7 +89,6 @@ export const TalkScreen = ({
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 시간이 무한이 된다
   const { unlimited } = useSpeakingLimit();
-  const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
     turnIndex,
@@ -152,16 +147,6 @@ export const TalkScreen = ({
   useEffect(() => {
     if (ended) router.prefetch(summaryPath);
   }, [ended, router, summaryPath]);
-  const showUserFirstIntro =
-    userFirstHint !== undefined &&
-    turn.isUserOpening &&
-    phase === 'USER_READY' &&
-    !introDismissed;
-  useEffect(() => {
-    if (!showUserFirstIntro) return;
-    const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
-    return () => clearTimeout(timer);
-  }, [showUserFirstIntro]);
 
   const characterLook = toCharacterLook(
     preparingAnswer ? 'AI_THINKING' : phase,
@@ -194,32 +179,38 @@ export const TalkScreen = ({
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
         <ConversationLog entries={log} latestKey={turnIndex}>
-          {/* 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
-          {!waitingForSound && (
-            <PartnerBubble
-              question={turn.aiMessage}
-              translation={turn.aiTranslation}
-              speaking={phase === 'AI_SPEAKING'}
-              instruction={turn.isUserOpening}
-              onTranslationToggled={(opened) =>
-                track(EVENTS.TRANSLATION_TOGGLED, {
-                  session_id: sessionId,
-                  turn_index: turnIndex,
-                  opened,
-                })
-              }
-              replay={replay}
-              textHidden={display.textHidden}
-              onTextToggled={(visible) =>
-                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                  session_id: sessionId,
-                  turn_index: turnIndex,
-                  hidden: !visible,
-                })
-              }
-              translationDefaultOpen={display.translationDefaultOpen}
-              thought={turn.thought}
+          {/* 내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 둔다. 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
+          {turn.isUserOpening ? (
+            <SituationCard
+              text={turn.aiMessage}
+              alone={!myBubble && !preparingAnswer}
             />
+          ) : (
+            !waitingForSound && (
+              <PartnerBubble
+                question={turn.aiMessage}
+                translation={turn.aiTranslation}
+                speaking={phase === 'AI_SPEAKING'}
+                onTranslationToggled={(opened) =>
+                  track(EVENTS.TRANSLATION_TOGGLED, {
+                    session_id: sessionId,
+                    turn_index: turnIndex,
+                    opened,
+                  })
+                }
+                replay={replay}
+                textHidden={display.textHidden}
+                onTextToggled={(visible) =>
+                  track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                    session_id: sessionId,
+                    turn_index: turnIndex,
+                    hidden: !visible,
+                  })
+                }
+                translationDefaultOpen={display.translationDefaultOpen}
+                thought={turn.thought}
+              />
+            )
           )}
           {myBubble && (
             <MyBubble
@@ -298,13 +289,6 @@ export const TalkScreen = ({
           </>
         )}
       </footer>
-
-      {/* 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다 */}
-      <ThoughtOverlay
-        thought={
-          showUserFirstIntro ? { text: userFirstHint, type: 'NORMAL' } : null
-        }
-      />
 
       {children}
 

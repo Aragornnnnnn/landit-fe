@@ -22,7 +22,6 @@
   },
   "partnerBubble": {
     "lastQuestionBadge": "最後の質問です",
-    "instructionCaption": "自分から話しかける場面",
     "replayButton": "もう一度聞く",
     "stopReplayButton": "再生を止める",
     "showTranslationButton": "訳を見る",
@@ -62,6 +61,9 @@
   "conversationWaiting": {
     "exitButton": "会話をやめる"
   },
+  "situationCard": {
+    "label": "自分から話しかける場面"
+  },
   "myBubble": {
     "editLabel": "回答を直す：{text}",
     "editBadge": "修正",
@@ -83,7 +85,6 @@
     "completeFailedToast": "接続に問題があり、会話を終えられませんでした"
   },
   "smallTalkConversation": {
-    "userFirstHint": "気軽にあいさつから始めてみましょう！",
     "exitButton": "会話をやめる",
     "feedbackButton": "フィードバックを見る",
     "remainingTimeLabel": "残り話せる時間 <emphasis>{time}</emphasis>"
@@ -114,7 +115,6 @@
     "closeButton": "閉じる"
   },
   "scenarioTalkFlow": {
-    "userFirstHint": "場面をよく読んで、自分から話しかけてみましょう！",
     "progressLabel": "会話の進み具合",
     "exitButton": "会話をやめる",
     "feedbackButton": "詳しい分析を見ます"

@@ -1,4 +1,4 @@
-// 랜디가 날아들어 속마음을 전하는 연출 — 전면 오버레이(ThoughtOverlay)와 온보딩 박스가 공유하는 속마음 UI
+// 랜디가 날아들어 속마음을 전하는 연출 — 온보딩 박스의 속마음 UI
 'use client';
 
 import { motion } from 'motion/react';

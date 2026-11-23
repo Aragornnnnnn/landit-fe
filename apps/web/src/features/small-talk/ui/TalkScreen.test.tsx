@@ -76,6 +76,31 @@ const renderTalk = (
   );
 
 describe('TalkScreen 대화 칸', () => {
+  it('내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 보인다', () => {
+    const flow = toFlow('USER_READY');
+    render(
+      <TalkScreen
+        sessionId={1}
+        partner="teddy"
+        flow={{
+          ...flow,
+          turn: {
+            ...flow.turn,
+            aiMessage: '오늘 있었던 일을 말해 보세요',
+            isUserOpening: true,
+          },
+        }}
+        summaryPath="/summary"
+        onShowSummary={vi.fn()}
+        onExitRequested={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole('region', { name: '내가 먼저 말해보는 상황' }),
+    ).toHaveTextContent('오늘 있었던 일을 말해 보세요');
+  });
+
   it('끝난 턴의 상대 말과 내 말을 지금 상대 말 위에 쌓아 보여 준다', () => {
     render(
       <TalkScreen

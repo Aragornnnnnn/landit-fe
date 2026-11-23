@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
-import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
@@ -19,8 +18,8 @@ import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { MyBubble } from '@/features/conversation/ui/flow/MyBubble';
 import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
+import { SituationCard } from '@/features/conversation/ui/flow/SituationCard';
 import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
-import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { TranscriptEditor } from '@/features/conversation/ui/flow/TranscriptEditor';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
 import { track } from '@/shared/analytics';
@@ -58,7 +57,6 @@ export const ScenarioTalkFlow = ({
   const [wasCompleted] = useState(scenario.completed);
   // USER 선발화 진입 안내 — 랜디가 먼저 날아들어 말을 걸어보라고 알려주고 잠시 후 사라진다.
   // 판정은 turn.isUserOpening 한 곳에 위임하고(카드 안내 구조와 같은 소스), 여기선 노출 시간만 관리한다.
-  const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
     turnIndex,
@@ -141,14 +139,6 @@ export const ScenarioTalkFlow = ({
       });
     },
   });
-  // 선발화 안내는 대기(USER_READY) 동안만 — 사용자가 말하기 시작하거나 속마음이 오면 즉시 비켜준다
-  const showUserFirstIntro =
-    turn.isUserOpening && phase === 'USER_READY' && !introDismissed;
-  useEffect(() => {
-    if (!showUserFirstIntro) return;
-    const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
-    return () => clearTimeout(timer);
-  }, [showUserFirstIntro]);
   // 캐릭터 자세 — 평소엔 단계를 따르고(대답 준비 중엔 생각하는 자세), 속마음이 말풍선에 뜨면 그 감정 표정이 잠깐 얹힌다
   const characterLook = toCharacterLook(
     preparingAnswer ? 'AI_THINKING' : phase,
@@ -203,33 +193,39 @@ export const ScenarioTalkFlow = ({
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
         <ConversationLog entries={log} latestKey={turnIndex}>
-          {/* 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
-          {!waitingForSound && (
-            <PartnerBubble
-              question={turn.aiMessage}
-              translation={turn.aiTranslation}
-              speaking={phase === 'AI_SPEAKING'}
-              instruction={turn.isUserOpening}
-              lastQuestion={gauge.lastQuestion}
-              onTranslationToggled={(opened) =>
-                track(EVENTS.TRANSLATION_TOGGLED, {
-                  session_id: sessionId ?? undefined,
-                  turn_index: turnIndex,
-                  opened,
-                })
-              }
-              replay={replay}
-              textHidden={display.textHidden}
-              onTextToggled={(visible) =>
-                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                  session_id: sessionId ?? undefined,
-                  turn_index: turnIndex,
-                  hidden: !visible,
-                })
-              }
-              translationDefaultOpen={display.translationDefaultOpen}
-              thought={turn.thought}
+          {/* 내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 둔다. 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
+          {turn.isUserOpening ? (
+            <SituationCard
+              text={turn.aiMessage}
+              alone={!myBubble && !preparingAnswer}
             />
+          ) : (
+            !waitingForSound && (
+              <PartnerBubble
+                question={turn.aiMessage}
+                translation={turn.aiTranslation}
+                speaking={phase === 'AI_SPEAKING'}
+                lastQuestion={gauge.lastQuestion}
+                onTranslationToggled={(opened) =>
+                  track(EVENTS.TRANSLATION_TOGGLED, {
+                    session_id: sessionId ?? undefined,
+                    turn_index: turnIndex,
+                    opened,
+                  })
+                }
+                replay={replay}
+                textHidden={display.textHidden}
+                onTextToggled={(visible) =>
+                  track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                    session_id: sessionId ?? undefined,
+                    turn_index: turnIndex,
+                    hidden: !visible,
+                  })
+                }
+                translationDefaultOpen={display.translationDefaultOpen}
+                thought={turn.thought}
+              />
+            )
           )}
           {guideShown && answerGuide && (
             <AnswerGuide
@@ -309,15 +305,6 @@ export const ScenarioTalkFlow = ({
           />
         )}
       </footer>
-
-      {/* USER 선발화 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 사라진다 */}
-      <ThoughtOverlay
-        thought={
-          showUserFirstIntro
-            ? { text: t('userFirstHint'), type: 'NORMAL' }
-            : null
-        }
-      />
 
       <ExitConfirmSheet
         open={showExitModal}
