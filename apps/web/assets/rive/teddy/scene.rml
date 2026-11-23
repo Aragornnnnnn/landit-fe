@@ -1811,7 +1811,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6014">
@@ -1826,7 +1826,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6015">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
@@ -1841,7 +1841,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6016">
@@ -1856,7 +1856,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6017">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
@@ -2378,7 +2378,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6014">
@@ -2393,7 +2393,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6015">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
@@ -2408,7 +2408,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6016">
@@ -2423,7 +2423,7 @@
             </KeyedObject>
             <KeyedObject objectId="3:6017">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
@@ -2950,27 +2950,27 @@
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
-                </KeyedProperty>
-            </KeyedObject>
-            <KeyedObject objectId="3:6015">
-                <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
+                <KeyedProperty propertyKey="18">
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="3:6015">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="1.1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="1.1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6016">
@@ -2980,27 +2980,27 @@
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
-                </KeyedProperty>
-            </KeyedObject>
-            <KeyedObject objectId="3:6017">
-                <KeyedProperty propertyKey="18">
                     <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
+                <KeyedProperty propertyKey="18">
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
+                </KeyedProperty>
+            </KeyedObject>
+            <KeyedObject objectId="3:6017">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="1.1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="1.1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:7015">
@@ -3517,17 +3517,17 @@
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
@@ -3547,17 +3547,17 @@
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
@@ -5218,17 +5218,17 @@
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6014">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="0.9" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6015">
@@ -5248,17 +5248,17 @@
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="16">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6016">
                 <KeyedProperty propertyKey="17">
-                    <KeyFrameDouble value="0.6" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="1" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
                 <KeyedProperty propertyKey="18">
-                    <KeyFrameDouble value="0.9" frame="0" interpolationType="hold" />
+                    <KeyFrameDouble value="0" frame="0" interpolationType="hold" />
                 </KeyedProperty>
             </KeyedObject>
             <KeyedObject objectId="3:6017">
