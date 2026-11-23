@@ -51,6 +51,25 @@ const BY_THOUGHT: Record<ThoughtType, CharacterExpression> = {
 export const toThoughtExpression = (type: ThoughtType): CharacterExpression =>
   BY_THOUGHT[type];
 
+/** 서버가 판별한 속마음 감정 → 표정. 감정 이름은 서버 계약(ThoughtEmotion) 그대로다 */
+const BY_EMOTION: Record<string, CharacterExpression> = {
+  NEUTRAL: 'neutral',
+  HAPPY: 'happy',
+  FROWN: 'frown',
+  ANGRY: 'angry',
+  SAD: 'sad',
+  LOVE: 'love',
+  SULKY: 'sulky',
+  EMBARRASSED: 'shy',
+};
+
+/** 속마음이 짓게 할 표정. 감정이 있으면 감정을, 없거나 모르는 값이면 종류를 따른다 */
+const expressionOf = ({
+  type,
+  emotion,
+}: FloatingThought): CharacterExpression =>
+  (emotion && BY_EMOTION[emotion]) || toThoughtExpression(type);
+
 /**
  * 지금 캐릭터의 겉모습. 자세는 대화 단계를 따르고,
  * 노출을 막 끝낸 속마음이 있으면 그 감정이 표정으로 잠깐 얹힌다.
@@ -60,7 +79,5 @@ export const toCharacterLook = (
   finishedThought: FloatingThought | null,
 ): CharacterLook => ({
   posture: BY_PHASE[phase],
-  expression: finishedThought
-    ? toThoughtExpression(finishedThought.type)
-    : 'neutral',
+  expression: finishedThought ? expressionOf(finishedThought) : 'neutral',
 });

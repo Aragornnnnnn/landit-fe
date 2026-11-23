@@ -96,3 +96,44 @@ describe('toThoughtExpression', () => {
     expect(toThoughtExpression('NORMAL')).toBe('neutral');
   });
 });
+
+describe('toCharacterLook — 속마음 감정', () => {
+  it('속마음에 감정이 실려 오면 속마음 종류 대신 그 감정의 표정을 짓는다', () => {
+    // given — 서버가 판별한 감정이 종류보다 구체적이다 (긍정이지만 부끄러워한다)
+    const thought: FloatingThought = {
+      ...thoughtOf('GOOD'),
+      emotion: 'EMBARRASSED',
+    };
+
+    // when
+    const { expression } = toCharacterLook('AI_INNER_THOUGHT', thought);
+
+    // then
+    expect(expression).toBe('shy');
+  });
+
+  it('감정이 안 오면 속마음 종류로 표정을 정한다 — 감정을 모르는 이전 서버와도 그대로 동작한다', () => {
+    // given
+    const thought = thoughtOf('GOOD');
+
+    // when
+    const { expression } = toCharacterLook('AI_INNER_THOUGHT', thought);
+
+    // then
+    expect(expression).toBe('happy');
+  });
+
+  it('모르는 감정 값이면 속마음 종류로 표정을 정한다', () => {
+    // given — 서버에 감정이 새로 늘어도 화면이 깨지지 않아야 한다
+    const thought: FloatingThought = {
+      ...thoughtOf('BAD'),
+      emotion: 'CONFUSED',
+    };
+
+    // when
+    const { expression } = toCharacterLook('AI_INNER_THOUGHT', thought);
+
+    // then
+    expect(expression).toBe('frown');
+  });
+});
