@@ -374,6 +374,8 @@ const driveMouth = (
 
   mouth.style.transition = 'none';
   let state = closedMouth;
+  // 같은 값을 다시 쓰면 바뀐 게 없어도 매 프레임 스타일 계산이 돈다 — 쉬는 구간(입 닫힘)이 대부분이라 아낄 게 많다
+  let written = '';
   const nextFrame = () => {
     state = advanceMouth(
       state,
@@ -384,7 +386,8 @@ const driveMouth = (
     );
     const { sx, sy, dy } = state;
     // 원래처럼 SVG 단위 0.1까지만 쓴다 — 더 잘게 쓰면 값이 매 프레임 달라 보여도 그림은 같다
-    mouth.style.transform = `translateY(${y(Number(dy.toFixed(1)))}) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+    const transform = `translateY(${y(Number(dy.toFixed(1)))}) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+    if (transform !== written) mouth.style.transform = written = transform;
     frame = requestAnimationFrame(nextFrame);
   };
   nextFrame();
