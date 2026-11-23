@@ -1,0 +1,97 @@
+{
+  "client": 3,
+  "rigIdBase": 100,
+  "idBase": 6000,
+  "rename": {
+    "eye-left": ["eye-left-ball"],
+    "eye-right": ["eye-right-ball"]
+  },
+  "synthBrows": {
+    "left": [381, 272, 46, 11, "FF1B1817"],
+    "right": [531, 272, 46, 11, "FF1B1817"]
+  },
+  "brow": {
+    "left": "brow-left-stroke",
+    "right": "brow-right-stroke"
+  },
+  "headPivot": [456, 560],
+  "torsoPivot": [472, 805],
+  "mouthPivot": [456, 474],
+  "eyes": {
+    "left": {
+      "contour": "eye-left-ball",
+      "whites": ["eye-left-ball"],
+      "lash": [],
+      "lashArc": [6, "FF1B1817"],
+      "shine": [
+        [390, 326, 7],
+        [373, 352, 3.2]
+      ],
+      "closedArc": [8, "FF1B1817", 6]
+    },
+    "right": {
+      "contour": "eye-right-ball",
+      "whites": ["eye-right-ball"],
+      "lash": [],
+      "lashArc": [6, "FF1B1817"],
+      "shine": [
+        [540, 326, 7],
+        [523, 352, 3.2]
+      ],
+      "closedArc": [8, "FF1B1817", 6]
+    }
+  },
+  "lineThick": 9,
+  "lineColor": "FF762A16",
+  "lowerLineColor": "CC1B1817",
+  "lowerLineThick": 4,
+  "cheeks": [
+    [352, 410],
+    [560, 410]
+  ],
+  "blushSize": [62, 32],
+  "effectsAbove": "muzzle",
+  "anger": [612, 236, 24],
+  "hearts": [
+    [640, 240, 20],
+    [290, 232, 14],
+    [690, 312, 11]
+  ],
+  "mouthScale": 1.55,
+  "eyeScale": 1.75,
+  "browScale": 1.5,
+  "headScale": 0.5,
+  "headRotScale": 0.25,
+  "breath": 0.008,
+  "browFade": true,
+  "override": {
+    "neutral": {
+      "browOp": 0
+    },
+    "happy": {
+      "lidY": 22,
+      "lowY": -34,
+      "browOp": 0
+    },
+    "love": {
+      "browOp": 0
+    },
+    "shy": {
+      "browOp": 0.9
+    },
+    "frown": {},
+    "angry": {},
+    "sulky": {}
+  },
+  "slantLine": [8, "FF1B1817"],
+  "shineByExpr": {
+    "neutral": [1, 1, 1, 1],
+    "happy": [1, 1, 1, 1],
+    "frown": [0, 0.6, 1, 1.1],
+    "angry": [0, 0.6, 1, 1],
+    "sulky": [0, 0.6, 0.9, 1],
+    "sad": [1, 1.15, 1, 1.2],
+    "love": [1, 1.35, 1, 1.4],
+    "shy": [1, 1.25, 1, 1.3]
+  }
+}

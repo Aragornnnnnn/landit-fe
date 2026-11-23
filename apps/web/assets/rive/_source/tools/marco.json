@@ -1,0 +1,77 @@
+{
+  "client": 2,
+  "rigIdBase": 100,
+  "idBase": 6000,
+  "headPivot": [506, 440],
+  "torsoPivot": [506, 650],
+  "mouthPivot": [504, 357],
+  "brow": {
+    "left": "Vector_116",
+    "right": "Vector_91"
+  },
+  "eyes": {
+    "left": {
+      "contour": "Vector_103",
+      "lash": ["Vector_107", "Vector_106", "Vector_105"],
+      "whites": ["Vector_104", "Vector_108"],
+      "mask": ["Vector_103", "Vector_104", "Vector_108"],
+      "closedArc": [4.5, "FF2B2019", 4],
+      "gazeOriginal": {
+        "whites": ["Vector_104", "Vector_108"],
+        "top": ["Vector_109"],
+        "near": [456, 292, 28, 54]
+      },
+      "trim": [451, 295, 45, 44]
+    },
+    "right": {
+      "contour": "Vector_110",
+      "whites": ["Vector_110"],
+      "lash": ["Vector_114", "Vector_113", "Vector_115"],
+      "iris": ["Vector_112", "Vector_111"],
+      "mask": ["Vector_110", "Vector_111"],
+      "closedArc": [4.5, "FF2B2019", 2],
+      "trim": [548.5, 289, 49, 44]
+    }
+  },
+  "remove": [],
+  "lineThick": 6,
+  "lineColor": "FF5C321C",
+  "cheeks": [
+    [436, 333],
+    [567, 331]
+  ],
+  "blushSize": [44, 22],
+  "anger": [606, 196, 15],
+  "hearts": [
+    [602, 214, 13],
+    [412, 200, 9],
+    [634, 262, 7]
+  ],
+  "mouthScale": 1.13,
+  "eyeScale": 1,
+  "browScale": 1,
+  "headScale": 1,
+  "lowerLineColor": "99A4502A",
+  "lowerLineThick": 2.2,
+  "override": {
+    "sad": {
+      "browRot": -0.3,
+      "browX": 2,
+      "browY": -4,
+      "lidY": 0,
+      "lidRot": 0,
+      "gazeX": 0
+    },
+    "shy": {
+      "lidY": 0,
+      "lidRot": 0,
+      "gazeX": 0
+    }
+  },
+  "slantLine": [4.5, "FF2B2019"],
+  "slantHidesLashes": true,
+  "lowerBotExtra": 4,
+  "restOnly": ["Vector_105", "Vector_115"],
+  "gazeScale": 0.35,
+  "gazeYScale": 0
+}
