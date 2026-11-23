@@ -21,7 +21,7 @@ import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
-import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
 import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
@@ -213,7 +213,7 @@ export const TalkScreen = ({
             {waitingForAnswer ? (
               <ThinkingBubble />
             ) : (
-              <QuestionCard
+              <PartnerBubble
                 question={turn.aiMessage}
                 translation={turn.aiTranslation}
                 speaking={phase === 'AI_SPEAKING'}

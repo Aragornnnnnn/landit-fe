@@ -16,7 +16,7 @@ import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmShe
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
-import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -209,7 +209,7 @@ export const ScenarioTalkFlow = ({
           {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
           {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
           <div className="flex min-h-0 flex-1 flex-col pt-2">
-            <QuestionCard
+            <PartnerBubble
               question={turn.aiMessage}
               translation={turn.aiTranslation}
               speaking={phase === 'AI_SPEAKING'}

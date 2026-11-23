@@ -1,4 +1,4 @@
-// QuestionCard — 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
+// PartnerBubble — 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
 import {
   cleanup,
   fireEvent,
@@ -8,14 +8,14 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { QuestionCard } from './QuestionCard';
+import { PartnerBubble } from './PartnerBubble';
 
 afterEach(() => cleanup());
 
-describe('QuestionCard', () => {
+describe('PartnerBubble', () => {
   it('마지막 질문이면 질문 위에 머리말이 보인다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="Anything else?"
         translation={null}
         speaking={false}
@@ -28,7 +28,7 @@ describe('QuestionCard', () => {
 
   it('마지막 질문이 아니면 머리말이 없다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -41,7 +41,7 @@ describe('QuestionCard', () => {
   it('발화가 끝나도 해석은 접힌 채로 시작한다', () => {
     // Given 해석이 있는 발화가 끝난 상태에서
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -54,7 +54,7 @@ describe('QuestionCard', () => {
 
   it('해석 보기를 누르면 해석이 펼쳐진다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -69,7 +69,7 @@ describe('QuestionCard', () => {
   it('펼친 해석은 다시 눌러 접는다', async () => {
     // Given 해석을 펼쳐 둔 카드에서
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -88,7 +88,7 @@ describe('QuestionCard', () => {
   it('다음 질문으로 넘어가면 해석이 다시 접힌 상태로 시작한다', () => {
     // Given 앞 질문에서 해석을 펼쳐 뒀어도
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -98,7 +98,7 @@ describe('QuestionCard', () => {
 
     // When 다음 질문이 오면
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="What did you eat?"
         translation="뭘 드셨어요?"
         speaking={false}
@@ -112,7 +112,7 @@ describe('QuestionCard', () => {
   it('펼치고 접을 때마다 그 상태를 바깥에 알린다', () => {
     const onTranslationToggled = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -129,7 +129,7 @@ describe('QuestionCard', () => {
   it('선발화 안내 카드에는 해석·다시 듣기 자리를 두지 않는다', () => {
     // 선발화 안내는 상대 발화가 아니다 — 해석·다시 듣기를 줘도 카드가 자리를 내주지 않는다
     render(
-      <QuestionCard
+      <PartnerBubble
         question="먼저 인사를 건네보세요"
         translation="Say hello first"
         speaking={false}
@@ -152,7 +152,7 @@ describe('QuestionCard', () => {
   it('다시 듣기를 누르면 그 발화를 다시 재생한다', () => {
     const toggle = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -169,7 +169,7 @@ describe('QuestionCard', () => {
     // Given 상대 발화·내 녹음처럼 enabled가 꺼진 구간 — 버튼은 자리만 지킨다
     const toggle = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -184,7 +184,7 @@ describe('QuestionCard', () => {
 
   it('다시 듣기가 없는 카드에는 버튼도 두지 않는다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -199,7 +199,7 @@ describe('QuestionCard', () => {
   it('해석이 없는 발화도 다시 듣기는 누를 수 있다', () => {
     const toggle = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -214,7 +214,7 @@ describe('QuestionCard', () => {
 
   it('글자를 가린 카드는 영어 문장을 흐리게 가리고, 화면 낭독기에도 읽히지 않게 한다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -235,7 +235,7 @@ describe('QuestionCard', () => {
     // Given 글자를 가린 카드에서
     const onTextToggled = vi.fn();
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -256,7 +256,7 @@ describe('QuestionCard', () => {
 
     // When 다음 질문이 오면 Then 다시 가려진다
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="What did you eat?"
         translation={null}
         speaking={false}
@@ -280,7 +280,7 @@ describe('QuestionCard', () => {
   it('보이는 카드에서 눈 버튼을 누르면 그 카드만 다시 가려진다', () => {
     const onTextToggled = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -301,7 +301,7 @@ describe('QuestionCard', () => {
 
   it('글자를 늘 보이게 둔 대화도 눈 버튼으로 그 카드만 가릴 수 있다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -318,7 +318,7 @@ describe('QuestionCard', () => {
 
   it('가린 채 발화 중이면 전문을 흐리게 두고, 해석 버튼은 발화가 끝나야 나온다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking
@@ -338,7 +338,7 @@ describe('QuestionCard', () => {
   it('해석 펼침 기본값이 늦게 들어와도 아직 손대지 않은 카드엔 반영된다', () => {
     // Given 저장값을 읽기 전(서버 렌더 값)으로 먼저 그려진 카드
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -348,7 +348,7 @@ describe('QuestionCard', () => {
 
     // When 저장된 기본값(펼침)이 들어오면
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -362,7 +362,7 @@ describe('QuestionCard', () => {
 
   it('해석을 펼쳐 두기로 하면 새 질문마다 해석이 펼쳐진 채로 나온다', () => {
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -372,7 +372,7 @@ describe('QuestionCard', () => {
     expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
 
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="What did you eat?"
         translation="뭘 드셨어요?"
         speaking={false}
@@ -401,7 +401,7 @@ describe('QuestionCard', () => {
 
     // When 발화가 시작돼 한 프레임이 흐르면
     render(
-      <QuestionCard
+      <PartnerBubble
         question={'A long opening line. '.repeat(40)}
         translation="아주 긴 발화"
         speaking

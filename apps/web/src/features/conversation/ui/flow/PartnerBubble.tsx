@@ -1,4 +1,4 @@
-// 질문 카드 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐보거나 그 발화를 다시 들을 수 있다.
+// 상대 말풍선 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐보거나 그 발화를 다시 들을 수 있다.
 // 말풍선은 발화 길이만큼만 차지한다 — 짧은 말에 큰 풍선이 붙으면 어색하고, 내 답변과의 사이는 비어도 괜찮다.
 // 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 화면이 계속 달라져 산만하다.
 // 남은 자리를 다 쓰는 긴 발화만 안쪽 글자가 스크롤된다.
@@ -20,7 +20,7 @@ import { TypingCursor } from './TypingCursor';
 // 카드 위·아래 흐림 폭(마스크 그라데이션의 1.5rem과 같은 값) — 말하는 줄이 흐림에 걸리지 않게 그만큼 띄운다
 const fadeEdgePx = 24;
 
-interface QuestionCardProps {
+interface PartnerBubbleProps {
   question: string;
   translation: string | null;
   speaking: boolean;
@@ -69,7 +69,7 @@ const CardIconButton = ({
   </button>
 );
 
-export const QuestionCard = ({
+export const PartnerBubble = ({
   question,
   translation,
   speaking,
@@ -80,8 +80,8 @@ export const QuestionCard = ({
   translationDefaultOpen = false,
   textHidden = false,
   onTextToggled,
-}: QuestionCardProps) => {
-  const t = useTranslations('conversation.questionCard');
+}: PartnerBubbleProps) => {
+  const t = useTranslations('conversation.partnerBubble');
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
   const [typed, setTyped] = useState({ question, count: 0 });
   const count = typed.question === question ? typed.count : 0;
