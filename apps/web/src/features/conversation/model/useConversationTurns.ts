@@ -14,6 +14,7 @@ import type { TtsVoice } from '@/shared/tts/voice';
 import { showToast } from '@/shared/ui/toast';
 
 import type { NextMessage, SubmittedMessage } from '../api/session';
+import { recordExchange, type LogEntry } from './conversation-log';
 import {
   canInterruptSpeech,
   initialConversationState,
@@ -112,6 +113,10 @@ export const useConversationTurns = ({
   // 위와 같은 값을 화면용으로 — 종료 인사 중엔 끊기 버튼을 열지 않는다
   const [closing, setClosing] = useState(false);
   const nextMessageRef = useRef<TurnNextMessage | null>(null);
+  // 서버에 전달된 이번 턴의 내 말 — 턴이 넘어갈 때 기록에 남긴다
+  const answeredRef = useRef<string | null>(null);
+  // 끝난 턴들의 상대 말과 내 말 — 대화 칸이 지금 차례 위로 쌓아 보여 준다
+  const [log, setLog] = useState<LogEntry[]>([]);
   const submittingRef = useRef(false); // 중복 제출 방지 (연출은 AI_THINKING phase가 맡는다)
   const abandonedRef = useRef(false); // 대화를 떠났는가 — 재전송을 멈추고 늦은 실패도 버린다
   // 끝내 전달되지 못한 답변 — 서버는 같은 턴에 다른 문장을 거절하므로 새로 말하게 하지 않고 이것만 다시 보낸다
@@ -194,6 +199,13 @@ export const useConversationTurns = ({
     event: 'INNER_THOUGHT_DONE' | 'AI_RESPONSE_SKIPPED',
   ) => {
     input.resetForNextTurn();
+    // 지금 차례의 상대 말과 방금 보낸 내 말을 기록으로 넘긴다 — 내가 먼저 건 첫 턴은 상대 말 없이 내 말만
+    const answered = answeredRef.current;
+    answeredRef.current = null;
+    if (answered != null)
+      setLog((prev) =>
+        recordExchange(prev, currentMessage?.content ?? null, answered),
+      );
     if (event === 'INNER_THOUGHT_DONE' && thought) setFinishedThought(thought);
     setThought(null);
     if (nextMessageRef.current) {
@@ -264,6 +276,7 @@ export const useConversationTurns = ({
       // 호출자가 이 턴을 스스로 접었다(예: 대화를 나가는 중) — 다음 연출을 이어붙이지 않는다
       if (!res || abandonedRef.current) return;
       setUnsent(null);
+      answeredRef.current = content;
       // 종료 인사도 nextMessage로 오고, 그 인사를 끝으로 종료인지는 completed가 알려준다 (인사 재생 후 CTA)
       nextMessageRef.current = res.nextMessage;
       completedRef.current = res.completed;
@@ -345,6 +358,7 @@ export const useConversationTurns = ({
     phase: state.phase,
     turnIndex: state.turnIndex,
     turn,
+    log,
     finishedThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
     speech: aiSpeech.speech,
