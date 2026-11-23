@@ -71,6 +71,12 @@
   "conversationWaiting": {
     "exitButton": "대화 나가기"
   },
+  "myBubble": {
+    "editLabel": "답변 고치기: {text}",
+    "editBadge": "수정",
+    "editHint": "말한 내용과 다르면 눌러서 고칠 수 있어요",
+    "unsentLabel": "보내지 못한 답변"
+  },
   "conversationTurns": {
     "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요",
     "unsentToast": "연결이 불안정해 답변을 보내지 못했어요"

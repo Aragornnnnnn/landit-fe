@@ -18,6 +18,10 @@ export const PartnerBubbleShell = ({
   </div>
 );
 
+/** 내 말풍선의 모양 — 오른위 꼬리·옅은 그림자. 지금 차례의 내 말풍선(MyBubble)이 보낸 뒤 지난 대화로 넘어가도 모양이 그대로 이어진다 */
+export const MY_BUBBLE_SHAPE =
+  'max-w-[280px] rounded-[18px] rounded-tr-md px-3.5 py-[9px] shadow-[0_4px_14px_rgba(0,0,0,0.06)]';
+
 /** 끝난 턴의 말 — 다시 듣기·해석·가리기 없이 대사만 둔다. 지금 차례의 말풍선보다 눈에 덜 띄어야 한다 */
 export const PastBubble = ({
   speaker,
@@ -33,7 +37,7 @@ export const PastBubble = ({
       </p>
     </PartnerBubbleShell>
   ) : (
-    <div className="max-w-[280px] self-end rounded-[18px] rounded-tr-md bg-bubble-mine px-3.5 py-[9px] shadow-[0_4px_14px_rgba(0,0,0,0.06)]">
+    <div className={`self-end bg-bubble-mine ${MY_BUBBLE_SHAPE}`}>
       <p className="text-16 leading-[1.35] font-medium break-words text-foreground">
         {text}
       </p>
