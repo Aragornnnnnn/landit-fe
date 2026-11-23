@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
-import type { FloatingThought } from '@/features/conversation/model/thought';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
@@ -18,6 +17,7 @@ import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
 import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
+import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -63,8 +63,9 @@ export const ScenarioTalkFlow = ({
     turn,
     log,
     partner,
-    finishedThought,
+    expressedThought,
     speech,
+    waitingForSound,
     replay,
     interruptible,
     input,
@@ -75,10 +76,7 @@ export const ScenarioTalkFlow = ({
     answerGuide,
     markGuideViewed,
   } = useScenarioTalkFlow(scenario);
-  useBackPress(() => {
-    // 답을 기다리는 연출이 X를 가린 동안은 뒤로가기도 받지 않는다
-    if (phase !== 'AI_THINKING') requestExit();
-  });
+  useBackPress(() => requestExit());
   const {
     transcript,
     speechPending,
@@ -140,16 +138,13 @@ export const ScenarioTalkFlow = ({
     const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
     return () => clearTimeout(timer);
   }, [showUserFirstIntro]);
-  // 속마음 오버레이 내용 — 선발화 안내가 우선, 다음이 속마음, 그 외엔 안 띄운다
-  const resolveOverlayThought = (): FloatingThought | null => {
-    if (showUserFirstIntro) return { text: t('userFirstHint'), type: 'NORMAL' };
-    if (phase === 'AI_INNER_THOUGHT')
-      return { text: turn.innerThought, type: turn.innerThoughtType };
-    return null;
-  };
-  const overlayThought = resolveOverlayThought();
-  // 캐릭터 자세 — 평소엔 단계를 따르고, 속마음이 끝난 직후에만 그 감정 표정이 잠깐 스친다
-  const characterLook = toCharacterLook(phase, finishedThought);
+  // 상대가 대답을 준비하는 중 — 답을 기다리거나, 대답은 왔지만 소리가 아직 안 났다. 그동안 대화 칸엔 점 말풍선을 띄운다
+  const preparingAnswer = phase === 'AI_THINKING' || waitingForSound;
+  // 캐릭터 자세 — 평소엔 단계를 따르고(대답 준비 중엔 생각하는 자세), 속마음이 말풍선에 뜨면 그 감정 표정이 잠깐 얹힌다
+  const characterLook = toCharacterLook(
+    preparingAnswer ? 'AI_THINKING' : phase,
+    expressedThought,
+  );
   // 대화 종료 후 CTA를 누르면 피드백 라우트로 넘어간다. 대화는 끝났으니 히스토리에서 지운다(replace) —
   // 뒤로가기로 종료된 대화에 다시 들어와 세션이 새로 시작되지 않게
   const feedbackPath = scenarioFeedbackPath(scenario.scenarioId, {
@@ -203,30 +198,35 @@ export const ScenarioTalkFlow = ({
           latestKey={turnIndex}
           hidden={keyboardLifted}
         >
-          <PartnerBubble
-            question={turn.aiMessage}
-            translation={turn.aiTranslation}
-            speaking={phase === 'AI_SPEAKING'}
-            instruction={turn.isUserOpening}
-            lastQuestion={gauge.lastQuestion}
-            onTranslationToggled={(opened) =>
-              track(EVENTS.TRANSLATION_TOGGLED, {
-                session_id: sessionId ?? undefined,
-                turn_index: turnIndex,
-                opened,
-              })
-            }
-            replay={replay}
-            textHidden={display.textHidden}
-            onTextToggled={(visible) =>
-              track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                session_id: sessionId ?? undefined,
-                turn_index: turnIndex,
-                hidden: !visible,
-              })
-            }
-            translationDefaultOpen={display.translationDefaultOpen}
-          />
+          {/* 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
+          {!waitingForSound && (
+            <PartnerBubble
+              question={turn.aiMessage}
+              translation={turn.aiTranslation}
+              speaking={phase === 'AI_SPEAKING'}
+              instruction={turn.isUserOpening}
+              lastQuestion={gauge.lastQuestion}
+              onTranslationToggled={(opened) =>
+                track(EVENTS.TRANSLATION_TOGGLED, {
+                  session_id: sessionId ?? undefined,
+                  turn_index: turnIndex,
+                  opened,
+                })
+              }
+              replay={replay}
+              textHidden={display.textHidden}
+              onTextToggled={(visible) =>
+                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                  session_id: sessionId ?? undefined,
+                  turn_index: turnIndex,
+                  hidden: !visible,
+                })
+              }
+              translationDefaultOpen={display.translationDefaultOpen}
+              thought={turn.thought}
+            />
+          )}
+          {preparingAnswer && <ThinkingBubble />}
         </ConversationLog>
 
         {/* 답변 칸은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
@@ -310,11 +310,13 @@ export const ScenarioTalkFlow = ({
         )}
       </footer>
 
-      {/* 속마음 — 화면 전체를 덮는 전면 연출. 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다.
-          USER 선발화 진입 시엔 같은 연출로 랜디가 먼저 안내하고 사라진다 */}
+      {/* USER 선발화 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 사라진다 */}
       <ThoughtOverlay
-        loading={phase === 'AI_THINKING'}
-        thought={overlayThought}
+        thought={
+          showUserFirstIntro
+            ? { text: t('userFirstHint'), type: 'NORMAL' }
+            : null
+        }
       />
 
       <ExitConfirmSheet

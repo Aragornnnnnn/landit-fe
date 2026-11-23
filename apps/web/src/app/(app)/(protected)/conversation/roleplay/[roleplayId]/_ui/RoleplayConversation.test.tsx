@@ -42,7 +42,7 @@ const flow = {
   turnIndex: 1,
   log: [],
   turn: { aiMessage: 'Hi', aiTranslation: null, isUserOpening: false },
-  finishedThought: null,
+  expressedThought: null,
   speech: {},
   replay: undefined,
   input: { transcript: '', keyboardMode: false },
