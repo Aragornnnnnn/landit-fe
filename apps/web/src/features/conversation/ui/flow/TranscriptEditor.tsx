@@ -60,11 +60,13 @@ export const TranscriptEditor = ({
   // 밖을 누른 뒤 입력창을 떠나는 신호가 이어 와도 한 번만 닫는다. 보냈거나 화면에서 빠질 때도 닫지 않는다 —
   // 입력창이 사라지며 오는 떠남 신호로 보낸 글이 확인 단계에 남지 않게
   const closedRef = useRef(false);
-  const close = useEffectEvent(() => {
+  const close = () => {
     if (closedRef.current) return;
     closedRef.current = true;
     onClose?.();
-  });
+  };
+  // 문서에 한 번 붙여 두는 바깥 누름 감지가 최신 onClose를 부르도록
+  const closeFromOutside = useEffectEvent(close);
   const submit = () => {
     if (!text.trim()) return;
     closedRef.current = true;
@@ -94,7 +96,7 @@ export const TranscriptEditor = ({
         event.clientY - pressedAt.y,
       );
       pressedAt = null;
-      if (moved <= TAP_SLOP_PX) close();
+      if (moved <= TAP_SLOP_PX) closeFromOutside();
     };
     document.addEventListener('pointerdown', rememberOutsidePress);
     document.addEventListener('pointerup', closeOnOutsideTap);
