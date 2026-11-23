@@ -5,3 +5,10 @@ export interface FloatingThought {
   text: string;
   type: ThoughtType;
 }
+
+/**
+ * 상대 말풍선 맨 위 속마음 줄 — 오는 중이면 뼈대(pending), 오면 글(shown).
+ * 속마음이 없는 대화나 생성에 실패한 턴은 줄 자체를 두지 않는다(null)
+ */
+export type BubbleThought =
+  { status: 'pending' } | ({ status: 'shown' } & FloatingThought);
