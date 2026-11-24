@@ -1,6 +1,6 @@
-// PartnerCharacter — 립싱크 입력이 음량 표 상태에 따라 어떻게 바뀌는지 검증한다
+// PartnerCharacter — 립싱크 입력이 음량 표 상태에 따라 어떻게 바뀌는지, 표정 데이터를 못 받으면 정지 그림으로 대신하는지 검증한다
 // @vitest-environment jsdom
-import { act, cleanup, render } from '@testing-library/react';
+import { act, cleanup, render, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { PlayingSpeech } from '../../model/useAiSpeech';
@@ -18,6 +18,14 @@ vi.mock('../../model/lipsync', async (importOriginal) => {
     loadLoudnessTrack: lipsync.loadLoudnessTrack,
     advanceMouth: lipsync.advanceMouth,
   };
+});
+
+const monitoring = vi.hoisted(() => ({ reportWarning: vi.fn() }));
+vi.mock('@/shared/monitoring/report', () => monitoring);
+
+// 마르코 표정 데이터는 받아 오기에 실패하는 상황으로 둔다
+vi.mock('./expressions/marco.json', () => {
+  throw new Error('chunk load failed');
 });
 
 const speech: PlayingSpeech = {
@@ -102,5 +110,28 @@ describe('PartnerCharacter 립싱크', () => {
 
     // Then
     expect(lastArticulation()).toHaveLength(100);
+  });
+});
+
+describe('PartnerCharacter 표정 데이터', () => {
+  afterEach(cleanup);
+
+  it('표정 데이터를 못 받으면 정지 그림으로 대신 보여주고 보고한다', async () => {
+    // Given — 마르코 데이터는 실패한다
+
+    // When
+    const { container } = render(
+      <PartnerCharacter
+        partner="marco"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+
+    // Then
+    await waitFor(() =>
+      expect(container.querySelector('#head')).not.toBeNull(),
+    );
+    expect(monitoring.reportWarning).toHaveBeenCalled();
   });
 });

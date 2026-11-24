@@ -6,6 +6,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 
+import { reportWarning } from '@/shared/monitoring/report';
+
 import type { CharacterLook, Partner } from '../../model/character-look';
 import {
   advanceMouth,
@@ -17,6 +19,7 @@ import {
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
 import { ExpressionPlayer, type ExpressionData } from './expression-player';
+import { PartnerAvatar } from './PartnerAvatar';
 import styles from './PartnerCharacter.module.css';
 import { VIEWBOX } from './parts-by-partner';
 
@@ -216,6 +219,7 @@ export const PartnerCharacter = ({
   // 3겹(끄덕임·입 흉내)은 모션을 줄이는 설정에서 빠진다. 입모양은 소리를 따라가는 정보라 남긴다
   const stillness = useReducedMotion() ?? false;
   const [ready, setReady] = useState(0);
+  const [loadFailed, setLoadFailed] = useState(false);
   const frameBox = viewBox ?? VIEWBOX[partner];
 
   // 프레임 콜백이 매번 새로 읽는 값 — 바뀔 때마다 플레이어를 다시 만들지 않는다
@@ -233,29 +237,40 @@ export const PartnerCharacter = ({
 
   useEffect(() => {
     let alive = true;
-    void LOADERS[partner]().then((data) => {
-      const host = hostRef.current;
-      if (!alive || !host) return;
-      const player = new ExpressionPlayer(host, data, { ambient: !stillness });
-      player.setExpression(live.current.expression, { instant: true });
-      const motion = createMotion();
-      player.onFrame = (dt) => {
-        const { posture: now, stillness: still, mouth } = live.current;
-        const tiltTarget = now === 'listening' && !still ? LISTENING.tilt : 0;
-        motion.tilt +=
-          (tiltTarget - motion.tilt) * Math.min(1, dt * LISTENING.follow);
-        const nod = now === 'listening' && !still ? stepNodding(motion, dt) : 0;
-        player.adjust('head', 'rotation', { add: motion.tilt });
-        player.adjust('head', 'y', { add: nod });
-        if (mouth) showMouth(player, mouth);
-        else if (now === 'speaking' && !still)
-          showMouth(player, stepMiming(motion, dt));
-        else releaseMouth(player);
-      };
-      playerRef.current = player;
-      player.start();
-      setReady((n) => n + 1);
-    });
+    void LOADERS[partner]().then(
+      (data) => {
+        const host = hostRef.current;
+        if (!alive || !host) return;
+        const player = new ExpressionPlayer(host, data, {
+          ambient: !stillness,
+        });
+        player.setExpression(live.current.expression, { instant: true });
+        const motion = createMotion();
+        player.onFrame = (dt) => {
+          const { posture: now, stillness: still, mouth } = live.current;
+          const tiltTarget = now === 'listening' && !still ? LISTENING.tilt : 0;
+          motion.tilt +=
+            (tiltTarget - motion.tilt) * Math.min(1, dt * LISTENING.follow);
+          const nod =
+            now === 'listening' && !still ? stepNodding(motion, dt) : 0;
+          player.adjust('head', 'rotation', { add: motion.tilt });
+          player.adjust('head', 'y', { add: nod });
+          if (mouth) showMouth(player, mouth);
+          else if (now === 'speaking' && !still)
+            showMouth(player, stepMiming(motion, dt));
+          else releaseMouth(player);
+        };
+        playerRef.current = player;
+        player.start();
+        setReady((n) => n + 1);
+      },
+      (error: unknown) => {
+        // 표정 데이터를 못 받으면 움직임 없는 그림으로 대신한다 — 대화는 캐릭터 없이도 이어진다
+        if (!alive) return;
+        reportWarning(error, { partner });
+        setLoadFailed(true);
+      },
+    );
     return () => {
       alive = false;
       playerRef.current?.stop();
@@ -277,6 +292,13 @@ export const PartnerCharacter = ({
       live.current.mouth = state;
     });
   }, [speech]);
+
+  if (loadFailed)
+    return (
+      <div className={styles.root}>
+        <PartnerAvatar partner={partner} viewBox={frameBox} />
+      </div>
+    );
 
   return (
     <div className={styles.root}>
