@@ -265,7 +265,7 @@ export const PartnerCharacter = ({
         setReady((n) => n + 1);
       },
       (error: unknown) => {
-        // 표정 데이터를 못 받으면 움직임 없는 그림으로 대신한다 — 대화는 캐릭터 없이도 이어진다
+        // 표정 데이터를 못 받으면 표정 없는 파츠 그림(CSS 숨쉬기만 돈다)으로 대신한다 — 대화는 표정 없이도 이어진다
         if (!alive) return;
         reportWarning(error, { partner });
         setLoadFailed(true);
