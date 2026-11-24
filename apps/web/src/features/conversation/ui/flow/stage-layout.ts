@@ -1,6 +1,6 @@
 // 대화 무대 배치 계약 — 캐릭터 얼굴 크기와 턱 선(대화 칸이 시작하는 높이)을 화면 높이로 정하는 CSS 길이
 //
-// 무대(CharacterStage)와 대화 칸이 같은 식을 쓴다. 대화 칸은 STAGE_CHIN_LINE부터 그리면 캐릭터 턱 바로 아래에서 시작한다.
+// 무대(CharacterStage)와 대화 칸이 같은 식을 쓴다. 대화 칸은 CHAT_TOP_LINE(턱 선에서 조금 아래)부터 그린다.
 // 값은 화면 위 끝 기준 CSS 길이 식이라 style의 top·height·padding 어디에든 그대로 넣는다(JS 측정·리렌더 없음).
 // 키보드는 레이아웃 높이를 줄이지 않는 웹뷰라(useKeyboardInset 참고) 키보드가 떠도 값이 바뀌지 않는다.
 import { STAGE_FRAME } from '../character/stage-frame';
@@ -23,8 +23,14 @@ const FACES_ABOVE_CHIN = STAGE_FRAME.chinY / STAGE_FRAME.face;
 /** 얼굴 크기(눈→턱 px). 화면 높이 몫을 쓰되, 턱 아래 자리가 모자라면 그만큼 줄인다 */
 const STAGE_FACE = `max(${MIN_FACE}, min(${FACE_SHARE_OF_HEIGHT}, calc((100dvh - ${MIN_SPACE_BELOW_CHIN} - ${HEAD_TOP}) / ${FACES_ABOVE_CHIN})))`;
 
-/** 턱 선 — 화면 위 끝에서 캐릭터 턱 끝까지. 대화 칸은 여기서 시작한다 */
+/** 턱 선 — 화면 위 끝에서 캐릭터 턱 끝까지 */
 export const STAGE_CHIN_LINE = `calc(${HEAD_TOP} + ${FACES_ABOVE_CHIN} * ${STAGE_FACE})`;
+
+// 턱과 대화 칸 사이 틈 — 칸 위 끝 흐림이 턱에 바로 붙으면 말풍선이 얼굴을 누르는 듯 답답해서 조금 띄운다
+const CHAT_GAP_BELOW_CHIN = '20px';
+
+/** 대화 칸이 시작하는 선 — 턱 선에서 조금 아래. 무대 자리와 스켈레톤이 이 높이를 차지한다 */
+export const CHAT_TOP_LINE = `calc(${STAGE_CHIN_LINE} + ${CHAT_GAP_BELOW_CHIN})`;
 
 /** 무대 바닥색 — 위는 밝고 아래로 갈수록 회색. 앱 배경(gray-50)보다 한 톤 깊어 캐릭터가 바닥에 선 느낌을 준다. 스켈레톤도 같은 색을 깐다 */
 export const STAGE_BACKGROUND_CLASS =

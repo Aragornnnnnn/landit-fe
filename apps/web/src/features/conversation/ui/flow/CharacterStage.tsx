@@ -1,4 +1,4 @@
-// 캐릭터 무대 — 대화 상대가 전신으로 서 있는 화면 전체 배경. 대화 칸은 턱 선(STAGE_CHIN_LINE) 아래에 놓인다
+// 캐릭터 무대 — 대화 상대가 전신으로 서 있는 화면 전체 배경. 대화 칸은 턱 선에서 조금 아래(CHAT_TOP_LINE)에 놓인다
 'use client';
 
 import type { CSSProperties } from 'react';
@@ -10,8 +10,8 @@ import { PartnerCharacter } from '../character/PartnerCharacter';
 import { STAGE_VIEWBOX } from '../character/parts-by-partner';
 import {
   CHARACTER_BOX,
+  CHAT_TOP_LINE,
   STAGE_BACKGROUND_CLASS,
-  STAGE_CHIN_LINE,
   STAGE_SWAY_TURN,
 } from './stage-layout';
 
@@ -31,7 +31,7 @@ interface CharacterStageProps {
 
 /**
  * 두 겹이다.
- * - 자리 — 화면 흐름 안에서 턱 선 높이만큼 차지해, 뒤따르는 대화 칸이 턱 바로 아래에서 시작한다.
+ * - 자리 — 화면 흐름 안에서 대화 칸 시작선 높이만큼 차지해, 뒤따르는 대화 칸이 턱 조금 아래에서 시작한다.
  *   키보드가 올라와 자리가 모자랄 때만 먼저 줄어든다(줄어드는 비율 1000). 닫기(X)가 위에 떠 있어 그 높이 밑으로는 줄지 않는다.
  * - 배경 — 자리에서 화면 바닥까지 뻗는 그림. 대화 칸 뒤로 깔리도록 -z로 둔다(화면 루트가 isolate여야 앱 배경 위에 그려진다).
  *   크기가 화면으로 정해져 있어 contain: strict로 가둔다 — 대화 칸 글자가 바뀌어도 무대는 다시 배치·페인트하지 않는다.
@@ -45,7 +45,7 @@ export const CharacterStage = ({
   <div
     className="relative w-full flex-none shrink-[1000]"
     style={{
-      height: STAGE_CHIN_LINE,
+      height: CHAT_TOP_LINE,
       minHeight: 'calc(3.5rem + max(var(--safe-area-inset-top), 8px))',
     }}
   >
