@@ -118,8 +118,8 @@ const CorrectedBubble = ({
   </div>
 );
 
-// 고친 문장 하나 — 원문의 틀린 부분은 회색 취소선, 그 아래 → 고친 문장(바뀐 부분만 초록), 회색 팁.
-// 장기기억을 근거로 고쳤으면 그 근거를 흰 알약으로 붙인다
+// 고친 문장 하나 — 원문의 틀린 부분은 옅은 회색 취소선(뒤로 물러나게), 그 아래 검정 → 고친 문장(바뀐 부분만 초록), 회색 팁.
+// 장기기억을 근거로 고쳤으면 그 출처를 팁 아래 한 줄로 붙인다
 const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
   const correction = sentence.correction!;
   return (
@@ -129,21 +129,17 @@ const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
           text={sentence.text}
           ranges={sentence.strikes}
           as="del"
-          className="text-muted-foreground"
+          className="text-muted-foreground/70"
         />
       </p>
       <p className="mt-2 flex gap-1.5 text-16 leading-[1.35] font-bold text-foreground">
-        <ArrowRightIcon
-          size={16}
-          strokeWidth={2.5}
-          className="mt-1 shrink-0 text-success"
-        />
+        <ArrowRightIcon size={16} strokeWidth={2.5} className="mt-1 shrink-0" />
         <span>
           <MarkedText
             text={correction.fixed}
             ranges={correction.changes}
             as="ins"
-            className="text-success no-underline"
+            className="text-correction no-underline"
           />
         </span>
       </p>
@@ -151,9 +147,10 @@ const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
         {correction.tip}
       </p>
       {correction.memory && (
-        // 연한 주황 바탕에선 초록 글씨가 묻혀 흰 알약에 담는다
-        <p className="mt-2 ml-[22px] inline-block rounded-full bg-card px-2.5 py-1 text-12 font-semibold text-success">
-          <Emoji>🗓️</Emoji> {correction.memory.label}
+        // 팁이 이미 근거를 말하므로 출처는 팁 아래 한 줄로 단다 — 말풍선 안엔 알약을 두지 않고, 팁보다 진하게 해 묻히지 않게 한다
+        <p className="mt-2 ml-[22px] flex items-center gap-1 text-13 font-semibold text-foreground/75">
+          <Emoji>🗓️</Emoji>
+          {correction.memory.label}
         </p>
       )}
     </div>
@@ -202,7 +199,28 @@ const HighlightedContent = ({
   );
 };
 
-// 말풍선 아래 연초록 한 줄 — 배운 표현을 실제로 썼다는 표시
+// 말풍선 아래에 붙는 상태 알약 — 같은 크기와 글씨를 쓰고 색만 뜻대로 바꾼다. 알약은 말풍선 밖에만 둔다.
+// 배운 표현은 초록, 잘한 것은 파랑(피드백 상세와 같은 토큰)
+const PILL_TONE = {
+  reused: 'bg-success/10 text-success',
+  good: 'bg-good/10 text-good',
+} as const;
+
+const Pill = ({
+  tone,
+  children,
+}: {
+  tone: keyof typeof PILL_TONE;
+  children: React.ReactNode;
+}) => (
+  <p
+    className={`flex w-fit items-center gap-1 rounded-full px-3 py-1.5 text-12 font-semibold ${PILL_TONE[tone]}`}
+  >
+    {children}
+  </p>
+);
+
+// 배운 표현을 실제로 썼다는 표시
 const ReusedExpressionTag = ({
   expression,
 }: {
@@ -210,20 +228,20 @@ const ReusedExpressionTag = ({
 }) => {
   const t = useTranslations('smallTalk.transcript');
   return (
-    <p className="flex items-center gap-1 rounded-full bg-success/10 px-3 py-1.5 text-12 font-semibold text-success">
+    <Pill tone="reused">
       <CheckIcon size={12} strokeWidth={3} />
       {t('reusedExpressionBadge', { expression: expression.text })}
-    </p>
+    </Pill>
   );
 };
 
-// 고칠 게 없던 말 — 배운 표현 태그와 같은 알약, 색만 파랑(잘한 것을 파랑으로 쓰는 피드백 상세와 같은 토큰)
+// 고칠 게 없던 말
 const GoodJobTag = () => {
   const t = useTranslations('smallTalk.transcript');
   return (
-    <p className="flex items-center gap-1 rounded-full bg-good/10 px-3 py-1.5 text-12 font-semibold text-good">
+    <Pill tone="good">
       <CheckIcon size={12} strokeWidth={3} />
       {t('goodJobBadge')}
-    </p>
+    </Pill>
   );
 };

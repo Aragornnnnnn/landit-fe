@@ -47,6 +47,7 @@
   --color-backdrop: var(--backdrop);
   --color-selected: var(--selected);
   --color-bubble-mine: var(--bubble-mine);
+  --color-correction: var(--correction);
   --color-bubble-mine-live: var(--bubble-mine-live);
   --color-awkward: var(--awkward);
   --color-awkward-ink: var(--awkward-ink);
@@ -196,6 +197,8 @@
   --bubble-mine: var(--orange-100);
   /* 아직 보내지 않은 내 말풍선(말하는 중·말한 뒤 확인)의 테두리 — 보내면 테두리 없이 연한 주황으로 굳는다 */
   --bubble-mine-live: var(--orange-200);
+  /* 대화 기록에서 고친 문장의 바뀐 부분 — 연한 주황 말풍선 위에서도 탁하지 않게 success보다 맑은 초록 */
+  --correction: var(--green-450);
   --star-filled: var(--amber-400);
   --star-empty: var(--gray-300);
   /* 스트릭 — 달력의 이어진 구간 띠 (피그마 스트릭 Flow 스펙) */
