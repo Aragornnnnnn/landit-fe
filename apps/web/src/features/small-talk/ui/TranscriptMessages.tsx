@@ -119,7 +119,7 @@ const CorrectedBubble = ({
 );
 
 // 고친 문장 하나 — 원문의 틀린 부분은 옅은 회색 취소선(뒤로 물러나게), 그 아래 검정 → 고친 문장(바뀐 부분만 초록), 회색 팁.
-// 장기기억을 근거로 고쳤으면 그 출처를 팁 아래 한 줄로 붙인다
+// 장기기억을 근거로 고쳤으면 그 출처를 팁 아래 칩으로 붙인다
 const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
   const correction = sentence.correction!;
   return (
@@ -147,8 +147,8 @@ const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
         {correction.tip}
       </p>
       {correction.memory && (
-        // 팁이 이미 근거를 말하므로 출처는 팁 아래 한 줄로 단다 — 말풍선 안엔 알약을 두지 않고, 팁보다 진하게 해 묻히지 않게 한다
-        <p className="mt-2 ml-[22px] flex items-center gap-1 text-13 font-semibold text-foreground/75">
+        // 출처는 팁 아래 반투명 흰 칩으로 단다 — 바탕이 비쳐 말풍선에 녹고, 덜 둥글게 해 말풍선 밖 상태 알약과 갈린다
+        <p className="mt-2 ml-[22px] flex w-fit items-center gap-1 rounded-lg bg-card/70 px-2 py-1 text-13 font-semibold text-foreground/75">
           <Emoji>🗓️</Emoji>
           {correction.memory.label}
         </p>
