@@ -30,11 +30,11 @@ export type TranscriptMessage = Pick<
   | 'correctionStatus'
 >;
 
-// 상대 말은 왼쪽에 번역까지 — 교정·표현 재사용은 내 말에만 있는 것이라 여기엔 아무것도 안 붙는다
+// 상대 말은 대화 화면의 상대 말풍선과 같은 흰 바탕·왼위 꼬리로, 번역까지 — 교정·표현 재사용은 내 말에만 있는 것이라 여기엔 아무것도 안 붙는다
 export const PartnerMessage = ({ message }: { message: TranscriptMessage }) => (
   <div className="flex justify-start">
-    <div className="max-w-[78%] rounded-2xl bg-card px-4 py-3 shadow-sm">
-      <p className="text-15 leading-6 font-medium text-foreground">
+    <div className="max-w-[78%] rounded-[18px] rounded-tl-md bg-card px-3.5 py-[9px] shadow-[0_4px_14px_rgba(0,0,0,0.08)]">
+      <p className="text-16 leading-[1.35] font-bold text-foreground">
         {message.content}
       </p>
       {message.translatedContent && (
@@ -47,7 +47,7 @@ export const PartnerMessage = ({ message }: { message: TranscriptMessage }) => (
 );
 
 // 내 말은 오른쪽에 — 내가 한 말은 번역이 필요 없다.
-// 고친 문장이 없으면 주황 말풍선에 원문만, 있으면 연한 주황 말풍선 안에서 문장별로 고쳐 보여 준다(흰 글씨 위엔 초록·회색이 안 읽혀 채움을 옅게 한다).
+// 대화 화면의 지난 내 말풍선과 같은 연한 주황·오른위 꼬리로 그린다. 고친 문장이 없으면 원문만, 있으면 문장별로 고쳐 보여 준다.
 // 그 아래에 배운 표현 태그 → (교정을 아직 만드는 중이면 찾는 중 한 줄) → (고칠 게 없었으면 잘했어요) 순으로 붙는다
 export const MyMessage = ({
   message,
@@ -70,8 +70,8 @@ export const MyMessage = ({
           className={lateCorrection ? 'animate-fade-up' : ''}
         />
       ) : (
-        <div className="max-w-[78%] rounded-2xl bg-primary px-4 py-3 text-white">
-          <p className="text-15 leading-6 font-medium">
+        <div className="max-w-[78%] rounded-[18px] rounded-tr-md bg-bubble-mine px-3.5 py-[9px] shadow-[0_4px_14px_rgba(0,0,0,0.06)]">
+          <p className="text-16 leading-[1.35] font-medium text-foreground">
             <HighlightedContent
               content={message.content}
               matchedText={message.reusedExpression?.matchedText}
@@ -101,13 +101,13 @@ const CorrectedBubble = ({
   className: string;
 }) => (
   <div
-    className={`max-w-[88%] divide-y divide-primary/15 rounded-2xl bg-primary/10 px-4 ${className}`}
+    className={`max-w-[88%] divide-y divide-bubble-mine-live/40 rounded-[18px] rounded-tr-md bg-bubble-mine px-3.5 shadow-[0_4px_14px_rgba(0,0,0,0.06)] ${className}`}
   >
     {groupSentences(sentences).map((block, index) =>
       block.kind === 'plain' ? (
         <p
           key={index}
-          className="py-3 text-15 leading-6 font-medium text-foreground"
+          className="py-3 text-16 leading-[1.35] font-medium text-foreground"
         >
           {block.text}
         </p>
@@ -119,12 +119,12 @@ const CorrectedBubble = ({
 );
 
 // 고친 문장 하나 — 원문의 틀린 부분은 회색 취소선, 그 아래 → 고친 문장(바뀐 부분만 초록), 회색 팁.
-// 장기기억을 근거로 고쳤으면 그 근거를 초록 한 줄로 붙인다
+// 장기기억을 근거로 고쳤으면 그 근거를 흰 알약으로 붙인다
 const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
   const correction = sentence.correction!;
   return (
     <div className="py-3">
-      <p className="text-15 leading-6 font-medium text-foreground">
+      <p className="text-16 leading-[1.35] font-medium text-foreground">
         <MarkedText
           text={sentence.text}
           ranges={sentence.strikes}
@@ -132,7 +132,7 @@ const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
           className="text-muted-foreground"
         />
       </p>
-      <p className="mt-2 flex gap-1.5 text-15 leading-6 font-bold text-foreground">
+      <p className="mt-2 flex gap-1.5 text-16 leading-[1.35] font-bold text-foreground">
         <ArrowRightIcon
           size={16}
           strokeWidth={2.5}
@@ -151,7 +151,8 @@ const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
         {correction.tip}
       </p>
       {correction.memory && (
-        <p className="mt-1.5 pl-[22px] text-12 font-semibold text-success">
+        // 연한 주황 바탕에선 초록 글씨가 묻혀 흰 알약에 담는다
+        <p className="mt-2 ml-[22px] inline-block rounded-full bg-card px-2.5 py-1 text-12 font-semibold text-success">
           <Emoji>🗓️</Emoji> {correction.memory.label}
         </p>
       )}
