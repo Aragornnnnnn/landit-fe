@@ -14,7 +14,11 @@ import type { TtsVoice } from '@/shared/tts/voice';
 import { showToast } from '@/shared/ui/toast';
 
 import type { NextMessage, SubmittedMessage } from '../api/session';
-import { recordExchange, type LogEntry } from './conversation-log';
+import {
+  recordExchange,
+  type LogEntry,
+  type PartnerLogEntry,
+} from './conversation-log';
 import {
   canInterruptSpeech,
   initialConversationState,
@@ -178,21 +182,36 @@ export const useConversationTurns = ({
       void submitContent(content, inputType, utteranceDurationMs),
   });
 
-  // 방금 들은 상대 발화를 한 번 더(재생 중이면 멈춤) — 재생만 다시 할 뿐 턴은 그대로다. 멈추려고 누른 건 세지 않는다
-  const toggleReplay = () => {
-    if (aiSpeech.replay())
+  // 상대 발화를 한 번 더(재생 중이면 멈춤) — 재생만 다시 할 뿐 턴은 그대로다. 멈추려고 누른 건 세지 않는다.
+  // 지난 말풍선이면 그 발화와 그 턴 번호를 넘긴다
+  const toggleReplay = (past?: { source: SpeechSource; turnIndex: number }) => {
+    if (aiSpeech.replay(past?.source))
       track(EVENTS.SPEECH_REPLAYED, {
         session_id: sessionId ?? undefined,
-        turn_index: state.turnIndex,
+        turn_index: past?.turnIndex ?? state.turnIndex,
       });
   };
 
-  // 다시 들을 소리가 없으면(음성 미배정 대화, 아직 상대 발화가 없는 선발화 안내) 버튼 자체를 두지 않는다
+  // 다시 들을 소리가 없으면(음성 미배정 대화, 아직 상대 발화가 없는 선발화 안내) 버튼 자체를 두지 않는다.
+  // 지금 차례 버튼은 남겨 둔 소리(어느 말풍선 것도 아님)가 들리는 동안에도 재생 중으로 보인다
   const replay: ReplayControl | undefined =
     voice && currentMessage
       ? {
-          toggle: toggleReplay,
-          playing: aiSpeech.replaying,
+          toggle: () => toggleReplay(),
+          playing:
+            aiSpeech.replaying &&
+            (aiSpeech.replayingContent == null ||
+              aiSpeech.replayingContent === currentMessage.content),
+          enabled: replayAllowed,
+        }
+      : undefined;
+
+  // 지난 상대 말풍선의 다시 듣기 — 지금 차례와 같은 규칙(내 차례에만, 한 번에 하나)을 따른다
+  const replayPast = (entry: PartnerLogEntry): ReplayControl | undefined =>
+    voice
+      ? {
+          toggle: () => toggleReplay(entry),
+          playing: aiSpeech.replayingContent === entry.source.content,
           enabled: replayAllowed,
         }
       : undefined;
@@ -204,7 +223,18 @@ export const useConversationTurns = ({
     const answered = answeredRef.current;
     answeredRef.current = null;
     const opener = currentMessage
-      ? { speaker: 'PARTNER' as const, text: currentMessage.content }
+      ? {
+          speaker: 'PARTNER' as const,
+          text: currentMessage.content,
+          translation: currentMessage.translatedContent,
+          // 뼈대인 채로 끝났으면(끝내 안 옴) 남길 속마음이 없다
+          thought:
+            thought?.status === 'shown'
+              ? { text: thought.text, type: thought.type }
+              : null,
+          source: currentMessage,
+          turnIndex: state.turnIndex,
+        }
       : openingInstruction
         ? { speaker: 'SITUATION' as const, text: openingInstruction }
         : null;
@@ -376,6 +406,7 @@ export const useConversationTurns = ({
     // 화면은 이 동안 점 말풍선을 띄우고 캐릭터를 생각하는 자세로 둔다
     preparingAnswer: state.phase === 'AI_THINKING' || aiSpeech.waitingForSound,
     replay,
+    replayPast,
     interruptible,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,

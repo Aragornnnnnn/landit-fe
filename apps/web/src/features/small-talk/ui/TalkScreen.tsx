@@ -49,6 +49,7 @@ export type TalkScreenFlow = Pick<
   | 'waitingForSound'
   | 'preparingAnswer'
   | 'replay'
+  | 'replayPast'
   | 'interruptible'
   | 'input'
   | 'resend'
@@ -99,6 +100,7 @@ export const TalkScreen = ({
     waitingForSound,
     preparingAnswer,
     replay,
+    replayPast,
     interruptible,
     input,
     resend,
@@ -178,7 +180,36 @@ export const TalkScreen = ({
       <div
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        <ConversationLog entries={log} latestKey={turnIndex}>
+        <ConversationLog
+          entries={log}
+          latestKey={turnIndex}
+          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
+          renderPartner={(entry) => (
+            <PartnerBubble
+              past
+              question={entry.text}
+              translation={entry.translation}
+              speaking={false}
+              thought={entry.thought && { status: 'shown', ...entry.thought }}
+              replay={replayPast(entry)}
+              translationDefaultOpen={display.translationDefaultOpen}
+              onTranslationToggled={(opened) =>
+                track(EVENTS.TRANSLATION_TOGGLED, {
+                  session_id: sessionId,
+                  turn_index: entry.turnIndex,
+                  opened,
+                })
+              }
+              onTextToggled={(visible) =>
+                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                  session_id: sessionId,
+                  turn_index: entry.turnIndex,
+                  hidden: !visible,
+                })
+              }
+            />
+          )}
+        >
           {/* 내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 둔다. 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
           {turn.isUserOpening ? (
             <SituationCard

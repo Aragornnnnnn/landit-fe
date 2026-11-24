@@ -8,7 +8,15 @@ import { ConversationLog } from './ConversationLog';
 afterEach(() => cleanup());
 
 const entries: LogEntry[] = [
-  { id: 0, speaker: 'PARTNER', text: 'Where do you live?' },
+  {
+    id: 0,
+    speaker: 'PARTNER',
+    text: 'Where do you live?',
+    translation: null,
+    thought: null,
+    source: { content: 'Where do you live?' },
+    turnIndex: 0,
+  },
   { id: 1, speaker: 'ME', text: 'I live in Seoul.' },
 ];
 

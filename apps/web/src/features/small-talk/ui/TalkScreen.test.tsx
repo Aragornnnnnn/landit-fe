@@ -46,6 +46,7 @@ const toFlow = (
     expressedThought: null,
     speech: {},
     replay: undefined,
+    replayPast: () => undefined,
     input: { transcript: 'It was great', keyboardMode: false },
     resend: null,
     pressClose: () => true,
@@ -107,7 +108,15 @@ describe('TalkScreen 대화 칸', () => {
         sessionId={1}
         partner="teddy"
         flow={toFlow('USER_READY', false, [
-          { id: 0, speaker: 'PARTNER', text: 'Hi! How are you?' },
+          {
+            id: 0,
+            speaker: 'PARTNER',
+            text: 'Hi! How are you?',
+            translation: '안녕! 잘 지내?',
+            thought: { text: '반갑네.', type: 'GOOD' },
+            source: { content: 'Hi! How are you?' },
+            turnIndex: 0,
+          },
           { id: 1, speaker: 'ME', text: 'Pretty good, thanks.' },
         ])}
         summaryPath="/summary"
@@ -119,6 +128,35 @@ describe('TalkScreen 대화 칸', () => {
     expect(screen.getByText('Hi! How are you?')).toBeInTheDocument();
     expect(screen.getByText('Pretty good, thanks.')).toBeInTheDocument();
     expect(screen.getByText('How was your day?')).toBeInTheDocument();
+  });
+
+  it('지난 상대 말풍선에도 그 턴의 속마음과 해석 버튼이 붙는다', () => {
+    render(
+      <TalkScreen
+        sessionId={1}
+        partner="teddy"
+        flow={toFlow('USER_READY', false, [
+          {
+            id: 0,
+            speaker: 'PARTNER',
+            text: 'Hi! How are you?',
+            translation: '안녕! 잘 지내?',
+            thought: { text: '반갑네.', type: 'GOOD' },
+            source: { content: 'Hi! How are you?' },
+            turnIndex: 0,
+          },
+          { id: 1, speaker: 'ME', text: 'Pretty good, thanks.' },
+        ])}
+        summaryPath="/summary"
+        onShowSummary={vi.fn()}
+        onExitRequested={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('반갑네.')).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('button', { name: '해석 보기' }).length,
+    ).toBeGreaterThan(0);
   });
 });
 

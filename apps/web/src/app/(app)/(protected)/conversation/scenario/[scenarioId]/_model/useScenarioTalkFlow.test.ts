@@ -700,6 +700,50 @@ describe('useScenarioTalkFlow', async () => {
     expect(second[3]).not.toBe(first[3]);
   });
 
+  it('지난 상대 말은 해석·속마음·턴 번호를 함께 기록에 남긴다', async () => {
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+
+    await speakAndSubmit(result, 'Second answer.');
+
+    const partners = result.current.log.filter(
+      (entry) => entry.speaker === 'PARTNER',
+    );
+    expect(partners.at(-1)).toMatchObject({
+      text: 'What size would you like?',
+      translation: '사이즈는 어떻게 드릴까요?',
+      thought: { text: '또렷하게 잘 말했어.', type: 'GOOD' },
+      turnIndex: 1,
+    });
+  });
+
+  it('지난 상대 말을 다시 들으면 그 말이 나온 턴으로 계측한다', async () => {
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+    const [opening] = result.current.log;
+    vi.mocked(track).mockClear();
+
+    act(() => {
+      if (opening.speaker === 'PARTNER')
+        result.current.replayPast(opening)?.toggle();
+    });
+
+    expect(track).toHaveBeenCalledWith('Speech Replayed', {
+      session_id: 1,
+      turn_index: 0,
+    });
+  });
+
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
