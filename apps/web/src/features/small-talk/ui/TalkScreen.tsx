@@ -184,6 +184,8 @@ export const TalkScreen = ({
           entries={log}
           latestKey={turnIndex}
           latestOnly={keyboardLifted}
+          // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
+          latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
           // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
           renderPartner={(entry) => (
             <PartnerBubble
@@ -213,10 +215,7 @@ export const TalkScreen = ({
         >
           {/* 내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 둔다. 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
           {turn.isUserOpening ? (
-            <SituationCard
-              text={turn.aiMessage}
-              alone={!myBubble && !preparingAnswer}
-            />
+            <SituationCard text={turn.aiMessage} />
           ) : (
             !waitingForSound && (
               <PartnerBubble

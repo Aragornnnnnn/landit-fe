@@ -49,6 +49,8 @@ interface ConversationLogProps {
   // 지금 차례만 보일 때(키보드로 쓰는 중) — 좁아진 칸에서 답할 질문이 바로 보이게 지난 대화를 숨긴다.
   // 빼지 않고 숨겨 두어 말풍선 상태(해석 펼침 등)가 그대로 남는다
   latestOnly?: boolean;
+  // 지금 차례의 말을 칸 가운데에 둔다 — 내가 먼저 거는 대화의 첫 상황 카드처럼 칸에 그것 하나뿐일 때
+  latestCentered?: boolean;
   // 지난 상대 말을 그리는 법 — 주면 지금 차례 말풍선처럼 다시 듣기·해석·속마음을 단다. 없으면 대사만 둔다
   renderPartner?: (entry: PartnerLogEntry) => React.ReactNode;
   // 지금 차례의 말(상대 말풍선·생각 중 점 등) — useChatScroll로 칸에 스크롤을 부탁한다
@@ -59,6 +61,7 @@ export const ConversationLog = ({
   entries,
   latestKey,
   latestOnly = false,
+  latestCentered = false,
   renderPartner,
   children,
 }: ConversationLogProps) => {
@@ -229,7 +232,10 @@ export const ConversationLog = ({
             )}
           </div>
           {/* 지금 차례의 말(상대 말풍선·상황 카드·예시·내 말풍선·점)도 지난 대화와 같은 간격으로 쌓는다 */}
-          <div ref={latestRef} className="flex flex-col gap-2.5">
+          <div
+            ref={latestRef}
+            className={`flex flex-col gap-2.5 ${latestCentered ? 'flex-1 justify-center' : ''}`}
+          >
             <ChatScrollContext value={scroll}>{children}</ChatScrollContext>
           </div>
         </div>
