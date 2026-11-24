@@ -34,11 +34,15 @@ export const groupSentences = (sentences: TranscriptSentence[]) =>
     return [...blocks, { kind: 'plain', text: sentence.text }];
   }, []);
 
-// 문장을 범위 안(칠할 곳)과 밖으로 순서대로 자른다 — 범위는 시작 순이고 겹치지 않는다는 계약이다
+// 문장을 범위 안(칠할 곳)과 밖으로 순서대로 자른다 — 범위는 시작 순이고 겹치지 않는다는 계약이지만,
+// 어긋나 와도 이미 그린 글자를 다시 그리지 않게 앞 범위 끝부터 자른다
 export const splitByRanges = (text: string, ranges: TextRange[]) => {
   const parts: { text: string; marked: boolean }[] = [];
   let cursor = 0;
-  for (const { start, end } of ranges) {
+  for (const range of ranges) {
+    const start = Math.max(range.start, cursor);
+    const end = Math.min(range.end, text.length);
+    if (start >= end) continue;
     if (start > cursor) {
       parts.push({ text: text.slice(cursor, start), marked: false });
     }
@@ -51,6 +55,8 @@ export const splitByRanges = (text: string, ranges: TextRange[]) => {
   return parts;
 };
 
-// 이 말에 고친 문장이 하나라도 있는가 — 말풍선 모양과 다음 교정 칩이 이걸로 갈린다
-export const hasSentenceCorrection = (sentences: TranscriptSentence[]) =>
-  sentences.some((sentence) => sentence.correction);
+// 이 말에 고친 문장이 하나라도 있는가 — 말풍선 모양과 다음 교정 칩이 이걸로 갈린다.
+// BE 배포 전·롤백된 응답엔 sentences가 없다 — 그땐 고친 문장이 없는 것으로 보고 원문 말풍선을 그린다
+export const hasSentenceCorrection = (
+  sentences: TranscriptSentence[] | undefined,
+) => (sentences ?? []).some((sentence) => sentence.correction);

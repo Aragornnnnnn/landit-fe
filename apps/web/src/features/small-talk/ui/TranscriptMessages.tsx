@@ -126,6 +126,7 @@ const CorrectedBubble = ({
 // 고친 문장 하나 — 원문의 틀린 부분은 옅은 회색 취소선(뒤로 물러나게), 그 아래 검정 → 고친 문장(바뀐 부분만 초록), 회색 팁.
 // 장기기억을 근거로 고쳤으면 그 출처를 팁 아래 칩으로 붙인다
 const SentenceCorrection = ({ sentence }: { sentence: CorrectedSentence }) => {
+  const t = useTranslations('smallTalk.transcript');
   const { correction } = sentence;
   return (
     <div className="py-3">
@@ -140,6 +141,8 @@ const SentenceCorrection = ({ sentence }: { sentence: CorrectedSentence }) => {
       {/* 화살표 옆 한 칸에 고친 문장·팁·출처를 쌓아 셋이 같은 줄에서 시작한다 */}
       <div className="mt-2 flex gap-1.5">
         <ArrowRightIcon size={16} strokeWidth={2.5} className="mt-1 shrink-0" />
+        {/* 화살표는 그림이라 읽히지 않는다 — 스크린 리더엔 원문과 고친 문장 사이를 말로 알린다 */}
+        <span className="sr-only">{t('fixedSentenceLabel')}</span>
         <div className="flex min-w-0 flex-col items-start">
           <p className="text-16 leading-[1.35] font-bold text-foreground">
             <MarkedText

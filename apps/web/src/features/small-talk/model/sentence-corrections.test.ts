@@ -72,6 +72,21 @@ describe('splitByRanges', () => {
     ]);
   });
 
+  it('범위가 앞 범위와 겹치면 겹친 글자를 한 번만 칠한다', () => {
+    const parts = splitByRanges('I go to gym.', [
+      { start: 2, end: 4 },
+      { start: 3, end: 7 },
+    ]);
+
+    expect(parts.map((part) => part.text).join('')).toBe('I go to gym.');
+  });
+
+  it('범위가 문장 밖으로 나가도 원문을 넘어 그리지 않는다', () => {
+    const parts = splitByRanges('Hi.', [{ start: 1, end: 10 }]);
+
+    expect(parts.map((part) => part.text).join('')).toBe('Hi.');
+  });
+
   it('범위가 없으면 문장 전체가 칠하지 않은 한 조각이다', () => {
     expect(splitByRanges('It was fun.', [])).toEqual([
       { text: 'It was fun.', marked: false },
@@ -84,6 +99,11 @@ describe('hasSentenceCorrection', () => {
     expect(
       hasSentenceCorrection([plain('Hi.'), corrected('I go.', 'I went.')]),
     ).toBe(true);
+  });
+
+  it('문장별 교정이 없는 옛 응답이면 false다', () => {
+    // BE 배포 전 응답이나 롤백된 응답엔 sentences가 없다 — 화면은 원문 말풍선으로 내려간다
+    expect(hasSentenceCorrection(undefined)).toBe(false);
   });
 
   it('모든 문장에 교정이 없으면 false다', () => {
