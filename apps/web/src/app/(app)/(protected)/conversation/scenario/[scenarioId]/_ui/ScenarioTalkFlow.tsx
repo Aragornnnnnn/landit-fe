@@ -196,6 +196,7 @@ export const ScenarioTalkFlow = ({
         <ConversationLog
           entries={log}
           latestKey={turnIndex}
+          latestOnly={keyboardLifted}
           // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
           renderPartner={(entry) => (
             <PartnerBubble
