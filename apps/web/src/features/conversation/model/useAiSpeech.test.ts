@@ -485,6 +485,29 @@ describe('useAiSpeech 다시 듣기', () => {
     expect(result.current.replaying).toBe(true);
   });
 
+  it('지난 발화를 넘기면 그 발화를 다시 틀고, 지금 다시 트는 발화가 무엇인지 알린다', async () => {
+    const { result } = await renderAfterSpeech();
+
+    act(() => result.current.replay({ content: 'Earlier line.' }));
+
+    expect(ttsMock.speak).toHaveBeenCalledWith(
+      'Earlier line.',
+      voice,
+      expect.anything(),
+    );
+    expect(result.current.replayingContent).toBe('Earlier line.');
+  });
+
+  it('다른 발화를 다시 트는 중에 또 다른 발화를 누르면 앞 것을 멈추고 새로 튼다', async () => {
+    const { result } = await renderAfterSpeech();
+    act(() => result.current.replay({ content: 'Earlier line.' }));
+
+    act(() => result.current.replay());
+
+    expect(ttsMock.stop).toHaveBeenCalled();
+    expect(result.current.replayingContent).toBe(LINE);
+  });
+
   it('다시 듣기가 끝나도 대화를 다음 단계로 넘기지 않는다', async () => {
     // Given 다시 듣기는 턴을 진행시키는 연출이 아니다 — 끝나도 유저 차례 그대로다
     const { result, onSpeechEnd } = await renderAfterSpeech();

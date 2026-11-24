@@ -350,7 +350,8 @@ export const useAiSpeech = ({
   const [speech, setSpeech] = useState<PlayingSpeech | null>(null);
   // 다시 듣기 회차의 중단 손잡이 — 이 회차는 effect가 아니라 버튼이 시작하므로 정리도 직접 들고 있어야 한다
   const replayStopRef = useRef<(() => void) | null>(null);
-  const [replaying, setReplaying] = useState(false);
+  // 지금 다시 트는 발화 — 지난 말풍선도 다시 들을 수 있어서, 어느 말풍선의 버튼이 재생 중인지 가린다
+  const [replayingContent, setReplayingContent] = useState<string | null>(null);
   // 멈춤으로 턴을 먼저 넘긴 회차의 중단 손잡이 — 소리는 남겨 두고, 마이크를 켜거나 화면을 떠나거나 새로 틀 때 끊는다
   const lingeringStopRef = useRef<(() => void) | null>(null);
   // 남겨 둔 소리가 지금 들리는가 — 들리는 동안은 다시 듣기가 재생 중으로 보이고, 누르면 멈춘다
@@ -362,7 +363,7 @@ export const useAiSpeech = ({
   const stopReplay = () => {
     replayStopRef.current?.();
     replayStopRef.current = null;
-    setReplaying(false);
+    setReplayingContent(null);
     setSoundStartedFor(null);
   };
 
@@ -455,21 +456,27 @@ export const useAiSpeech = ({
    * 재생 중에 다시 부르면 멈추고, 허용 구간 밖에서 부르면 무시한다 — 상대 발화 중에 소리를 뺏으면
    * 그 발화가 끝을 못 알려 대화가 멈춘다. 새로 재생을 시작했는지를 돌려준다(계측용)
    */
-  const replay = (): boolean => {
-    // 다시 듣기든 남겨 둔 소리든, 들리는 중에 누르면 멈춘다
-    if (replaying || lingeringPlaying) {
+  const replay = (target?: SpeechSource): boolean => {
+    // 주지 않으면 지금 차례의 발화, 주면 그 지난 발화를 다시 튼다
+    const replaySource = target ?? source;
+    // 다시 듣기든 남겨 둔 소리든, 들리는 중에 누르면 멈춘다. 다른 말풍선을 누른 거면 이어서 그걸 튼다
+    if (replayingContent != null || lingeringPlaying) {
+      const switching =
+        replayingContent != null &&
+        replaySource != null &&
+        replaySource.content !== replayingContent;
       stopReplay();
       stopLingering();
-      return false;
+      if (!switching) return false;
     }
-    if (!replayAllowed || source == null) return false;
+    if (!replayAllowed || replaySource == null) return false;
     // 남겨 둔 소리를 이어 듣는 대신 처음부터 다시 튼다
     stopLingering();
     // 오프닝은 음원을 그대로 다시 튼다 — 합성을 미리 시켜 봐야 안 쓰인다.
     // 그 외엔 합성분은 방금 튼 게 캐시에 있어 요청이 안 나가고, 질문 음원만 미리 열려 맞장구 뒤 공백이 없어진다
-    if (!resolveOpeningSrc()) prefetch(source);
-    setReplaying(true);
-    replayStopRef.current = startSpeech(source, {
+    if (target || !resolveOpeningSrc()) prefetch(replaySource);
+    setReplayingContent(replaySource.content);
+    replayStopRef.current = startSpeech(replaySource, {
       onEnd: stopReplay,
       passTurnOnStall: false,
     }).stop;
@@ -490,6 +497,7 @@ export const useAiSpeech = ({
     speech,
     waitingForSound,
     replay,
-    replaying: replaying || lingeringPlaying,
+    replaying: replayingContent != null || lingeringPlaying,
+    replayingContent,
   };
 };
