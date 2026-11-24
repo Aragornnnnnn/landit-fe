@@ -9,7 +9,7 @@
 
 ## 다시 만들기
 
-Rive CLI(`brew install --cask rive-app/tap/rive-cli`)와 python3가 필요하다.
+Rive CLI(`brew install --cask rive-app/tap/rive-cli`)와 Python 3.9 이상이 필요하다.
 
 ```bash
 bash apps/web/assets/rive/_source/tools/build_all.sh

@@ -20,7 +20,7 @@ def idof(name):
     if not e.get('id'): e.set('id', nid())
     return e.get('id')
 # 지난 생성물 걷기
-for a in [a for a in art.findall('LinearAnimation') if a.get('name', '').startswith(('pose-', 'fx-')) or a.get('name') in ('blink', 'breathe')]: art.remove(a)
+for a in [a for a in art.findall('LinearAnimation') if a.get('name', '').startswith(('pose-', 'fx-')) or a.get('name') in ('blink', 'blink-rest', 'breathe')]: art.remove(a)
 for sm in art.findall('StateMachine'): art.remove(sm)
 for x in [x for x in R if x.tag in ('ViewModel', 'DataEnumCustom')]: R.remove(x)
 

@@ -191,7 +191,11 @@ def emit(e):
 for cs in art.iter('ClippingShape'):
     for pc in shape_pieces(id_index[cs.get('sourceId')]) + [id_index[cs.get('sourceId')]]:
         if not pc.get('id'):
-            seq[0] += 1; pc.set('id', f'9:{seq[0]}'); id_index[pc.get('id')] = pc
+            seq[0] += 1
+            while f'9:{seq[0]}' in id_index:
+                seq[0] += 1
+            pc.set('id', f'9:{seq[0]}')
+            id_index[pc.get('id')] = pc
 top = [c for c in art if c.tag in ('Node', 'Shape')]
 body = ''.join(emit(c) for c in reversed(top))
 for cl in clips:

@@ -1,6 +1,7 @@
-# 삐진 입(오므려 내민 입술)을 입 노드에 얹는 일회성 추가 — 사용: pout.py scene.rml 배율 입술색 안쪽색
+# 삐진 입(오므려 내민 입술)을 입 노드에 얹는 일회성 추가 — 사용: pout.py scene.rml 배율 입술색 안쪽색 [id 클라이언트 번호, 기본 3]
 import sys, math, xml.etree.ElementTree as ET
 p, s, lip, inner = sys.argv[1], float(sys.argv[2]), sys.argv[3], sys.argv[4]
+client = sys.argv[5] if len(sys.argv) > 5 else '3'
 t = ET.parse(p); art = t.getroot().find('Artboard')
 mouth = next(e for e in art.iter('Node') if e.get('name') == 'mouth')
 for old in [c for c in mouth if c.get('name') == 'mouth-pout']: mouth.remove(old)
@@ -9,7 +10,7 @@ def el(tag, **a):
 def V(x, y, ir, idist, orr, od):
     return el('CubicDetachedVertex', x=round(x * s, 3), y=round(y * s, 3), inRotation=round(ir, 4), inDistance=round(idist * s, 3), outRotation=round(orr, 4), outDistance=round(od * s, 3))
 pi = math.pi
-node = el('Node', x=round(5 * s, 2), y=round(1 * s, 2), rotation='-0.1', opacity='0', name='mouth-pout', id='3:%d' % (7000 + int(s * 10)))
+node = el('Node', x=round(5 * s, 2), y=round(1 * s, 2), rotation='-0.1', opacity='0', name='mouth-pout', id=f'{client}:%d' % (7000 + int(s * 10)))
 # 입술 외곽 — 윗입술은 가운데가 살짝 패인 활 모양, 아랫입술은 앞으로 볼록 튀어나온다
 lips = el('Shape', name='pout-lips')
 pp = el('PointsPath', isClosed='true', name='Path')
