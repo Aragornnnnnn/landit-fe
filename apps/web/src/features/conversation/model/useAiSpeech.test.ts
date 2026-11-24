@@ -487,25 +487,47 @@ describe('useAiSpeech 다시 듣기', () => {
 
   it('지난 발화를 넘기면 그 발화를 다시 틀고, 지금 다시 트는 발화가 무엇인지 알린다', async () => {
     const { result } = await renderAfterSpeech();
+    const earlier = { content: 'Earlier line.' };
 
-    act(() => result.current.replay({ content: 'Earlier line.' }));
+    act(() => result.current.replay(earlier));
 
     expect(ttsMock.speak).toHaveBeenCalledWith(
       'Earlier line.',
       voice,
       expect.anything(),
     );
-    expect(result.current.replayingContent).toBe('Earlier line.');
+    expect(result.current.replayingSource).toBe(earlier);
   });
 
   it('다른 발화를 다시 트는 중에 또 다른 발화를 누르면 앞 것을 멈추고 새로 튼다', async () => {
-    const { result } = await renderAfterSpeech();
+    const { result, initialProps } = await renderAfterSpeech();
     act(() => result.current.replay({ content: 'Earlier line.' }));
 
     act(() => result.current.replay());
 
     expect(ttsMock.stop).toHaveBeenCalled();
-    expect(result.current.replayingContent).toBe(LINE);
+    expect(result.current.replayingSource).toBe(initialProps.source);
+  });
+
+  it('같은 문장이라도 다른 턴의 발화면 따로 가려 바꿔 튼다', async () => {
+    const { result } = await renderAfterSpeech();
+    const first = { content: 'Thank you.' };
+    const second = { content: 'Thank you.' };
+    act(() => result.current.replay(first));
+
+    act(() => result.current.replay(second));
+
+    expect(result.current.replayingSource).toBe(second);
+  });
+
+  it('어느 발화를 다시 듣던 중이든 한 번에 끊을 수 있다 — 화면을 떠날 때 쓴다', async () => {
+    const { result } = await renderAfterSpeech();
+    act(() => result.current.replay({ content: 'Earlier line.' }));
+
+    act(() => result.current.stopReplaying());
+
+    expect(result.current.replaying).toBe(false);
+    expect(result.current.replayingSource).toBeNull();
   });
 
   it('다시 듣기가 끝나도 대화를 다음 단계로 넘기지 않는다', async () => {

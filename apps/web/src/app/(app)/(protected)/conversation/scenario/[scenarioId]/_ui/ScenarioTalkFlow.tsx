@@ -69,6 +69,7 @@ export const ScenarioTalkFlow = ({
     preparingAnswer,
     replay,
     replayPast,
+    stopReplaying,
     interruptible,
     input,
     resend,
@@ -160,8 +161,8 @@ export const ScenarioTalkFlow = ({
   // 라우트 전환은 새 화면이 준비될 때까지 이 화면에 머문다 — 그동안 버튼이 돌아가야 눌린 줄 안다
   const [leavingForFeedback, startLeaving] = useTransition();
   const goToFeedback = () => {
-    // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사를 다시 듣던 중이면 여기서 끊는다
-    if (replay?.playing) replay.toggle();
+    // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사든 지난 말풍선이든 다시 듣던 중이면 여기서 끊는다
+    stopReplaying();
     startLeaving(() => router.replace(feedbackPath));
   };
 

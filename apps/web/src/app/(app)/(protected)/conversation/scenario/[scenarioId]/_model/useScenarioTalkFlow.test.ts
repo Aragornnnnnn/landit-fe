@@ -1217,6 +1217,58 @@ describe('useScenarioTalkFlow', async () => {
     });
   });
 
+  it('다음 답을 기다리는 사이 늦게 온 속마음도 그 말풍선의 기록에 남긴다', async () => {
+    // Given 첫 대답의 속마음이 상한을 넘겨 뼈대로 시작했다
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
+    let thoughtReady = false;
+    getInnerThought.mockImplementation(async () =>
+      thoughtReady
+        ? {
+            processingStatus: 'COMPLETED',
+            innerThought: '좀 머쓱하네.',
+            innerThoughtType: 'BAD',
+          }
+        : {
+            processingStatus: 'PREPARING',
+            innerThought: null,
+            innerThoughtType: null,
+          },
+    );
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(thoughtWaitMs);
+    });
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+    // And 다음 답을 보냈고 응답을 기다린다
+    let resolveNext: (value: ScenarioTalkSubmitResponse) => void = () => {};
+    submitScenarioTalkMessage.mockReturnValue(
+      new Promise((r) => {
+        resolveNext = r;
+      }),
+    );
+    await speakAndSubmit(result, 'Medium, please.');
+
+    // When 그사이 앞 속마음이 도착하고, 이어서 다음 응답이 온다
+    thoughtReady = true;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
+    });
+    await act(async () => resolveNext(submitResponse()));
+
+    // Then 기록된 그 말풍선에 도착한 속마음이 남아 있다
+    const partners = result.current.log.filter(
+      (entry) => entry.speaker === 'PARTNER',
+    );
+    expect(partners.at(-1)).toMatchObject({
+      text: 'What size would you like?',
+      thought: { text: '좀 머쓱하네.', type: 'BAD' },
+    });
+  });
+
   it('StrictMode 재마운트 뒤에도 속마음 폴링이 죽지 않고 완료를 노출한다', async () => {
     startScenarioTalkSession.mockResolvedValue(startResponse());
     const { result } = renderHook(() => useScenarioTalkFlow(userScenario), {
