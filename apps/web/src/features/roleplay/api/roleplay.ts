@@ -16,6 +16,7 @@ import type {
   SmallTalkSummaryHeadline,
   SmallTalkSummaryReusedExpressions,
   SummaryAnalysisStatus,
+  TranscriptSentence,
 } from '@/features/small-talk/api/small-talk';
 import { api } from '@/shared/api/client';
 
@@ -180,8 +181,10 @@ export interface RoleplayHistoryMessage {
   content: string;
   translatedContent: string | null;
   emotion: string | null;
-  // 상대 말이거나 교정을 시작하지 않은 말이면 null
+  // 상대 말이거나 교정을 시작하지 않은 말이면 null. 화면은 상태(status)만 읽는다 — sentence는 옛 앱 호환용이다
   correction: RoleplayMessageCorrection | null;
+  // 문장별 교정 — 스몰톡 기록과 같은 모양이다
+  sentences: TranscriptSentence[];
   reusedExpression: SmallTalkReusedExpression | null;
 }
 

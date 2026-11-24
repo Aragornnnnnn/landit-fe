@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import { PageHeader } from '@/app/(app)/(protected)/_ui/PageHeader';
 import { useRoleplaySessionQuery } from '@/features/roleplay/model/useRoleplaySessionQuery';
+import { hasSentenceCorrection } from '@/features/small-talk/model/sentence-corrections';
 import {
   messageAnchorId,
   useCorrectionJump,
@@ -42,15 +43,7 @@ export const RoleplayTranscript = ({
   const t = useTranslations('roleplay.transcript');
   const tSmallTalk = useTranslations('smallTalk.transcript');
   const { session, error, waitExpired } = useRoleplaySessionQuery(sessionId);
-  const messages = (session?.messages ?? []).map((message) =>
-    toTranscriptMessage(message, ({ month, day, label }) =>
-      t('memoryTagLabel', {
-        month,
-        day,
-        label: label ?? t('memoryDefaultLabel'),
-      }),
-    ),
-  );
+  const messages = (session?.messages ?? []).map(toTranscriptMessage);
   // 들어오면 첫 교정으로, 칩을 누르면 다음 교정으로
   const { hasNext, jumpNext } = useCorrectionJump(messages);
 
@@ -62,8 +55,8 @@ export const RoleplayTranscript = ({
     track(EVENTS.ROLEPLAY_FEEDBACK_VIEWED, {
       session_id: sessionId,
       source: fromRoleplayId === undefined ? 'summary' : 'history',
-      correction_count: session.messages.filter(
-        (message) => message.correction?.sentence,
+      correction_count: session.messages.filter((message) =>
+        hasSentenceCorrection(message.sentences),
       ).length,
     });
   });

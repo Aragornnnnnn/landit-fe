@@ -70,8 +70,7 @@
     "learnButton": "フレーズを学びに行く",
     "preparingCaption": "より自然な言い方を探しています…",
     "reusedExpressionBadge": "学んだフレーズ「{expression}」を使いました",
-    "goodJobBadge": "よくできました！",
-    "correctionTitle": "こう言うともっと自然です"
+    "goodJobBadge": "よくできました！"
   },
   "transcriptSkeleton": {
     "loadingLabel": "会話を読み込み中"

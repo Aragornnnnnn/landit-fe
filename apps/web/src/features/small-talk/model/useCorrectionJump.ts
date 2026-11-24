@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 
 import type { SmallTalkHistoryMessage } from '../api/small-talk';
+import { hasSentenceCorrection } from './sentence-corrections';
 
 // 말풍선의 DOM 앵커 id — 스크롤 목적지를 이걸로 찾는다
 export const messageAnchorId = (messageId: number) => `message-${messageId}`;
@@ -14,12 +15,12 @@ const scrollToMessage = (messageId: number) =>
     .getElementById(messageAnchorId(messageId))
     ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-// 대화 기록 화면(스몰톡·롤플레이)이 같이 쓴다 — 말풍선 id와 교정 유무만 본다
+// 대화 기록 화면(스몰톡·롤플레이)이 같이 쓴다 — 말풍선 id와 고친 문장 유무만 본다
 export const useCorrectionJump = (
-  messages: Pick<SmallTalkHistoryMessage, 'messageId' | 'correction'>[],
+  messages: Pick<SmallTalkHistoryMessage, 'messageId' | 'sentences'>[],
 ) => {
   const correctedIds = messages
-    .filter((message) => message.correction)
+    .filter((message) => hasSentenceCorrection(message.sentences))
     .map((message) => message.messageId);
   const firstId = correctedIds[0];
 

@@ -1,4 +1,4 @@
-// 대화 보기 — 조회 중엔 스켈레톤이 서고, 내 말풍선 아래엔 교정 카드와 배운 표현 태그가 조건에 따라 붙는다
+// 대화 보기 — 조회 중엔 스켈레톤이 서고, 내 말풍선은 문장별 교정과 배운 표현 태그가 조건에 따라 붙는다
 import { EVENTS } from '@landit/analytics';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   SmallTalkHistoryMessage,
   SmallTalkSessionDetailResponse,
+  TranscriptSentence,
 } from '@/features/small-talk/api/small-talk';
+import { hasSentenceCorrection } from '@/features/small-talk/model/sentence-corrections';
 import { useSmallTalkSessionQuery } from '@/features/small-talk/model/useSmallTalkSessionQuery';
 import { setTestLocale } from '@/shared/i18n/test-locale';
 
@@ -37,6 +39,14 @@ const messageOf = (
   emotion: null,
   innerThought: null,
   innerThoughtType: null,
+  // 고칠 게 없는 원문 한 문장 — 서버는 교정이 없거나 만드는 중이어도 이렇게 준다
+  sentences: [
+    {
+      text: overrides.content ?? "I'm working out now.",
+      strikes: [],
+      correction: null,
+    },
+  ],
   ...overrides,
 });
 
@@ -52,7 +62,9 @@ const sessionOf = (
   expressionGenerationStatus: 'READY',
   expressionLearningStatus: 'NOT_STARTED',
   expressions: [],
-  correctionCount: messages.filter((message) => message.correction).length,
+  correctionCount: messages.filter((message) =>
+    hasSentenceCorrection(message.sentences),
+  ).length,
 });
 
 const renderTranscript = (
@@ -84,13 +96,14 @@ beforeEach(() => {
 
 afterEach(cleanup);
 
-const correctionOf = (betterSentence: string) => ({
-  originalSentence: 'x',
-  betterSentence,
-  reason: '이유',
-  mistakePattern: 'OTHER',
-  memoryTag: null,
-});
+// 첫 글자를 긋고 고친 문장 하나뿐인 발화
+const correctedOf = (text: string, fixed: string): TranscriptSentence[] => [
+  {
+    text,
+    strikes: [{ start: 0, end: 1 }],
+    correction: { fixed, changes: [], tip: '이유', memory: null },
+  },
+];
 
 // 스크롤이 간 요소가 그 문장을 품고 있는가
 const scrolledTo = (text: string) =>
@@ -145,40 +158,80 @@ describe('SmallTalkTranscript 하단 여백', () => {
   });
 });
 
-describe('SmallTalkTranscript 교정 카드', () => {
-  it('교정이 있으면 말풍선 아래에 더 자연스러운 문장과 이유가 보인다', () => {
+describe('SmallTalkTranscript 문장별 교정', () => {
+  it('고친 문장은 틀린 부분을 긋고 바뀐 부분을 칠한 고친 문장과 팁을 보여 준다', () => {
     renderTranscript([
       messageOf({
         correctionStatus: 'COMPLETED',
-        correction: {
-          originalSentence: "I'm working out now.",
-          betterSentence: "I'm at the gym right now.",
-          reason: 'at the gym이 더 자연스러워요.',
-          mistakePattern: 'VOCAB_CHOICE',
-          memoryTag: null,
-        },
+        sentences: [
+          {
+            text: 'I did stairs for very long time.',
+            strikes: [{ start: 17, end: 21 }],
+            correction: {
+              fixed: 'I did stairs for a really long time.',
+              changes: [{ start: 17, end: 25 }],
+              tip: '「for a long time」처럼 a가 꼭 들어가요.',
+              memory: null,
+            },
+          },
+        ],
       }),
     ]);
 
-    expect(screen.getByText("I'm at the gym right now.")).toBeInTheDocument();
+    expect(screen.getByRole('deletion')).toHaveTextContent('very');
+    expect(screen.getByRole('insertion')).toHaveTextContent('a really');
     expect(
-      screen.getByText('at the gym이 더 자연스러워요.'),
+      screen.getByText('「for a long time」처럼 a가 꼭 들어가요.'),
     ).toBeInTheDocument();
     // 장기기억 근거가 없으면 날짜 태그도 없다
     expect(screen.queryByText(/스몰톡에서 말한/)).not.toBeInTheDocument();
   });
 
-  it('장기기억 근거가 있으면 카드 안에 날짜 태그가 보인다', () => {
+  it('고칠 게 없는 문장은 고친 문장 앞뒤에 원문대로 이어 붙여 보여 준다', () => {
     renderTranscript([
       messageOf({
         correctionStatus: 'COMPLETED',
-        correction: {
-          originalSentence: 'I am doing stairs at a gym.',
-          betterSentence: "Today it's just stairs at the gym.",
-          reason: '둘 다 아는 곳엔 the를 붙여요.',
-          mistakePattern: 'ARTICLE',
-          memoryTag: '9/13 스몰톡에서 말한 헬스장',
-        },
+        sentences: [
+          { text: 'I went to the gym.', strikes: [], correction: null },
+          { text: 'It was great.', strikes: [], correction: null },
+          {
+            text: 'It was tired.',
+            strikes: [{ start: 7, end: 12 }],
+            correction: {
+              fixed: 'It was tiring.',
+              changes: [{ start: 7, end: 13 }],
+              tip: '팁',
+              memory: null,
+            },
+          },
+        ],
+      }),
+    ]);
+
+    expect(
+      screen.getByText('I went to the gym. It was great.'),
+    ).toBeInTheDocument();
+  });
+
+  it('장기기억 근거가 있으면 고친 문장 아래에 그 근거가 보인다', () => {
+    renderTranscript([
+      messageOf({
+        correctionStatus: 'COMPLETED',
+        sentences: [
+          {
+            text: 'I am doing stairs at a gym.',
+            strikes: [{ start: 20, end: 21 }],
+            correction: {
+              fixed: "Today it's just stairs at the gym.",
+              changes: [{ start: 25, end: 28 }],
+              tip: '둘 다 아는 곳엔 the를 붙여요.',
+              memory: {
+                label: '9/13 스몰톡에서 말한 헬스장',
+                sourceDate: '2026-09-13',
+              },
+            },
+          },
+        ],
       }),
     ]);
 
@@ -190,29 +243,24 @@ describe('SmallTalkTranscript 교정 카드', () => {
   it.each([
     ['교정이 없으면', 'COMPLETED' as const],
     ['교정에 실패했으면', 'FAILED' as const],
-  ])('%s 말풍선 아래에 교정 카드가 붙지 않는다', (_, correctionStatus) => {
-    renderTranscript([messageOf({ correctionStatus, correction: null })]);
+  ])('%s 고친 문장 없이 원문만 보인다', (_, correctionStatus) => {
+    renderTranscript([messageOf({ correctionStatus })]);
 
-    expect(
-      screen.queryByText('이렇게 말하면 더 자연스러워요', { exact: false }),
-    ).not.toBeInTheDocument();
+    expect(screen.getByText("I'm working out now.")).toBeInTheDocument();
+    expect(screen.queryByRole('deletion')).not.toBeInTheDocument();
     expect(screen.queryByText(/찾는 중/)).not.toBeInTheDocument();
   });
 
   it('고칠 게 없었으면 말풍선 아래에 잘했어요가 보인다', () => {
     // 아무것도 안 붙이면 잘 말한 것인지 아직 분석이 안 끝난 것인지 구분되지 않는다
-    renderTranscript([
-      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
-    ]);
+    renderTranscript([messageOf({ correctionStatus: 'COMPLETED' })]);
 
     expect(screen.getByText('잘했어요!')).toBeInTheDocument();
   });
 
   it('일본어 화면은 잘했어요를 일본어로 보여 준다', () => {
     setTestLocale('ja');
-    renderTranscript([
-      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
-    ]);
+    renderTranscript([messageOf({ correctionStatus: 'COMPLETED' })]);
 
     expect(screen.getByText('よくできました！')).toBeInTheDocument();
   });
@@ -222,7 +270,7 @@ describe('SmallTalkTranscript 교정 카드', () => {
     ['아직 만드는 중이면', 'PREPARING' as const],
   ])('%s 잘했어요가 뜨지 않는다', (_, correctionStatus) => {
     // 교정이 null인 건 같지만 "고칠 게 없었다"는 뜻이 아니다
-    renderTranscript([messageOf({ correctionStatus, correction: null })]);
+    renderTranscript([messageOf({ correctionStatus })]);
 
     expect(screen.queryByText('잘했어요!')).not.toBeInTheDocument();
   });
@@ -231,7 +279,7 @@ describe('SmallTalkTranscript 교정 카드', () => {
     renderTranscript([
       messageOf({
         correctionStatus: 'COMPLETED',
-        correction: correctionOf("I'm at the gym right now."),
+        sentences: correctedOf('x', "I'm at the gym right now."),
       }),
     ]);
 
@@ -239,18 +287,15 @@ describe('SmallTalkTranscript 교정 카드', () => {
   });
 
   it('교정을 아직 만드는 중이면 말풍선 아래에 기다리는 표시가 보인다', () => {
-    renderTranscript([
-      messageOf({ correctionStatus: 'PREPARING', correction: null }),
-    ]);
+    renderTranscript([messageOf({ correctionStatus: 'PREPARING' })]);
 
     expect(screen.getByText(/찾는 중/)).toBeInTheDocument();
   });
 
   it('상한까지 기다려 더는 묻지 않으면 찾는 중 표시를 거둔다', () => {
-    renderTranscript(
-      [messageOf({ correctionStatus: 'PREPARING', correction: null })],
-      { waitExpired: true },
-    );
+    renderTranscript([messageOf({ correctionStatus: 'PREPARING' })], {
+      waitExpired: true,
+    });
 
     expect(screen.queryByText(/찾는 중/)).not.toBeInTheDocument();
   });
@@ -261,7 +306,6 @@ describe('SmallTalkTranscript 배운 표현 태그', () => {
     renderTranscript([
       messageOf({
         correctionStatus: 'COMPLETED',
-        correction: null,
         reusedExpression: {
           expressionId: 73,
           text: 'work out',
@@ -280,7 +324,6 @@ describe('SmallTalkTranscript 배운 표현 태그', () => {
     renderTranscript([
       messageOf({
         correctionStatus: 'COMPLETED',
-        correction: null,
         reusedExpression: {
           expressionId: 73,
           text: 'work out',
@@ -317,20 +360,22 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
       messageId: 1,
       content: 'Hi.',
       correctionStatus: 'COMPLETED',
-      correction: null,
     }),
     messageOf({
       messageId: 2,
       content: 'I go to gym.',
       correctionStatus: 'COMPLETED',
-      correction: correctionOf('I went to the gym.'),
+      sentences: correctedOf('I go to gym.', 'I went to the gym.'),
     }),
     messageOf({ messageId: 3, role: 'AI', content: 'Nice.' }),
     messageOf({
       messageId: 4,
       content: 'I am doing stairs at a gym.',
       correctionStatus: 'COMPLETED',
-      correction: correctionOf("Today it's just stairs at the gym."),
+      sentences: correctedOf(
+        'I am doing stairs at a gym.',
+        "Today it's just stairs at the gym.",
+      ),
     }),
   ];
 
@@ -403,7 +448,10 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
         ? {
             ...message,
             correctionStatus: 'PREPARING' as const,
-            correction: null,
+            // 만드는 중엔 원문이 교정 없는 한 문장으로 온다
+            sentences: [
+              { text: message.content, strikes: [], correction: null },
+            ],
           }
         : message,
     );
@@ -428,7 +476,10 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
         ? {
             ...message,
             correctionStatus: 'PREPARING' as const,
-            correction: null,
+            // 만드는 중엔 원문이 교정 없는 한 문장으로 온다
+            sentences: [
+              { text: message.content, strikes: [], correction: null },
+            ],
           }
         : message,
     );
@@ -464,7 +515,10 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
     const late = twoCorrections();
     const { rerender } = renderTranscript([
       late[0]!,
-      { ...late[1]!, correction: null },
+      {
+        ...late[1]!,
+        sentences: [{ text: late[1]!.content, strikes: [], correction: null }],
+      },
       late[2]!,
       late[3]!,
     ]);
@@ -484,9 +538,7 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
   });
 
   it('교정이 없으면 스크롤도 칩도 없다', () => {
-    renderTranscript([
-      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
-    ]);
+    renderTranscript([messageOf({ correctionStatus: 'COMPLETED' })]);
 
     expect(scrollIntoView).not.toHaveBeenCalled();
     expect(
@@ -497,12 +549,9 @@ describe('SmallTalkTranscript 교정 사이 이동', () => {
 
 describe('SmallTalkTranscript 종료 흐름', () => {
   it('대화 종료 흐름에서 왔으면 표현 배우러 가기 버튼이 있고, 누르면 축하를 켠 표현 화면으로 간다', async () => {
-    renderTranscript(
-      [messageOf({ correctionStatus: 'COMPLETED', correction: null })],
-      {
-        continueToLearning: true,
-      },
-    );
+    renderTranscript([messageOf({ correctionStatus: 'COMPLETED' })], {
+      continueToLearning: true,
+    });
 
     await userEvent.click(
       screen.getByRole('button', { name: /표현 배우러 가기/ }),
@@ -514,9 +563,7 @@ describe('SmallTalkTranscript 종료 흐름', () => {
   });
 
   it('기록에서 열었으면 표현 배우러 가기 버튼이 없다', () => {
-    renderTranscript([
-      messageOf({ correctionStatus: 'COMPLETED', correction: null }),
-    ]);
+    renderTranscript([messageOf({ correctionStatus: 'COMPLETED' })]);
 
     expect(
       screen.queryByRole('button', { name: /표현 배우러 가기/ }),
@@ -535,7 +582,7 @@ describe('SmallTalkTranscript 계측', () => {
         [
           messageOf({
             correctionStatus: 'COMPLETED',
-            correction: correctionOf('Better.'),
+            sentences: correctedOf('Bad.', 'Better.'),
           }),
         ],
         { continueToLearning },

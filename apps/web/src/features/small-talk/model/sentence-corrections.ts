@@ -1,0 +1,43 @@
+// 문장별 교정을 말풍선에 그릴 묶음과 칠할 조각으로 나눈다 — 스몰톡·롤플레이 대화 기록이 같이 쓴다
+import type { TextRange, TranscriptSentence } from '../api/small-talk';
+
+export type SentenceBlock =
+  | { kind: 'plain'; text: string }
+  | { kind: 'corrected'; sentence: TranscriptSentence };
+
+// 고칠 게 없는 문장이 이어지면 원문처럼 한 덩어리로 붙이고, 고친 문장은 하나씩 따로 세운다
+export const groupSentences = (sentences: TranscriptSentence[]) =>
+  sentences.reduce<SentenceBlock[]>((blocks, sentence) => {
+    if (sentence.correction) {
+      return [...blocks, { kind: 'corrected', sentence }];
+    }
+    const last = blocks.at(-1);
+    if (last?.kind === 'plain') {
+      return [
+        ...blocks.slice(0, -1),
+        { kind: 'plain', text: `${last.text} ${sentence.text}` },
+      ];
+    }
+    return [...blocks, { kind: 'plain', text: sentence.text }];
+  }, []);
+
+// 문장을 범위 안(칠할 곳)과 밖으로 순서대로 자른다 — 범위는 시작 순이고 겹치지 않는다는 계약이다
+export const splitByRanges = (text: string, ranges: TextRange[]) => {
+  const parts: { text: string; marked: boolean }[] = [];
+  let cursor = 0;
+  for (const { start, end } of ranges) {
+    if (start > cursor) {
+      parts.push({ text: text.slice(cursor, start), marked: false });
+    }
+    parts.push({ text: text.slice(start, end), marked: true });
+    cursor = end;
+  }
+  if (cursor < text.length) {
+    parts.push({ text: text.slice(cursor), marked: false });
+  }
+  return parts;
+};
+
+// 이 말에 고친 문장이 하나라도 있는가 — 말풍선 모양과 다음 교정 칩이 이걸로 갈린다
+export const hasSentenceCorrection = (sentences: TranscriptSentence[]) =>
+  sentences.some((sentence) => sentence.correction);
