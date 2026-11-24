@@ -17,7 +17,12 @@ import {
   groupSentences,
   hasSentenceCorrection,
   splitByRanges,
+  type CorrectedSentence,
 } from '../model/sentence-corrections';
+
+// 내 말풍선 바탕 — 대화 화면의 지난 내 말풍선과 같은 연한 주황·오른위 꼬리·옅은 그림자. 원문 말풍선과 고친 말풍선이 같이 쓴다
+const MY_BUBBLE =
+  'rounded-[18px] rounded-tr-md bg-bubble-mine shadow-[0_4px_14px_rgba(0,0,0,0.06)]';
 
 // 말풍선이 읽는 칸만 — 상대 말이나 교정을 시작하지 않은 말엔 교정 상태가 없다
 export type TranscriptMessage = Pick<
@@ -70,7 +75,7 @@ export const MyMessage = ({
           className={lateCorrection ? 'animate-fade-up' : ''}
         />
       ) : (
-        <div className="max-w-[78%] rounded-[18px] rounded-tr-md bg-bubble-mine px-3.5 py-[9px] shadow-[0_4px_14px_rgba(0,0,0,0.06)]">
+        <div className={`max-w-[78%] px-3.5 py-[9px] ${MY_BUBBLE}`}>
           <p className="text-16 leading-[1.35] font-medium text-foreground">
             <HighlightedContent
               content={message.content}
@@ -101,7 +106,7 @@ const CorrectedBubble = ({
   className: string;
 }) => (
   <div
-    className={`max-w-[88%] divide-y divide-bubble-mine-live/40 rounded-[18px] rounded-tr-md bg-bubble-mine px-3.5 shadow-[0_4px_14px_rgba(0,0,0,0.06)] ${className}`}
+    className={`max-w-[88%] divide-y divide-bubble-mine-live/40 px-3.5 ${MY_BUBBLE} ${className}`}
   >
     {groupSentences(sentences).map((block, index) =>
       block.kind === 'plain' ? (
@@ -120,8 +125,8 @@ const CorrectedBubble = ({
 
 // 고친 문장 하나 — 원문의 틀린 부분은 옅은 회색 취소선(뒤로 물러나게), 그 아래 검정 → 고친 문장(바뀐 부분만 초록), 회색 팁.
 // 장기기억을 근거로 고쳤으면 그 출처를 팁 아래 칩으로 붙인다
-const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
-  const correction = sentence.correction!;
+const SentenceCorrection = ({ sentence }: { sentence: CorrectedSentence }) => {
+  const { correction } = sentence;
   return (
     <div className="py-3">
       <p className="text-16 leading-[1.35] font-medium text-foreground">
@@ -132,27 +137,30 @@ const SentenceCorrection = ({ sentence }: { sentence: TranscriptSentence }) => {
           className="text-muted-foreground/70"
         />
       </p>
-      <p className="mt-2 flex gap-1.5 text-16 leading-[1.35] font-bold text-foreground">
+      {/* 화살표 옆 한 칸에 고친 문장·팁·출처를 쌓아 셋이 같은 줄에서 시작한다 */}
+      <div className="mt-2 flex gap-1.5">
         <ArrowRightIcon size={16} strokeWidth={2.5} className="mt-1 shrink-0" />
-        <span>
-          <MarkedText
-            text={correction.fixed}
-            ranges={correction.changes}
-            as="ins"
-            className="text-correction no-underline"
-          />
-        </span>
-      </p>
-      <p className="mt-1 pl-[22px] text-13 leading-5 text-muted-foreground">
-        {correction.tip}
-      </p>
-      {correction.memory && (
-        // 출처는 팁 아래 반투명 흰 칩으로 단다 — 바탕이 비쳐 말풍선에 녹고, 덜 둥글게 해 말풍선 밖 상태 알약과 갈린다
-        <p className="mt-2 ml-[22px] flex w-fit items-center gap-1 rounded-lg bg-card/70 px-2 py-1 text-13 font-semibold text-foreground/75">
-          <Emoji>🗓️</Emoji>
-          {correction.memory.label}
-        </p>
-      )}
+        <div className="flex min-w-0 flex-col items-start">
+          <p className="text-16 leading-[1.35] font-bold text-foreground">
+            <MarkedText
+              text={correction.fixed}
+              ranges={correction.changes}
+              as="ins"
+              className="text-correction no-underline"
+            />
+          </p>
+          <p className="mt-1 text-13 leading-5 text-muted-foreground">
+            {correction.tip}
+          </p>
+          {correction.memory && (
+            // 출처는 팁 아래 반투명 흰 칩으로 단다 — 바탕이 비쳐 말풍선에 녹고, 덜 둥글게 해 말풍선 밖 상태 알약과 갈린다
+            <p className="mt-2 flex items-center gap-1 rounded-lg bg-card/70 px-2 py-1 text-13 font-semibold text-foreground/75">
+              <Emoji>🗓️</Emoji>
+              {correction.memory.label}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

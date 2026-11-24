@@ -1,15 +1,28 @@
 // 문장별 교정을 말풍선에 그릴 묶음과 칠할 조각으로 나눈다 — 스몰톡·롤플레이 대화 기록이 같이 쓴다
-import type { TextRange, TranscriptSentence } from '../api/small-talk';
+import type {
+  SentenceCorrection,
+  TextRange,
+  TranscriptSentence,
+} from '../api/small-talk';
+
+// 교정이 붙은 문장 — 묶음에서 따로 선 문장은 교정이 반드시 있다
+export type CorrectedSentence = TranscriptSentence & {
+  correction: SentenceCorrection;
+};
 
 export type SentenceBlock =
   | { kind: 'plain'; text: string }
-  | { kind: 'corrected'; sentence: TranscriptSentence };
+  | { kind: 'corrected'; sentence: CorrectedSentence };
 
 // 고칠 게 없는 문장이 이어지면 원문처럼 한 덩어리로 붙이고, 고친 문장은 하나씩 따로 세운다
 export const groupSentences = (sentences: TranscriptSentence[]) =>
   sentences.reduce<SentenceBlock[]>((blocks, sentence) => {
-    if (sentence.correction) {
-      return [...blocks, { kind: 'corrected', sentence }];
+    const { correction } = sentence;
+    if (correction) {
+      return [
+        ...blocks,
+        { kind: 'corrected', sentence: { ...sentence, correction } },
+      ];
     }
     const last = blocks.at(-1);
     if (last?.kind === 'plain') {
