@@ -105,4 +105,18 @@ describe('ExpressionPlayer', () => {
     // Then
     expect(headTransform(host)).toContain('translate(0.000 10.000)');
   });
+  it('조정을 걷으면 애니메이션이 없는 값은 기본값으로 돌아간다', () => {
+    // Given
+    const host = document.createElement('div');
+    const player = new ExpressionPlayer(host, fakeData(), { ambient: false });
+    player.adjust('head', 'y', { set: 40 });
+    player.step(0);
+
+    // When
+    player.adjust('head', 'y', null);
+    player.step(0);
+
+    // Then
+    expect(headTransform(host)).toContain('translate(0.000 10.000)');
+  });
 });

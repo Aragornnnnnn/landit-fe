@@ -255,6 +255,9 @@ export class ExpressionPlayer {
       state.out = out;
       for (const [k, v] of out) frameVals.set(k, v);
     }
+    // 이번 프레임에 아무 층도 안 그린 값(걷힌 조정 등)은 기본값으로 돌려놓는다
+    for (const key of this.values.keys())
+      if (!frameVals.has(key)) frameVals.set(key, this.base.get(key) ?? 0);
     for (const [key, adj] of this.adjusts) {
       const animated = frameVals.get(key) ?? this.base.get(key) ?? 0;
       frameVals.set(key, (adj.set ?? animated) + (adj.add ?? 0));
