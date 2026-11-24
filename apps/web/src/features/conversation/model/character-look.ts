@@ -68,7 +68,8 @@ const expressionOf = ({
   type,
   emotion,
 }: FloatingThought): CharacterExpression =>
-  (emotion && BY_EMOTION[emotion]) || toThoughtExpression(type);
+  (emotion && Object.hasOwn(BY_EMOTION, emotion) && BY_EMOTION[emotion]) ||
+  toThoughtExpression(type);
 
 /**
  * 지금 캐릭터의 겉모습. 자세는 대화 단계를 따르고,

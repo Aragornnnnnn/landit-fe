@@ -136,4 +136,17 @@ describe('toCharacterLook — 속마음 감정', () => {
     // then
     expect(expression).toBe('frown');
   });
+  it('상속 속성 이름이 감정으로 오면 모르는 감정으로 보고 속마음 종류를 따른다', () => {
+    // given
+    const thought: FloatingThought = {
+      ...thoughtOf('BAD'),
+      emotion: 'constructor',
+    };
+
+    // when
+    const { expression } = toCharacterLook('AI_INNER_THOUGHT', thought);
+
+    // then
+    expect(expression).toBe('frown');
+  });
 });
