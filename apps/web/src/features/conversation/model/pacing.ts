@@ -17,9 +17,6 @@ export const thoughtWaitMs = 3000;
 export const thoughtWaitLeftMs = (sentAt: number, now: number) =>
   Math.max(0, thoughtWaitMs - (now - sentAt));
 
-// 속마음이 말풍선에 뜬 뒤 그 감정이 캐릭터 표정으로 남아 있는 시간. 립싱크와 따로 움직여 말하는 동안 얹혀도 된다
-export const expressionHoldMs = 3000;
-
 // 속마음은 비동기 생성이라, 준비될 때까지 이 간격으로 폴링한다
 export const innerThoughtPollMs = 500;
 // 폴링 상한 — 넘으면 제출 응답 값으로라도 진행해 대화가 멈추지 않게 한다 (약 20초)

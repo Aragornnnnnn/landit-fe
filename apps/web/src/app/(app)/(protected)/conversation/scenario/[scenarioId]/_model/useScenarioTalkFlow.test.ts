@@ -9,7 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as sessionApi from '@/features/conversation/api/session';
 import type { Partner } from '@/features/conversation/model/character-look';
 import {
-  expressionHoldMs,
   innerThoughtMaxPolls,
   innerThoughtPollMs,
   thoughtWaitMs,
@@ -497,17 +496,20 @@ describe('useScenarioTalkFlow', async () => {
     });
   });
 
-  it('속마음이 뜨면 그 감정이 표정으로 잠깐 얹혔다가 사라진다', async () => {
+  it('속마음이 뜨면 그 감정이 표정으로 남아 다음 속마음까지 유지된다', async () => {
+    // Given 속마음이 표정으로 얹힌 뒤
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
-
     await speakAndSubmit(result, 'Hello!');
     expect(result.current.expressedThought?.type).toBe('GOOD');
 
+    // When 내가 답할 시간만큼 지나도
     act(() => {
-      vi.advanceTimersByTime(expressionHoldMs);
+      vi.advanceTimersByTime(60_000);
     });
-    expect(result.current.expressedThought).toBeNull();
+
+    // Then 표정은 그대로다 — 다음 반응이 올 때 바뀐다
+    expect(result.current.expressedThought?.type).toBe('GOOD');
   });
 
   it('응답이 끊기면 같은 답변을 같은 식별자로 자동으로 다시 보내 대화를 이어 간다', async () => {

@@ -71,7 +71,7 @@ const expressionOf = ({
 
 /**
  * 지금 캐릭터의 겉모습. 자세는 대화 단계를 따르고,
- * 말풍선에 막 뜬 속마음이 있으면 그 감정이 표정으로 잠깐 얹힌다.
+ * 말풍선에 마지막으로 뜬 속마음이 있으면 그 감정이 표정으로 남는다 — 다음 속마음이 올 때까지 유지한다.
  */
 export const toCharacterLook = (
   phase: ConversationPhase,
