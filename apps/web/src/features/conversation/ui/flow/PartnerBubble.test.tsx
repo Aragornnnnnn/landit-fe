@@ -86,6 +86,30 @@ describe('PartnerBubble', () => {
     );
   });
 
+  it('해석을 펼친 채 지난 대화가 된 말풍선은 펼친 채로 나타나 부드럽게 접힌다 — 툭 사라지지 않게', async () => {
+    // Given 펼친 해석을 접으며 지난 대화로 넘어온 말풍선
+    render(
+      <PartnerBubble
+        past
+        collapseTranslation
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+      />,
+    );
+
+    // Then 처음엔 해석이 보이고
+    expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
+
+    // 곧 접힌다
+    await waitFor(() =>
+      expect(screen.queryByText('오늘 하루 어땠어요?')).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole('button', { name: '해석 보기' }),
+    ).toBeInTheDocument();
+  });
+
   it('다음 질문으로 넘어가면 해석이 다시 접힌 상태로 시작한다', () => {
     // Given 앞 질문에서 해석을 펼쳐 뒀어도
     const { rerender } = render(

@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
+import { useBubbleChoices } from '@/features/conversation/model/useBubbleChoices';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
@@ -51,6 +52,8 @@ export const ScenarioTalkFlow = ({
     setShowExitModal(true);
   };
   const display = useTalkDisplay();
+  // 말풍선마다 사용자가 고른 것(글자 보임·해석 펼침) — 지난 대화가 돼도 이어 간다. 글자는 고른 적 없으면 설정을 따른다
+  const bubbleChoices = useBubbleChoices(display.textHidden);
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다.
   // 피드백 화면은 이 값을 다시 구할 수 없어 주소로 넘긴다
@@ -200,7 +203,7 @@ export const ScenarioTalkFlow = ({
           latestOnly={keyboardLifted}
           // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
           latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
-          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
+          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 영어 글자는 그 말풍선에서 고른 대로(고른 적 없으면 설정대로) 둔다
           renderPartner={(entry) => (
             <PartnerBubble
               past
@@ -217,13 +220,21 @@ export const ScenarioTalkFlow = ({
                   opened,
                 })
               }
-              onTextToggled={(visible) =>
+              textHidden={bubbleChoices.hiddenFor(entry.turnIndex)}
+              collapseTranslation={bubbleChoices.translationWasOpen(
+                entry.turnIndex,
+              )}
+              onTranslationCollapsed={() =>
+                bubbleChoices.recordTranslation(entry.turnIndex, false)
+              }
+              onTextToggled={(visible) => {
+                bubbleChoices.recordText(entry.turnIndex, visible);
                 track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                   session_id: sessionId ?? undefined,
                   turn_index: entry.turnIndex,
                   hidden: !visible,
-                })
-              }
+                });
+              }}
             />
           )}
         >
@@ -237,22 +248,24 @@ export const ScenarioTalkFlow = ({
                 translation={turn.aiTranslation}
                 speaking={phase === 'AI_SPEAKING'}
                 lastQuestion={gauge.lastQuestion}
-                onTranslationToggled={(opened) =>
+                onTranslationToggled={(opened) => {
+                  bubbleChoices.recordTranslation(turnIndex, opened);
                   track(EVENTS.TRANSLATION_TOGGLED, {
                     session_id: sessionId ?? undefined,
                     turn_index: turnIndex,
                     opened,
-                  })
-                }
+                  });
+                }}
                 replay={replay}
-                textHidden={display.textHidden}
-                onTextToggled={(visible) =>
+                textHidden={bubbleChoices.hiddenFor(turnIndex)}
+                onTextToggled={(visible) => {
+                  bubbleChoices.recordText(turnIndex, visible);
                   track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                     session_id: sessionId ?? undefined,
                     turn_index: turnIndex,
                     hidden: !visible,
-                  })
-                }
+                  });
+                }}
                 translationDefaultOpen={display.translationDefaultOpen}
                 thought={turn.thought}
               />

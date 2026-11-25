@@ -14,6 +14,7 @@ import {
   type Partner,
 } from '@/features/conversation/model/character-look';
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
+import { useBubbleChoices } from '@/features/conversation/model/useBubbleChoices';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
@@ -87,6 +88,8 @@ export const TalkScreen = ({
   const t = useTranslations('conversation.smallTalkConversation');
   const router = useRouter();
   const display = useTalkDisplay();
+  // 말풍선마다 사용자가 고른 것(글자 보임·해석 펼침) — 지난 대화가 돼도 이어 간다. 글자는 고른 적 없으면 설정을 따른다
+  const bubbleChoices = useBubbleChoices(display.textHidden);
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 시간이 무한이 된다
   const { unlimited } = useSpeakingLimit();
@@ -186,7 +189,7 @@ export const TalkScreen = ({
           latestOnly={keyboardLifted}
           // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
           latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
-          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
+          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 영어 글자는 그 말풍선에서 고른 대로(고른 적 없으면 설정대로) 둔다
           renderPartner={(entry) => (
             <PartnerBubble
               past
@@ -203,13 +206,21 @@ export const TalkScreen = ({
                   opened,
                 })
               }
-              onTextToggled={(visible) =>
+              textHidden={bubbleChoices.hiddenFor(entry.turnIndex)}
+              collapseTranslation={bubbleChoices.translationWasOpen(
+                entry.turnIndex,
+              )}
+              onTranslationCollapsed={() =>
+                bubbleChoices.recordTranslation(entry.turnIndex, false)
+              }
+              onTextToggled={(visible) => {
+                bubbleChoices.recordText(entry.turnIndex, visible);
                 track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                   session_id: sessionId,
                   turn_index: entry.turnIndex,
                   hidden: !visible,
-                })
-              }
+                });
+              }}
             />
           )}
         >
@@ -222,22 +233,24 @@ export const TalkScreen = ({
                 question={turn.aiMessage}
                 translation={turn.aiTranslation}
                 speaking={phase === 'AI_SPEAKING'}
-                onTranslationToggled={(opened) =>
+                onTranslationToggled={(opened) => {
+                  bubbleChoices.recordTranslation(turnIndex, opened);
                   track(EVENTS.TRANSLATION_TOGGLED, {
                     session_id: sessionId,
                     turn_index: turnIndex,
                     opened,
-                  })
-                }
+                  });
+                }}
                 replay={replay}
-                textHidden={display.textHidden}
-                onTextToggled={(visible) =>
+                textHidden={bubbleChoices.hiddenFor(turnIndex)}
+                onTextToggled={(visible) => {
+                  bubbleChoices.recordText(turnIndex, visible);
                   track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                     session_id: sessionId,
                     turn_index: turnIndex,
                     hidden: !visible,
-                  })
-                }
+                  });
+                }}
                 translationDefaultOpen={display.translationDefaultOpen}
                 thought={turn.thought}
               />
