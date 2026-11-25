@@ -107,6 +107,10 @@ const pathOf = (verts: Vert[], closed: boolean) => {
   return closed ? `${d}Z` : d;
 };
 
+const writeIfChanged = (el: Element, name: string, value: string) => {
+  if (el.getAttribute(name) !== value) el.setAttribute(name, value);
+};
+
 interface LayerState {
   name: string;
   anim: string;
@@ -142,6 +146,9 @@ export class ExpressionPlayer {
   private adjusts = new Map<string, Adjust>();
   private frame = 0;
   private last = 0;
+  // 처음 한 번은 클립을 맞춰야 한다 — 그 뒤로는 무언가 움직인 프레임에만 다시 맞춘다
+  private clipsStale = true;
+  private readonly clipTransforms = new Map<Element, string>();
 
   /** 매 프레임 그리기 직전에 불린다 — 끄덕임·립싱크처럼 바깥에서 얹는 움직임을 여기서 정한다 */
   onFrame: ((dt: number) => void) | null = null;
@@ -307,11 +314,13 @@ export class ExpressionPlayer {
     for (const rid of dirtyXf) {
       const el = this.els.get(this.data.targets[rid].el);
       if (!el) continue;
-      el.setAttribute(
+      // 같은 파츠라도 움직인 값만 바뀐다(대개 위치) — 그대로인 속성은 다시 쓰지 않아 스타일 계산을 줄인다
+      writeIfChanged(
+        el,
         'transform',
         `translate(${val(rid, 'x').toFixed(3)} ${val(rid, 'y').toFixed(3)}) rotate(${((val(rid, 'rotation') * 180) / Math.PI).toFixed(3)}) scale(${val(rid, 'scaleX').toFixed(4)} ${val(rid, 'scaleY').toFixed(4)})`,
       );
-      el.setAttribute('opacity', val(rid, 'opacity').toFixed(3));
+      writeIfChanged(el, 'opacity', val(rid, 'opacity').toFixed(3));
     }
     for (const el of dirtyMorph) {
       const shape = this.data.morph[el];
@@ -333,7 +342,11 @@ export class ExpressionPlayer {
         ?.querySelectorAll('path')
         .forEach((p) => p.setAttribute('d', d));
     }
-    this.syncClips();
+    // 클립 조각은 원본 도형을 따라간다 — 아무것도 안 움직인 프레임(가만히 있는 대부분)엔 잴 필요가 없다
+    if (this.clipsStale || dirtyXf.size || dirtyMorph.size) {
+      this.syncClips();
+      this.clipsStale = false;
+    }
   }
 
   /** 움직이는 클립 — 클립 도형을 원본 도형이 지금 있는 자리로 옮긴다 */
@@ -347,10 +360,12 @@ export class ExpressionPlayer {
         const m = src?.getCTM?.();
         if (!m) continue;
         const r = inverse.multiply(m);
-        this.byId(piece.el)?.setAttribute(
-          'transform',
-          `matrix(${r.a} ${r.b} ${r.c} ${r.d} ${r.e} ${r.f})`,
-        );
+        const el = this.byId(piece.el);
+        const transform = `matrix(${r.a} ${r.b} ${r.c} ${r.d} ${r.e} ${r.f})`;
+        // 다른 조각이 움직였을 뿐 이 조각은 그대로인 경우가 많다 — 같은 값은 다시 쓰지 않는다
+        if (!el || this.clipTransforms.get(el) === transform) continue;
+        this.clipTransforms.set(el, transform);
+        el.setAttribute('transform', transform);
       }
     }
   }

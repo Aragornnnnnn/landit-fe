@@ -1,6 +1,6 @@
 // 표정 플레이어 — 바깥 조정(덮어쓰기·더하기·폭 줄이기·상한)과 모션 줄이기 설정에서 계속 도는 층이 멈추는지 검증한다
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { ExpressionPlayer, type ExpressionData } from './expression-player';
 
@@ -127,6 +127,43 @@ describe('ExpressionPlayer', () => {
     expect(clipOf(second)).toBe(clipIdOf(second));
     expect(clipOf(first)).not.toBe(clipOf(second));
     expect(headTransform(second)).toContain('translate(0.000 10.000)');
+  });
+
+  it('움직인 파츠가 없는 프레임에는 클립을 다시 맞추지 않는다 — 클립 계산(getCTM)이 매 프레임 돌면 가만히 있어도 비싸다', () => {
+    // Given 머리를 따라가는 클립 조각 하나 — jsdom엔 getCTM이 없어 이 테스트 동안만 심는다
+    const matrix = { a: 1, b: 0, c: 0, d: 1, e: 0, f: 0 };
+    const fakeCTM = vi.fn(() => ({
+      ...matrix,
+      inverse: () => ({ ...matrix, multiply: () => matrix }),
+    }));
+    const proto = SVGElement.prototype as unknown as { getCTM?: unknown };
+    proto.getCTM = fakeCTM;
+    onTestFinished(() => {
+      delete proto.getCTM;
+    });
+    const data = {
+      ...fakeData(),
+      svg: '<svg viewBox="0 0 100 100"><defs><clipPath id="c"><rect id="piece"/></clipPath></defs><g id="h"></g></svg>',
+      clips: [{ ref: 'h', pieces: [{ el: 'piece', src: 'h' }] }],
+    };
+    const player = new ExpressionPlayer(document.createElement('div'), data, {
+      ambient: false,
+    });
+    player.step(0);
+    fakeCTM.mockClear();
+
+    // When 아무것도 움직이지 않는 프레임을 지나면
+    player.step(0.1);
+
+    // Then 클립을 다시 재지 않는다
+    expect(fakeCTM).not.toHaveBeenCalled();
+
+    // When 머리가 움직이면
+    player.adjust('head', 'x', { set: 5 });
+    player.step(0.1);
+
+    // Then 그때 다시 맞춘다
+    expect(fakeCTM).toHaveBeenCalled();
   });
 
   it('이름표에 없는 파츠를 조정하면 아무것도 바꾸지 않는다', () => {
