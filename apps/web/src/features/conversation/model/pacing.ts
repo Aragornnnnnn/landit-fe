@@ -9,9 +9,6 @@ export const speechTypingMs = (text: string, rate: number = 1) =>
 // 폴백 발화가 끝난 뒤 잠깐의 숨 고르기 — 글이 끝나자마자 마이크로 넘어가면 급해 보인다
 export const speechEndPauseMs = 600;
 
-// USER 선발화 진입 안내(랜디)가 떠 있는 시간
-export const userIntroHoldMs = 2800;
-
 // 속마음을 기다려 주는 상한 — 내 말을 보낸 순간부터 센다. 안에 오면 속마음과 대사가 한 말풍선으로 함께 나오고,
 // 넘으면 대사부터 말하며 속마음 자리는 뼈대로 잡아 둔다. 사용자가 느끼는 기다림 기준이라 대답이 늦어도 더 끌지 않는다
 export const thoughtWaitMs = 3000;

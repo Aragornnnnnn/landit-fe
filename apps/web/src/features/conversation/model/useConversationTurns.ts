@@ -200,13 +200,16 @@ export const useConversationTurns = ({
   // 다음 질문을 화면에 올리고 턴을 넘긴다 — 그 말풍선 맨 위에 붙일 속마음 줄(글·뼈대·없음)과 함께
   const startNextTurn = (initialThought: BubbleThought | null) => {
     input.resetForNextTurn();
-    // 지금 차례의 상대 말과 방금 보낸 내 말을 기록으로 넘긴다 — 내가 먼저 건 첫 턴은 상대 말 없이 내 말만
+    // 지금 차례를 연 말과 방금 보낸 내 말을 기록으로 넘긴다 — 내가 먼저 건 첫 턴은 상대 말 대신 상황 안내가 남는다
     const answered = answeredRef.current;
     answeredRef.current = null;
+    const opener = currentMessage
+      ? { speaker: 'PARTNER' as const, text: currentMessage.content }
+      : openingInstruction
+        ? { speaker: 'SITUATION' as const, text: openingInstruction }
+        : null;
     if (answered != null)
-      setLog((prev) =>
-        recordExchange(prev, currentMessage?.content ?? null, answered),
-      );
+      setLog((prev) => recordExchange(prev, opener, answered));
     setThought(initialThought);
     if (nextMessageRef.current) {
       setAiMessage(nextMessageRef.current);
