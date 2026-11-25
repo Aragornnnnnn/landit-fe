@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { TranscriptSentence } from '../api/small-talk';
 import {
+  countCorrectedSentences,
   groupSentences,
   hasSentenceCorrection,
   splitByRanges,
@@ -108,5 +109,21 @@ describe('hasSentenceCorrection', () => {
 
   it('모든 문장에 교정이 없으면 false다', () => {
     expect(hasSentenceCorrection([plain('Hi.')])).toBe(false);
+  });
+});
+
+describe('countCorrectedSentences', () => {
+  it('교정이 붙은 문장만 센다', () => {
+    expect(
+      countCorrectedSentences([
+        plain('Hi.'),
+        corrected('I go.', 'I went.'),
+        corrected('It tired.', 'It was tiring.'),
+      ]),
+    ).toBe(2);
+  });
+
+  it('문장별 교정이 없는 옛 응답이면 0이다', () => {
+    expect(countCorrectedSentences(undefined)).toBe(0);
   });
 });

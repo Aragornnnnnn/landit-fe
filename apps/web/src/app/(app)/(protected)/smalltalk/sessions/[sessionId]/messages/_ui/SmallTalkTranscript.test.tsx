@@ -298,6 +298,20 @@ describe('SmallTalkTranscript 문장별 교정', () => {
     expect(screen.queryByText('잘했어요!')).not.toBeInTheDocument();
   });
 
+  it('고친 문장이 있으면 말풍선 아래에 고친 문장 수를 보여 준다', () => {
+    renderTranscript([
+      messageOf({
+        correctionStatus: 'COMPLETED',
+        sentences: [
+          ...correctedOf('I go to gym.', 'I went to the gym.'),
+          ...correctedOf('It tired.', 'It was tiring.'),
+        ],
+      }),
+    ]);
+
+    expect(screen.getByText('고친 문장 2개')).toBeInTheDocument();
+  });
+
   it('교정을 아직 만드는 중이면 말풍선 아래에 기다리는 표시가 보인다', () => {
     renderTranscript([messageOf({ correctionStatus: 'PREPARING' })]);
 
@@ -330,6 +344,41 @@ describe('SmallTalkTranscript 배운 표현 태그', () => {
     expect(
       screen.getByText('배운 표현 「work out」을 썼어요', { exact: false }),
     ).toBeInTheDocument();
+  });
+
+  it('배운 표현을 썼으면 잘했어요는 접고 배운 표현 한 줄만 보인다', () => {
+    // 배운 표현을 쓴 것 자체가 칭찬이다 — 말풍선 아래는 한 줄만 둔다
+    renderTranscript([
+      messageOf({
+        correctionStatus: 'COMPLETED',
+        reusedExpression: {
+          expressionId: 73,
+          text: 'work out',
+          matchedText: 'working out',
+        },
+      }),
+    ]);
+
+    expect(screen.queryByText('잘했어요!')).not.toBeInTheDocument();
+  });
+
+  it('배운 표현을 쓴 고친 말이면 고친 문장 수 대신 배운 표현이 보인다', () => {
+    renderTranscript([
+      messageOf({
+        correctionStatus: 'COMPLETED',
+        reusedExpression: {
+          expressionId: 73,
+          text: 'work out',
+          matchedText: 'work out',
+        },
+        sentences: correctedOf('I work out more harder.', 'I work out harder.'),
+      }),
+    ]);
+
+    expect(
+      screen.getByText('배운 표현 「work out」을 썼어요', { exact: false }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/고친 문장 \d개/)).not.toBeInTheDocument();
   });
 
   it('강조할 구절이 원문에 없으면 원문만 그대로 그린다', () => {

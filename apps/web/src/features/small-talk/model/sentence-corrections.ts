@@ -60,3 +60,8 @@ export const splitByRanges = (text: string, ranges: TextRange[]) => {
 export const hasSentenceCorrection = (
   sentences: TranscriptSentence[] | undefined,
 ) => (sentences ?? []).some((sentence) => sentence.correction);
+
+// 고친 문장이 몇 개인가 — 말풍선 아래 「고친 문장 n개」가 쓴다. 서버는 이 수를 따로 주지 않는다
+export const countCorrectedSentences = (
+  sentences: TranscriptSentence[] | undefined,
+) => (sentences ?? []).filter((sentence) => sentence.correction).length;
