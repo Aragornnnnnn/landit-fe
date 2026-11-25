@@ -9,9 +9,20 @@
 // 상자는 저마다 제 그림 영역만큼만 잡는다(layer-box.ts) — 상자가 곧 합성 레이어라 크기가 GPU 메모리다.
 // 상자는 CSS 픽셀 세계라 SVG 단위 길이는 그 상자 높이 대비 %로 바꿔 쓴다(--box-height = 상자 영역 높이).
 //
+// 얼굴은 표정 데이터를 불러오면 표정 플레이어가 머리 자리에서 그린다(expression-head.ts). 불러오기 전이나
+// 실패하면 원래 머리 층(눈·입 파츠)을 그대로 그린다 — 대화는 표정 없이도 이어진다.
+//
 // 값은 전부 아래 사양표(BLINKING·NODDING·MIMING)에 모아 두고, 함수는 "언제 쏘는가"만 말한다.
-import { useEffect, useLayoutEffect, useRef, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { useReducedMotion } from 'motion/react';
+
+import { reportWarning } from '@/shared/monitoring/report';
 
 import type { CharacterLook, Partner } from '../../model/character-look';
 import {
@@ -20,8 +31,18 @@ import {
   loadLoudnessTrack,
   toArticulationTrack,
   toVisemes,
+  type MouthState,
 } from '../../model/lipsync';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
+import {
+  createRestingMouth,
+  loadExpressionData,
+  mimeMouth,
+  mountExpressionHead,
+  releaseMouth,
+  showMouth,
+} from './expression-head';
+import type { ExpressionData, ExpressionPlayer } from './expression-player';
 import {
   clipArea,
   placeArea,
@@ -340,18 +361,16 @@ const keepMiming = (parts: CharacterParts, accents: Accents, y: BoxUnits) => {
 };
 
 /**
- * 재생 시각만 읽어 입모양과 벌림을 매 프레임 다시 그린다. 소리 경로는 건드리지 않는다.
- * 자세 transition을 끄는 이유 — 켜두면 0.4초 보간이 매 프레임을 서로 취소해 입이 굳는다.
+ * 재생 시각만 읽어 입 상태를 매 프레임 계산해 넘긴다. 소리 경로는 건드리지 않는다.
  * 음량 표는 디코딩이 끝나야 생기고, 그 전까지는 입을 닫아 둔다. 표가 늦거나 실패하면 글자를 고르게 나눠 움직인다.
- * 정리할 때 인라인 스타일을 지워 입을 자세 CSS에 돌려준다.
+ * 입을 어디에 그릴지(원래 입 층·표정 머리)는 부르는 쪽이 정한다
  */
 // 음량 표를 기다리며 입을 닫아 두는 한도 — 음성 앞머리 무음(약 0.4초)을 넘기면 소리가 나는데 입이 닫혀 있게 된다
 const LOUDNESS_WAIT_MS = 500;
 
-const driveMouth = (
-  mouth: HTMLElement,
+const followSpeech = (
   { playback, text }: PlayingSpeech,
-  y: ToBoxY,
+  onMouth: (state: MouthState) => void,
 ) => {
   const visemes = toVisemes(text);
   let track: Float32Array | null = null;
@@ -372,10 +391,7 @@ const driveMouth = (
     articulation = loaded && toArticulationTrack(loaded);
   });
 
-  mouth.style.transition = 'none';
   let state = closedMouth;
-  // 같은 값을 다시 쓰면 바뀐 게 없어도 매 프레임 스타일 계산이 돈다 — 쉬는 구간(입 닫힘)이 대부분이라 아낄 게 많다
-  let written = '';
   const nextFrame = () => {
     state = advanceMouth(
       state,
@@ -384,10 +400,7 @@ const driveMouth = (
       playback.progress(),
       articulation,
     );
-    const { sx, sy, dy } = state;
-    // 원래처럼 SVG 단위 0.1까지만 쓴다 — 더 잘게 쓰면 값이 매 프레임 달라 보여도 그림은 같다
-    const transform = `translateY(${y(Number(dy.toFixed(1)))}) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
-    if (transform !== written) mouth.style.transform = written = transform;
+    onMouth(state);
     frame = requestAnimationFrame(nextFrame);
   };
   nextFrame();
@@ -396,8 +409,39 @@ const driveMouth = (
     driving = false;
     window.clearTimeout(waitTimer);
     cancelAnimationFrame(frame);
+  };
+};
+
+/**
+ * 원래 입 층에 소리를 맞춘다. 자세 transition을 끄는 이유 — 켜두면 0.4초 보간이 매 프레임을 서로 취소해 입이 굳는다.
+ * 정리할 때 인라인 스타일을 지워 입을 자세 CSS에 돌려준다
+ */
+const driveMouthLayer = (
+  mouth: HTMLElement,
+  speech: PlayingSpeech,
+  y: ToBoxY,
+) => {
+  mouth.style.transition = 'none';
+  // 같은 값을 다시 쓰면 바뀐 게 없어도 매 프레임 스타일 계산이 돈다 — 쉬는 구간(입 닫힘)이 대부분이라 아낄 게 많다
+  let written = '';
+  const stop = followSpeech(speech, ({ sx, sy, dy }) => {
+    // 원래처럼 SVG 단위 0.1까지만 쓴다 — 더 잘게 쓰면 값이 매 프레임 달라 보여도 그림은 같다
+    const transform = `translateY(${y(Number(dy.toFixed(1)))}) scale(${sx.toFixed(3)}, ${sy.toFixed(3)})`;
+    if (transform !== written) mouth.style.transform = written = transform;
+  });
+  return () => {
+    stop();
     mouth.style.transform = '';
     mouth.style.transition = '';
+  };
+};
+
+/** 표정 머리의 입에 소리를 맞춘다. 정리할 때 입을 표정에 돌려준다 */
+const driveHeadMouth = (player: ExpressionPlayer, speech: PlayingSpeech) => {
+  const stop = followSpeech(speech, (state) => showMouth(player, state));
+  return () => {
+    stop();
+    releaseMouth(player);
   };
 };
 
@@ -434,7 +478,11 @@ const placePivots = (root: HTMLElement, boxes: Boxes) => {
     const box = root.querySelector<HTMLElement>(`[data-layer="${layer}"]`);
     const frame = areaOf.get(layer);
     if (!frame) continue;
-    const shapes = [...(box?.querySelectorAll<SVGGraphicsElement>(part) ?? [])];
+    // 표정 머리를 그릴 땐 보이지 않게 둔 원래 머리 그림으로 잰다 — 표정 데이터엔 크게 늘린 클립 조각이 있어 영역이 부푼다
+    const scope = box?.querySelector('[data-measure]') ?? box;
+    const shapes = [
+      ...(scope?.querySelectorAll<SVGGraphicsElement>(part) ?? []),
+    ];
     if (!box || !shapes.length || !('getBBox' in shapes[0])) continue;
     // 숨긴 조각(display:none)은 0,0 점으로 잡혀 영역을 늘린다 — 원래 기준(fill-box)처럼 뺀다
     const drawn = shapes
@@ -461,6 +509,100 @@ export const PartnerCharacter = ({
   const frameBox = viewBox ?? VIEWBOX[partner];
   const boxes = layoutBoxes(partner, frameBox);
 
+  // 표정 데이터 — 상대마다 불러온다. 다른 상대의 데이터가 남아 있으면 쓰지 않는다
+  const [loaded, setLoaded] = useState<{
+    partner: Partner;
+    data: ExpressionData;
+  } | null>(null);
+  const expressionData = loaded?.partner === partner ? loaded.data : null;
+  const headHostRef = useRef<HTMLDivElement>(null);
+  const headPlayerRef = useRef<ExpressionPlayer | null>(null);
+  const restingMouthRef = useRef<ReturnType<typeof createRestingMouth> | null>(
+    null,
+  );
+  // 표정 머리를 새로 띄울 때 지금 표정으로 시작하려고 들고 있는다 — 표정이 바뀔 때마다 다시 띄우지 않는다
+  const expressionRef = useRef(expression);
+  useEffect(() => {
+    expressionRef.current = expression;
+  });
+
+  useEffect(() => {
+    let alive = true;
+    loadExpressionData(partner).then(
+      (data) => {
+        if (alive) setLoaded({ partner, data });
+      },
+      (error: unknown) => {
+        // 못 받으면 원래 머리 층으로 남는다 — 표정만 빠지고 대화는 이어진다
+        if (alive) reportWarning(error, { partner });
+      },
+    );
+    return () => {
+      alive = false;
+    };
+  }, [partner]);
+
+  useEffect(() => {
+    const host = headHostRef.current;
+    const area = layoutBoxes(partner, frameBox).head;
+    if (!host || !expressionData || !area) return;
+
+    const player = mountExpressionHead({
+      host,
+      data: expressionData,
+      area,
+      partner,
+      expression: expressionRef.current,
+      ambient: !stillness,
+    });
+    const restingMouth = createRestingMouth(player);
+    restingMouth.to(expressionRef.current === 'neutral' ? 1 : 0, {
+      instant: true,
+    });
+    headPlayerRef.current = player;
+    restingMouthRef.current = restingMouth;
+    // 원래 머리 그림이 측정용으로 바뀌었다 — 고개 기준점을 다시 잰다
+    const root = rootRef.current;
+    if (root) placePivots(root, layoutBoxes(partner, frameBox));
+
+    return () => {
+      restingMouth.stop();
+      player.stop();
+      headPlayerRef.current = null;
+      restingMouthRef.current = null;
+      host.replaceChildren();
+    };
+  }, [expressionData, partner, frameBox, stillness]);
+
+  useEffect(() => {
+    headPlayerRef.current?.setExpression(expression);
+  }, [expression, expressionData]);
+
+  // 표정 머리의 입 — 말하면 소리에, 소리 없이 말하면 음절 흉내에, 쉬면 중립의 쉬는 입(다른 표정이면 표정 입)에 맡긴다
+  useEffect(() => {
+    const player = headPlayerRef.current;
+    const restingMouth = restingMouthRef.current;
+    if (!player || !restingMouth) return;
+
+    if (speech) {
+      restingMouth.to(0, { instant: true });
+      return driveHeadMouth(player, speech);
+    }
+    if (posture === 'speaking' && !stillness) {
+      restingMouth.to(0, { instant: true });
+      return mimeMouth(player);
+    }
+    restingMouth.to(expression === 'neutral' ? 1 : 0);
+  }, [
+    speech,
+    posture,
+    stillness,
+    expression,
+    expressionData,
+    partner,
+    frameBox,
+  ]);
+
   // 첫 페인트 전에 기준점을 놓는다 — 늦으면 쉬는 입이 엉뚱한 축으로 눌린 채 한 번 그려진다.
   // 표정이 바뀔 때도 다시 잰다 — 찡그린 입 대신 숨은 입은 잴 수 없어, 찡그린 채 처음 그려지면 입 기준점이 비어 있다
   useLayoutEffect(() => {
@@ -479,15 +621,16 @@ export const PartnerCharacter = ({
     return () => observer.disconnect();
   }, [partner, frameBox]);
 
+  // 깜빡임은 원래 머리 층의 눈에 건다 — 표정 머리는 제 데이터 안에서 깜빡인다
   useEffect(() => {
     const root = rootRef.current;
-    if (!root || stillness) return;
+    if (!root || stillness || expressionData) return;
 
     const accents = createAccents();
     keepBlinking(readParts(root).eyes, accents);
 
     return () => accents.stopAll();
-  }, [partner, stillness]);
+  }, [partner, stillness, expressionData]);
 
   useEffect(() => {
     const root = rootRef.current;
@@ -508,7 +651,7 @@ export const PartnerCharacter = ({
     );
     if (!mouth || !speech) return;
 
-    return driveMouth(
+    return driveMouthLayer(
       mouth,
       speech,
       unitsOf(layoutBoxes(partner, frameBox)).mouth,
@@ -553,17 +696,30 @@ export const PartnerCharacter = ({
             style={boxStyle(head, frame)}
           >
             <div data-layer="head-pose" className={styles.headPose}>
-              {draw('head-back', head)}
-              {mouth && (
-                <div
-                  data-layer="mouth"
-                  className={styles.mouth}
-                  style={boxStyle(mouth, head)}
-                >
-                  {draw('mouth', mouth)}
-                </div>
+              {expressionData ? (
+                <>
+                  {/* 원래 머리 그림은 그리지 않고 고개 기준점을 재는 데만 쓴다 */}
+                  <div data-measure className={styles.measure}>
+                    {draw('head-back', head)}
+                    {draw('head-front', head)}
+                  </div>
+                  <div ref={headHostRef} className={styles.expressionHead} />
+                </>
+              ) : (
+                <>
+                  {draw('head-back', head)}
+                  {mouth && (
+                    <div
+                      data-layer="mouth"
+                      className={styles.mouth}
+                      style={boxStyle(mouth, head)}
+                    >
+                      {draw('mouth', mouth)}
+                    </div>
+                  )}
+                  {draw('head-front', head)}
+                </>
               )}
-              {draw('head-front', head)}
             </div>
           </div>
         )}
