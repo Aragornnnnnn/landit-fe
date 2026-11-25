@@ -43,7 +43,7 @@ interface PartnerBubbleProps {
 }
 
 /**
- * 말풍선 맨 위 속마음 줄 — 대사와 구분되게 작은 회색 기울임으로, 길어도 두 줄까지만.
+ * 말풍선 맨 위 속마음 줄 — 대사와 구분되게 작은 회색 기울임으로, 길어도 자르지 않고 다 보인다.
  * 오는 중이면 한 줄 높이 뼈대를 둬서, 도착해도 대사가 크게 밀려 내려가지 않게 한다
  */
 const ThoughtLine = ({ thought }: { thought: BubbleThought }) => {
@@ -51,7 +51,7 @@ const ThoughtLine = ({ thought }: { thought: BubbleThought }) => {
   return (
     <>
       {thought.status === 'shown' ? (
-        <p className="line-clamp-2 text-13 leading-normal break-words text-muted-foreground italic">
+        <p className="text-13 leading-normal break-words text-muted-foreground italic">
           {thought.text}
         </p>
       ) : (
