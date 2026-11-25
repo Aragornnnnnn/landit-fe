@@ -489,6 +489,32 @@ describe('PartnerCharacter 표정 머리', () => {
     );
   });
 
+  it('말하는 도중 표정 데이터가 도착해도 원래 입 움직임이 표정 머리에 번지지 않는다 — 첫 발화에 머리 전체가 눌렸다', async () => {
+    // Given 표정 데이터가 오기 전에 말이 시작돼 원래 입 층이 움직이는 중
+    let arrive!: (data: ExpressionData) => void;
+    expressionHead.load.mockReturnValue(
+      new Promise<ExpressionData>((resolve) => {
+        arrive = resolve;
+      }),
+    );
+    const { container } = renderSpeaking();
+    await settle();
+    nextFrame();
+    expect(
+      container.querySelector<HTMLElement>('[data-layer="mouth"]')?.style
+        .transform,
+    ).not.toBe('');
+
+    // When 표정 데이터가 도착하고 몇 프레임 지나면
+    await act(async () => arrive(chloeData));
+    await settle();
+    nextFrame();
+
+    // Then 표정 머리 자리에는 입 변형이 없다
+    const headHost = partOf(container, 'head')?.closest('svg')?.parentElement;
+    expect(headHost?.style.transform).toBe('');
+  });
+
   it('표정 데이터를 못 받으면 원래 머리 층으로 남고 경고만 남긴다', async () => {
     // Given
     const failure = new Error('chunk failed');
