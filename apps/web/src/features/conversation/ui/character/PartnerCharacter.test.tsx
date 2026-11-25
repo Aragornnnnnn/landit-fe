@@ -468,6 +468,26 @@ describe('PartnerCharacter 표정 머리', () => {
     expect(lipsync.advanceMouth).toHaveBeenCalled();
   });
 
+  it('말하는 중에 표정이 바뀌어도 입 맞추기를 다시 시작하지 않는다 — 다시 시작하면 음량 표를 새로 읽는 동안 입이 멈춘다', async () => {
+    // Given 말하는 중
+    const { rerender } = renderSpeaking();
+    await settle();
+    lipsync.loadLoudnessTrack.mockClear();
+
+    // When 속마음이 와서 표정이 바뀌면
+    rerender(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'speaking', expression: 'happy' }}
+        speech={speech}
+      />,
+    );
+    await settle();
+
+    // Then 같은 발화의 음량 표를 다시 읽지 않는다
+    expect(lipsync.loadLoudnessTrack).not.toHaveBeenCalled();
+  });
+
   it('말을 마치고 중립으로 쉬면 벌린 입이 쉬는 입으로 섞여 돌아간다', async () => {
     // Given
     const { container, rerender } = renderSpeaking();
