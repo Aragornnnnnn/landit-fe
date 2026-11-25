@@ -85,7 +85,9 @@ const AnswerGuideChip = ({
     <motion.button
       ref={ref}
       layoutId={GUIDE_LAYOUT_ID}
-      transition={reduced ? { duration: 0 } : MORPH}
+      // 알약은 접을 때만 새로 붙는다 — 카드 크기에서 천천히 줄어들면 사라진 카드 자리가 빈 채 남아 보인다.
+      // 접을 땐 바로 제 크기로 돌아오고, 펼칠 때의 커지는 모양은 카드 쪽 전환이 맡는다
+      transition={{ duration: 0 }}
       onClick={onOpen}
       className="flex items-center gap-1.5 self-end border py-2 pr-3.5 pl-3 text-14 font-medium text-foreground transition-shadow active:scale-95"
       style={{
@@ -95,12 +97,12 @@ const AnswerGuideChip = ({
         boxShadow: hintVisible ? HINT_GLOW : PILL_SHADOW,
       }}
     >
-      {/* 카드에서 줄어들어 돌아올 때 글자가 늘어난 채 보이지 않게, 모양이 자리 잡은 뒤 나타난다 */}
+      {/* 접혀 돌아오면 글자도 바로 보인다 — 카드가 빠지는 0.12초와 겹쳐 살짝 떠오른다 */}
       <motion.span
         className="flex items-center gap-1.5"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.15, delay: reduced ? 0 : MORPH_SETTLE_S }}
+        transition={{ duration: reduced ? 0 : 0.15 }}
       >
         <GradientSparkle size={13} />
         {t('openButton')}
