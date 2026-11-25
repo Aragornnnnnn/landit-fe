@@ -4,7 +4,7 @@
 // 대화마다 다른 것(흐름 훅·종료 시트·내가 먼저 걸 때의 안내)은 화면을 쓰는 쪽이 넣는다
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -13,18 +13,19 @@ import {
   toCharacterLook,
   type Partner,
 } from '@/features/conversation/model/character-look';
-import { userIntroHoldMs } from '@/features/conversation/model/pacing';
-import type { FloatingThought } from '@/features/conversation/model/thought';
+import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
+import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
-import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { MyBubble } from '@/features/conversation/ui/flow/MyBubble';
+import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
+import { SituationCard } from '@/features/conversation/ui/flow/SituationCard';
 import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
-import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
-import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
+import { TranscriptEditor } from '@/features/conversation/ui/flow/TranscriptEditor';
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
 import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
@@ -42,10 +43,13 @@ export type TalkScreenFlow = Pick<
   | 'phase'
   | 'turnIndex'
   | 'turn'
-  | 'finishedThought'
+  | 'log'
+  | 'expressedThought'
   | 'speech'
   | 'waitingForSound'
+  | 'preparingAnswer'
   | 'replay'
+  | 'replayPast'
   | 'interruptible'
   | 'input'
   | 'resend'
@@ -68,10 +72,6 @@ interface TalkScreenProps {
   onShowSummary: () => void;
   // X로 종료 시트를 열어야 할 때 — 시트는 화면을 쓰는 쪽이 children으로 넣는다
   onExitRequested: () => void;
-  // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
-  userFirstHint?: string;
-  // 속마음이 없는 대화(롤플레이)는 답을 기다릴 때 화면을 덮지 않고 말풍선 자리에 점 세 개를 띄운다
-  hasInnerThought?: boolean;
   children?: React.ReactNode;
 }
 
@@ -82,8 +82,6 @@ export const TalkScreen = ({
   summaryPath,
   onShowSummary,
   onExitRequested,
-  userFirstHint,
-  hasInnerThought = true,
   children,
 }: TalkScreenProps) => {
   const t = useTranslations('conversation.smallTalkConversation');
@@ -92,15 +90,17 @@ export const TalkScreen = ({
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 시간이 무한이 된다
   const { unlimited } = useSpeakingLimit();
-  const [introDismissed, setIntroDismissed] = useState(false);
   const {
     phase,
     turnIndex,
     turn,
-    finishedThought,
+    log,
+    expressedThought,
     speech,
     waitingForSound,
+    preparingAnswer,
     replay,
+    replayPast,
     interruptible,
     input,
     resend,
@@ -120,6 +120,7 @@ export const TalkScreen = ({
     setTranscript,
     submitText,
     reviewing,
+    reviewedInputType,
     speakAgain,
     editTranscript,
     submitReviewed,
@@ -129,11 +130,15 @@ export const TalkScreen = ({
   } = input;
 
   const ended = phase === 'DONE';
-  const thinking = phase === 'AI_THINKING';
-  // 속마음이 없는 대화의 답 대기 — 소리가 날 때까지 기다린다. 소리 없이 글자나 입부터 움직이면 어색하다
-  const waitingForAnswer = !hasInnerThought && (thinking || waitingForSound);
-  // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 대화 칸 아래에 입력창을 열고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
+  const myBubble = toMyBubbleState({
+    phase,
+    reviewing,
+    typing,
+    unsent: resend != null,
+    text: transcript,
+  });
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
@@ -144,27 +149,10 @@ export const TalkScreen = ({
   useEffect(() => {
     if (ended) router.prefetch(summaryPath);
   }, [ended, router, summaryPath]);
-  const showUserFirstIntro =
-    userFirstHint !== undefined &&
-    turn.isUserOpening &&
-    phase === 'USER_READY' &&
-    !introDismissed;
-  useEffect(() => {
-    if (!showUserFirstIntro) return;
-    const timer = setTimeout(() => setIntroDismissed(true), userIntroHoldMs);
-    return () => clearTimeout(timer);
-  }, [showUserFirstIntro]);
 
-  const resolveOverlayThought = (): FloatingThought | null => {
-    if (showUserFirstIntro) return { text: userFirstHint, type: 'NORMAL' };
-    if (phase === 'AI_INNER_THOUGHT')
-      return { text: turn.innerThought, type: turn.innerThoughtType };
-    return null;
-  };
-  const overlayThought = resolveOverlayThought();
   const characterLook = toCharacterLook(
-    waitingForAnswer ? 'AI_THINKING' : phase,
-    finishedThought,
+    preparingAnswer ? 'AI_THINKING' : phase,
+    expressedThought,
   );
 
   const requestExit = () => {
@@ -175,15 +163,11 @@ export const TalkScreen = ({
     router.prefetch(summaryPath);
     onExitRequested();
   };
-  useBackPress(() => {
-    // 답을 기다리는 연출이 X를 가린 동안은 뒤로가기도 받지 않는다 — 보낸 첫 답을 확인 없이 버리지 않게
-    if (thinking && hasInnerThought) return;
-    requestExit();
-  });
+  useBackPress(requestExit);
 
   return (
     <main
-      className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
+      className="relative isolate mx-auto flex h-dvh max-w-[430px] flex-col bg-background"
       // iOS WKWebView는 키보드가 떠도 레이아웃이 안 줄어든다 — 가려진 높이만큼 올려 입력 박스를 보이게 한다
       style={keyboardLifted ? { paddingBottom: keyboardInset } : undefined}
     >
@@ -191,33 +175,53 @@ export const TalkScreen = ({
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
-      {/* 질문과 답변 칸이 무대 아래 높이를 나눠 쓴다 — 둘 다 글 길이만큼 서고, 모자라면 질문이 최소 높이까지 먼저 줄어(줄어드는 비율 1000) 안에서 스크롤된다. 지금 읽고 고칠 건 내 답이다.
-          키보드가 없을 땐 무대 높이를 건드리지 않고, 키보드가 올라오면 무대가 먼저 줄어 입력창에 자리를 내준다 */}
+      {/* 대화 칸과 키보드 입력창이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
+          키보드가 올라오면 대화 칸을 접고 무대가 먼저 줄어 입력창에 자리를 내준다 */}
       <div
-        className={`flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
+        className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        {/* 질문은 글자 크기와 상관없이 한 줄은 온전히 보이게 남긴다(카드 여백·버튼 4.75rem + 17px 글 한 줄). 더 크게 잡으면 짧은 질문 밑이 빈다.
-          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
-        <section
-          className={
-            keyboardLifted
-              ? 'hidden'
-              : 'flex min-h-[calc(4.75rem+1.46rem*var(--font-scale))] flex-auto shrink-[1000] flex-col px-5'
-          }
+        <ConversationLog
+          entries={log}
+          latestKey={turnIndex}
+          latestOnly={keyboardLifted}
+          // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
+          latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
+          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
+          renderPartner={(entry) => (
+            <PartnerBubble
+              past
+              question={entry.text}
+              translation={entry.translation}
+              speaking={false}
+              thought={entry.thought && { status: 'shown', ...entry.thought }}
+              replay={replayPast(entry)}
+              translationDefaultOpen={display.translationDefaultOpen}
+              onTranslationToggled={(opened) =>
+                track(EVENTS.TRANSLATION_TOGGLED, {
+                  session_id: sessionId,
+                  turn_index: entry.turnIndex,
+                  opened,
+                })
+              }
+              onTextToggled={(visible) =>
+                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                  session_id: sessionId,
+                  turn_index: entry.turnIndex,
+                  hidden: !visible,
+                })
+              }
+            />
+          )}
         >
-          {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다.
-            끝난 뒤엔 남는 높이를 통계 시트 아래로 넘긴다 — 시트가 작별 인사에 붙어야 이 대화의 결과로 읽힌다 */}
-          <div
-            className={`flex min-h-0 flex-col pt-2 ${ended ? '' : 'flex-1'}`}
-          >
-            {waitingForAnswer ? (
-              <ThinkingBubble />
-            ) : (
-              <QuestionCard
+          {/* 내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 둔다. 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
+          {turn.isUserOpening ? (
+            <SituationCard text={turn.aiMessage} />
+          ) : (
+            !waitingForSound && (
+              <PartnerBubble
                 question={turn.aiMessage}
                 translation={turn.aiTranslation}
                 speaking={phase === 'AI_SPEAKING'}
-                instruction={turn.isUserOpening}
                 onTranslationToggled={(opened) =>
                   track(EVENTS.TRANSLATION_TOGGLED, {
                     session_id: sessionId,
@@ -235,37 +239,43 @@ export const TalkScreen = ({
                   })
                 }
                 translationDefaultOpen={display.translationDefaultOpen}
+                thought={turn.thought}
               />
-            )}
-          </div>
-          {ended && (
-            <>
-              <TalkSummary {...summary} />
-              <div className="flex-1" />
-            </>
+            )
           )}
-        </section>
-
-        {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
-        {!ended && (
-          <div className="flex min-h-0 shrink flex-col px-5">
-            <UserTranscript
+          {myBubble && (
+            <MyBubble
+              state={myBubble}
               text={transcript}
               speechPending={speechPending}
-              phase={phase}
-              unsent={resend != null}
-              editing={typing}
-              onChange={setTranscript}
-              onSubmit={submitText}
-              onCancel={closeTyping}
-              onEdit={reviewing && !typing ? editTranscript : undefined}
+              onEdit={editTranscript}
+              typed={reviewedInputType === 'TEXT'}
             />
+          )}
+          {preparingAnswer && <ThinkingBubble />}
+        </ConversationLog>
+
+        {/* 끝난 뒤엔 대화 칸 아래에 이 대화의 기록을 붙인다 — 작별 인사 바로 밑이라 이 대화의 결과로 읽힌다 */}
+        {ended && (
+          <div className="px-5">
+            <TalkSummary {...summary} />
           </div>
+        )}
+
+        {/* 키보드 입력바는 대화 칸 밖, 화면 폭으로 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력바는 그대로 키보드 위에 선다.
+            닫기 버튼 없이 위쪽을 누르거나 키보드를 내리면 닫히고, 쓴 글은 확인 말풍선으로 남는다 */}
+        {typing && (
+          <TranscriptEditor
+            text={transcript}
+            onChange={setTranscript}
+            onSubmit={submitText}
+            onClose={closeTyping}
+          />
         )}
       </div>
 
       <footer
-        className={`flex-none ${keyboardLifted ? 'pb-4' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
+        className={`flex-none ${keyboardLifted ? '' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
       >
         {ended ? (
           // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다
@@ -281,12 +291,13 @@ export const TalkScreen = ({
                 0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다.
                 무제한이면 이 줄째 없다 — "무제한"이라 써 둘 것도 없다 */}
             {!unlimited && (
-              <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
-                {/* 남은 시간만 강조색으로 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
+              // 캐릭터 다리 위에 겹쳐도 읽히게 흰 글자에 그림자를 둔다
+              <p className="mt-3 text-center text-sm font-medium text-on-stage">
+                {/* 남은 시간만 굵게 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
                 {t.rich('remainingTimeLabel', {
                   time: toCountdownLabel(remainingMs),
                   emphasis: (chunks) => (
-                    <span className="font-bold text-primary">{chunks}</span>
+                    <span className="font-bold">{chunks}</span>
                   ),
                 })}
               </p>
@@ -309,12 +320,6 @@ export const TalkScreen = ({
           </>
         )}
       </footer>
-
-      {/* 속마음 — 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다 */}
-      <ThoughtOverlay
-        loading={thinking && hasInnerThought}
-        thought={overlayThought}
-      />
 
       {children}
 

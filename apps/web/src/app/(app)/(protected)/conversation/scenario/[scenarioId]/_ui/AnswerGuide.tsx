@@ -1,13 +1,14 @@
-// 답변 가이드 — 내 답변 칸 오른쪽 위 칩이 그 자리에서 예시 카드로 커지고, 접으면 다시 칩으로 줄어든다.
-// 칩과 카드는 같은 layoutId라 화면에선 한 물건이 모양만 바꾼다. 답변 칸은 그대로 두고 카드를 그 위에 겹쳐서,
-// 여닫을 때 답변 칸이 다시 그려지거나 위 질문 카드가 밀리지 않는다. 움직임 줄이기면 모양 변화 없이 바로 바뀐다
+// 답변 가이드 — 대화 칸에서 내 다음 말이 올 자리(오른쪽 아래)에 「✦ 예시 볼래요」 알약으로 서고, 누르면 그 자리에서 예시 카드로 커진다.
+// 알약과 카드는 같은 layoutId라 화면에선 한 물건이 모양만 바꾼다. 말하기 시작하면 내 말풍선이 그 아래에 붙어 예시를 보며 말할 수 있다.
+// 움직임 줄이기면 모양 변화 없이 바로 바뀐다
 'use client';
 
-import { useEffect, useId, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
-import type { AnswerGuide } from '@/features/scenario/api/daily';
+import { useChatScroll } from '@/features/conversation/ui/flow/ConversationLog';
+import type { AnswerGuide as AnswerGuideContent } from '@/features/scenario/api/daily';
 import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { GradientSparkle, SPARKLE_COLORS } from '@/shared/ui/GradientSparkle';
 import { ChevronDownIcon } from '@/shared/ui/Icons';
@@ -18,125 +19,101 @@ const gradientBorder = {
   borderColor: 'transparent',
 };
 
-// 칩과 카드를 한 물건으로 잇는 이름
+// 알약과 카드를 한 물건으로 잇는 이름
 const GUIDE_LAYOUT_ID = 'answer-guide';
 
-// 칩↔카드 모양 변화 — 살짝만 넘치고 멈추는 스프링
+// 알약↔카드 모양 변화 — 살짝만 넘치고 멈추는 스프링
 const MORPH = { type: 'spring', stiffness: 420, damping: 34 } as const;
 
-// 모양 변화가 대략 자리 잡는 시간(초) — 칩·카드 안쪽 글자는 이 뒤에 나타나야 늘어난 채 보이지 않는다
+// 모양 변화가 대략 자리 잡는 시간(초) — 알약·카드 안쪽 글자는 이 뒤에 나타나야 늘어난 채 보이지 않는다
 const MORPH_SETTLE_S = 0.25;
 
-// 힌트가 떠 있는 동안 칩 둘레를 감싸는 옅은 보라 고리 — 반짝이·테두리의 보라와 같은 색
-const HINT_RING = `0 0 0 4px ${SPARKLE_COLORS[2]}33`;
+// 알약이 바닥에서 살짝 떠 보이는 그림자
+const PILL_SHADOW = '0 3px 10px rgba(0,0,0,0.06)';
+// 첫 질문에서 눌러 보라고 알약 둘레에 번지는 옅은 보라 빛 — 반짝이·테두리의 보라와 같은 색
+const HINT_GLOW = `${PILL_SHADOW}, 0 0 14px ${SPARKLE_COLORS[2]}2e`;
 
-/** 내 답변 칸 머리에 붙는 칩 — 라벨 줄 높이를 키우지 않게 위아래를 끌어당긴다.
- * 유도 힌트가 켜지면 칩 아래(아직 비어 있는 답변 칸 안)에 "말이 안 떠오르면 눌러 봐요" 말풍선이 떠서 칩을 가리킨다.
- * 칩 위로 띄우면 작은 화면에서 질문 카드의 다시 듣기·해석 버튼을 가린다 */
-export const AnswerGuideChip = ({
+/**
+ * 대화 칸의 답변 가이드 — 접혀 있으면 알약, 펼치면 예시 카드.
+ * 유도(hintVisible)가 켜지면 알약 둘레에 보라 빛이 번져 처음 막힌 사람의 눈에 걸리게 한다
+ */
+export const AnswerGuide = ({
+  guide,
+  open,
+  onOpen,
+  onClose,
+  hintVisible,
+  chipRef,
+}: {
+  guide: AnswerGuideContent;
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+  hintVisible: boolean;
+  // 카드를 접은 뒤 포커스를 돌려받을 자리
+  chipRef?: React.Ref<HTMLButtonElement>;
+}) => (
+  // 바뀌는 순간 빠지는 쪽을 제자리에 띄워 둔다(popLayout) — 그 기준이 되는 틀이라 relative다
+  <div className="relative flex flex-col">
+    <AnimatePresence initial={false} mode="popLayout">
+      {open ? (
+        <AnswerGuideCard key="card" guide={guide} onClose={onClose} />
+      ) : (
+        <AnswerGuideChip
+          key="pill"
+          ref={chipRef}
+          onOpen={onOpen}
+          hintVisible={hintVisible}
+        />
+      )}
+    </AnimatePresence>
+  </div>
+);
+
+const AnswerGuideChip = ({
   onOpen,
   hintVisible,
   ref,
 }: {
   onOpen: () => void;
   hintVisible: boolean;
-  // 카드를 접은 뒤 포커스를 돌려받을 자리
   ref?: React.Ref<HTMLButtonElement>;
 }) => {
   const t = useTranslations('conversation.answerGuideChip');
   const reduced = useReducedMotion() ?? false;
-  const hintId = `guide-hint-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
   return (
-    // 말풍선은 칩 버튼 밖 형제로 둔다 — 칩이 카드로 커지는 모양 변화에 같이 늘어나지 않게
-    <span className="relative flex">
-      <motion.button
-        ref={ref}
-        layoutId={GUIDE_LAYOUT_ID}
-        transition={reduced ? { duration: 0 } : MORPH}
-        onClick={onOpen}
-        aria-describedby={hintVisible ? hintId : undefined}
-        className="-my-1 flex h-6 items-center gap-1 border px-2.5 text-xs font-bold text-foreground transition-shadow active:scale-95"
-        style={{
-          ...gradientBorder,
-          // 높이(24px)의 절반 — 999로 두면 카드로 커지는 동안 알약처럼 부푼다
-          borderRadius: 12,
-          boxShadow: hintVisible ? HINT_RING : undefined,
-        }}
+    <motion.button
+      ref={ref}
+      layoutId={GUIDE_LAYOUT_ID}
+      transition={reduced ? { duration: 0 } : MORPH}
+      onClick={onOpen}
+      className="flex items-center gap-1.5 self-end border py-2 pr-3.5 pl-3 text-14 font-medium text-foreground transition-shadow active:scale-95"
+      style={{
+        ...gradientBorder,
+        // 높이의 절반쯤 — 999로 두면 카드로 커지는 동안 알약처럼 부푼다
+        borderRadius: 20,
+        boxShadow: hintVisible ? HINT_GLOW : PILL_SHADOW,
+      }}
+    >
+      {/* 카드에서 줄어들어 돌아올 때 글자가 늘어난 채 보이지 않게, 모양이 자리 잡은 뒤 나타난다 */}
+      <motion.span
+        className="flex items-center gap-1.5"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.15, delay: reduced ? 0 : MORPH_SETTLE_S }}
       >
-        {/* 카드에서 줄어들어 돌아올 때 글자가 늘어난 채 보이지 않게, 모양이 자리 잡은 뒤 나타난다 */}
-        <motion.span
-          className="flex items-center gap-1"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.15, delay: reduced ? 0 : MORPH_SETTLE_S }}
-        >
-          <GradientSparkle size={12} />
-          {t('openButton')}
-        </motion.span>
-      </motion.button>
-      <AnimatePresence>
-        {hintVisible && (
-          <motion.span
-            key="hint"
-            id={hintId}
-            initial={{ opacity: 0, y: reduced ? 0 : -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, transition: { duration: 0.12 } }}
-            transition={{ duration: DURATION.base, ease: EASE_STANDARD }}
-            className="pointer-events-none absolute top-full right-0 z-10 mt-3 whitespace-nowrap"
-          >
-            {/* 살짝 떠다녀 눈에 걸리게 한다. 움직임 줄이기면 멈춘다 */}
-            <motion.span
-              className="relative block rounded-xl bg-foreground px-3 py-2 text-[13px] font-bold text-background shadow-lg shadow-black/15"
-              animate={reduced ? undefined : { y: [0, -3, 0] }}
-              transition={{
-                duration: 1.8,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              {t('hint')}
-              {/* 위쪽 칩 가운데를 가리키는 꼬리 — 칩 폭(약 92px)의 절반쯤에 둔다 */}
-              <span className="absolute right-10 bottom-full border-x-[6px] border-b-[7px] border-x-transparent border-b-foreground" />
-            </motion.span>
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </span>
+        <GradientSparkle size={13} />
+        {t('openButton')}
+      </motion.span>
+    </motion.button>
   );
 };
-
-/**
- * 내 답변 칸 자리 — 칸은 늘 그대로 두고, 펼치면 예시 카드를 그 위에 겹친다.
- * 카드는 칸의 아래 끝에 붙어 칸과 같은 최소 높이로 덮는다. 글이 길면 위로 자라 마이크를 가리지 않는다
- */
-export const AnswerGuideSlot = ({
-  guide,
-  open,
-  onClose,
-  children,
-}: {
-  guide: AnswerGuide | null;
-  open: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) => (
-  // flex로 둬서 안쪽 답변 칸의 위 여백이 바깥으로 새지 않게 한다 — 카드가 칸 높이를 그대로 덮어야 한다
-  <div className="relative flex min-h-0 shrink flex-col">
-    {children}
-    <AnimatePresence>
-      {open && guide && (
-        <AnswerGuideCard key="guide" guide={guide} onClose={onClose} />
-      )}
-    </AnimatePresence>
-  </div>
-);
 
 const AnswerGuideCard = ({
   guide,
   onClose,
 }: {
-  guide: AnswerGuide;
+  guide: AnswerGuideContent;
   onClose: () => void;
 }) => {
   const t = useTranslations('conversation.answerGuideCard');
@@ -155,17 +132,22 @@ const AnswerGuideCard = ({
 
   // 칩이 카드로 바뀌며 사라지므로 포커스를 카드 안(접기)으로 옮긴다 — 키보드·화면 읽기 사용자가 자리를 잃지 않게
   const closeRef = useRef<HTMLButtonElement>(null);
-  // 칩이 카드로 다 커진 뒤에 옮긴다 — 펼치는 첫 프레임에 포커스까지 얹으면 화면 계산이 겹쳐 버벅인다
+  const cardRef = useRef<HTMLDivElement>(null);
+  const scroll = useChatScroll();
+  // 칩이 카드로 다 커진 뒤에 한다 — 펼치는 첫 프레임에 포커스까지 얹으면 화면 계산이 겹쳐 버벅인다.
+  // 커진 카드가 칸 아래로 넘치면 접기 버튼까지 보이게 칸에 따라 내려와 달라고 한다
   useEffect(() => {
-    const timer = setTimeout(
-      () => closeRef.current?.focus({ preventScroll: true }),
-      MORPH_SETTLE_S * 1000,
-    );
+    const timer = setTimeout(() => {
+      if (cardRef.current) scroll?.follow(cardRef.current);
+      closeRef.current?.focus({ preventScroll: true });
+    }, MORPH_SETTLE_S * 1000);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 펼친 순간 한 번만. scroll은 렌더마다 새 객체다
   }, []);
 
   return (
     <motion.div
+      ref={cardRef}
       layoutId={GUIDE_LAYOUT_ID}
       transition={reduced ? { duration: 0 } : MORPH}
       // 접을 때는 줄어드는 칩에 자리를 넘기며 재빨리 사라진다.
@@ -175,11 +157,12 @@ const AnswerGuideCard = ({
       exit={{ opacity: 0, transition: { duration: 0.12 } }}
       role="region"
       aria-label={t('regionLabel')}
-      className="absolute inset-x-0 bottom-0 z-10 flex min-h-28 flex-col border-[1.5px] px-5 py-3 shadow-lg shadow-black/5"
-      style={{ ...gradientBorder, borderRadius: 16 }}
+      // 상대 말풍선과 짝을 이루는 오른쪽 말풍선 모양 — 오른위 꼬리, 내 다음 말이 올 자리에 선다
+      className="relative flex w-[280px] max-w-full flex-col self-end border px-[18px] pt-3.5 pb-3 shadow-[0_8px_12px_rgba(0,0,0,0.09)]"
+      style={{ ...gradientBorder, borderRadius: '20px 6px 20px 20px' }}
     >
       {!reduced && <span className="animate-guide-sweep" aria-hidden="true" />}
-      <motion.div className="flex items-center gap-1.5" {...line(0)}>
+      <motion.div className="flex items-center gap-[5px]" {...line(0)}>
         {/* 반짝이가 톡 튀어나와 "도움이 왔다"를 알린다 */}
         <motion.span
           className="flex"
@@ -189,29 +172,31 @@ const AnswerGuideCard = ({
         >
           <GradientSparkle size={14} />
         </motion.span>
-        <p className="flex-1 text-xs font-bold text-foreground">{t('title')}</p>
-        <button
-          ref={closeRef}
-          onClick={onClose}
-          className="-my-1 -mr-1 flex items-center gap-0.5 px-1 py-1 text-xs font-medium text-muted-foreground active:opacity-70"
-        >
-          {t('closeButton')}
-          <ChevronDownIcon size={12} strokeWidth={2.5} className="rotate-180" />
-        </button>
+        <p className="text-12 font-bold text-foreground">{t('title')}</p>
       </motion.div>
       {/* 예시가 뜻보다 먼저 — 영어를 먼저 읽게 한 박자 늦춰 따라온다 */}
       <motion.p
         {...line(0.08)}
-        className="mt-1.5 text-[17px] leading-snug font-bold text-foreground"
+        className="mt-1.5 text-16 leading-[1.45] font-bold break-words text-foreground"
       >
         {guide.content}
       </motion.p>
       <motion.p
         {...line(0.16)}
-        className="mt-1 text-sm leading-snug text-muted-foreground"
+        className="mt-1.5 text-13 leading-normal break-words text-muted-foreground"
       >
         {guide.translatedContent}
       </motion.p>
+      <motion.div className="mt-1.5 flex justify-end" {...line(0.16)}>
+        <button
+          ref={closeRef}
+          onClick={onClose}
+          className="-my-1 -mr-1 flex items-center gap-0.5 px-1 py-1 text-12 font-bold text-muted-foreground active:opacity-70"
+        >
+          {t('closeButton')}
+          <ChevronDownIcon size={14} strokeWidth={2.5} className="rotate-180" />
+        </button>
+      </motion.div>
     </motion.div>
   );
 };

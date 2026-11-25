@@ -26,9 +26,8 @@ export interface CharacterLook {
  * 침묵에 맞장구치는 꼴이고 재촉으로도 읽힌다. 끄덕임은 listening에서만 돌기 때문에
  * 기본 자세로 두는 것만으로 멈춘다.
  *
- * AI_THINKING·AI_INNER_THOUGHT가 idle인 이유 — 제출한 순간부터 속마음 오버레이가
- * 화면을 덮는다. 그 뒤에서 끄덕여봐야 보이지 않고, 이미 다 들은 뒤라 맞장구칠 것도 없다.
- * 표정은 말풍선이 끝난 뒤 따로 스친다.
+ * AI_THINKING이 idle인 이유 — 이미 다 들은 뒤라 맞장구칠 것이 없다.
+ * 표정은 속마음이 말풍선에 뜰 때 따로 얹힌다.
  *
  * 그래서 끄덕임은 유저가 실제로 말하는 동안에만 돈다.
  */
@@ -37,7 +36,6 @@ const BY_PHASE: Record<ConversationPhase, CharacterPosture> = {
   USER_READY: 'idle',
   USER_SPEAKING: 'listening',
   AI_THINKING: 'idle',
-  AI_INNER_THOUGHT: 'idle',
   DONE: 'idle',
 };
 
@@ -73,12 +71,12 @@ const expressionOf = ({
 
 /**
  * 지금 캐릭터의 겉모습. 자세는 대화 단계를 따르고,
- * 노출을 막 끝낸 속마음이 있으면 그 감정이 표정으로 잠깐 얹힌다.
+ * 말풍선에 막 뜬 속마음이 있으면 그 감정이 표정으로 잠깐 얹힌다.
  */
 export const toCharacterLook = (
   phase: ConversationPhase,
-  finishedThought: FloatingThought | null,
+  expressedThought: FloatingThought | null,
 ): CharacterLook => ({
   posture: BY_PHASE[phase],
-  expression: finishedThought ? expressionOf(finishedThought) : 'neutral',
+  expression: expressedThought ? expressionOf(expressedThought) : 'neutral',
 });

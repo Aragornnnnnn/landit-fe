@@ -70,15 +70,9 @@ describe('nextConversationState', () => {
     ).toEqual(state('AI_THINKING'));
   });
 
-  it('대기 중 응답이 오면 속마음으로 넘어간다', () => {
+  it('대기 중 응답이 오면 바로 다음 AI 발화로 넘어간다 — 속마음은 그 말풍선 맨 위에 붙는다', () => {
     expect(
-      nextConversationState(state('AI_THINKING'), 'AI_RESPONSE_READY'),
-    ).toEqual(state('AI_INNER_THOUGHT'));
-  });
-
-  it('대기 중 속마음을 건너뛰면(빈값) 바로 다음 AI 발화로 넘어간다', () => {
-    expect(
-      nextConversationState(state('AI_THINKING', 0), 'AI_RESPONSE_SKIPPED'),
+      nextConversationState(state('AI_THINKING', 0), 'AI_RESPONSE_READY'),
     ).toEqual(state('AI_SPEAKING', 1));
   });
 
@@ -92,12 +86,6 @@ describe('nextConversationState', () => {
     expect(
       nextConversationState(state('USER_READY'), 'RESEND_STARTED'),
     ).toEqual(state('AI_THINKING'));
-  });
-
-  it('속마음이 끝나면 다음 AI 발화로 넘어간다 — 서버가 종료 인사까지 항상 보내주므로 다음 발화는 늘 있다', () => {
-    expect(
-      nextConversationState(state('AI_INNER_THOUGHT', 0), 'INNER_THOUGHT_DONE'),
-    ).toEqual(state('AI_SPEAKING', 1));
   });
 
   it.each([
@@ -131,7 +119,7 @@ describe('canInterruptSpeech', () => {
 
   it.each([
     ['스위치가 꺼져 있으면', { enabled: false }],
-    ['상대가 말하는 중이 아니면', { phase: 'AI_INNER_THOUGHT' as const }],
+    ['상대가 말하는 중이 아니면', { phase: 'AI_THINKING' as const }],
     ['아직 들을 발화가 없으면', { hasMessage: false }],
     ['음성을 준비하느라 소리가 아직 안 났으면', { soundStarted: false }],
     ['종료 인사 중이면', { completed: true }],

@@ -100,6 +100,7 @@ describe('useSmallTalkSessionQuery', () => {
           innerThoughtType: null,
           correctionStatus: 'PREPARING',
           correction: null,
+          sentences: [{ text: 'Hi.', strikes: [], correction: null }],
         },
       ],
     });

@@ -20,26 +20,21 @@
     "keyboardButton": "キーボードで入力",
     "speakButton": "話す"
   },
-  "questionCard": {
+  "partnerBubble": {
     "lastQuestionBadge": "最後の質問です",
-    "instructionCaption": "自分から話しかける場面",
     "replayButton": "もう一度聞く",
     "stopReplayButton": "再生を止める",
     "showTranslationButton": "訳を見る",
     "hideTranslationButton": "訳を閉じる",
     "showTextButton": "英文を表示",
-    "hideTextButton": "英文を隠す"
+    "hideTextButton": "英文を隠す",
+    "thoughtLoadingLabel": "心の声を思い浮かべています"
   },
-  "userTranscript": {
-    "editLabel": "回答を直す：{text}",
-    "headerLabel": "あなたの回答",
-    "unsentError": "接続が不安定です",
-    "editBadge": "修正",
-    "editHint": "話した内容と違ったらタップして直せます"
+  "conversationLog": {
+    "jumpToLatestButton": "最新の会話へ",
+    "newReplyLabel": "新しい返事があります"
   },
   "transcriptEditor": {
-    "headerLabel": "あなたの回答",
-    "cancelButton": "入力をキャンセル",
     "placeholder": "回答を入力してください",
     "sendButton": "回答を送信",
     "englishOnlyToast": "英語のみ入力できます",
@@ -66,8 +61,18 @@
   "conversationWaiting": {
     "exitButton": "会話をやめる"
   },
+  "situationCard": {
+    "label": "自分から話しかける場面"
+  },
+  "myBubble": {
+    "editLabel": "回答を直す：{text}",
+    "editBadge": "修正",
+    "editHint": "話した内容と違ったらタップして直せます",
+    "unsentLabel": "送信できなかった回答"
+  },
   "conversationTurns": {
-    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください"
+    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください",
+    "unsentToast": "接続が不安定で回答を送信できませんでした"
   },
   "conversationInput": {
     "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",
@@ -80,7 +85,6 @@
     "completeFailedToast": "接続に問題があり、会話を終えられませんでした"
   },
   "smallTalkConversation": {
-    "userFirstHint": "気軽にあいさつから始めてみましょう！",
     "exitButton": "会話をやめる",
     "feedbackButton": "フィードバックを見る",
     "remainingTimeLabel": "残り話せる時間 <emphasis>{time}</emphasis>"
@@ -103,8 +107,7 @@
     "homeButton": "ホームへ"
   },
   "answerGuideChip": {
-    "openButton": "例を見ます",
-    "hint": "思いつかないときはタップしてみてください"
+    "openButton": "例を見ます"
   },
   "answerGuideCard": {
     "regionLabel": "回答の例",
@@ -112,7 +115,6 @@
     "closeButton": "閉じる"
   },
   "scenarioTalkFlow": {
-    "userFirstHint": "場面をよく読んで、自分から話しかけてみましょう！",
     "progressLabel": "会話の進み具合",
     "exitButton": "会話をやめる",
     "feedbackButton": "詳しい分析を見ます"

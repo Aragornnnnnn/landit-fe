@@ -109,7 +109,8 @@ const SCROLL_EXCEPTIONS = new Set([
   'features/survey/ui/ChoiceList.tsx',
   'features/survey/ui/steps/TextStep.tsx',
   'features/onboarding/ui/common/AccentForm.tsx',
-  'features/conversation/ui/flow/QuestionCard.tsx',
+  // 대화 칸 — 마이크·답변 칸 위에서 끝나 바닥에 닿지 않는다
+  'features/conversation/ui/flow/ConversationLog.tsx',
   'app/(app)/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',
   'app/(app)/(protected)/roleplay/new/_ui/CreateRoleplayFlow.tsx',
   // 바깥 스크롤 상자 — 안쪽 내용이 safe-area 여백을 맡는다
@@ -121,8 +122,6 @@ const SCROLL_EXCEPTIONS = new Set([
   'app/(app)/(auth)/_ui/LoginScreen.tsx',
   // 카드 뒷면 안쪽 스크롤 — 바닥에 닿지 않는다
   'features/scenario/ui/card/ScenarioCardBack.tsx',
-  // 높이가 고정된 내 답변 칸 안쪽 스크롤 — 바닥에 닿지 않는다
-  'features/conversation/ui/flow/UserTranscript.tsx',
   // 개발자 전용
   'app/(app)/(protected)/me/developer/_ui/AlarmCheckScreen.tsx',
   'app/(app)/(protected)/me/developer/reward/_ui/RewardCheckScreen.tsx',

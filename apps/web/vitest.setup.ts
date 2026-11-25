@@ -42,3 +42,12 @@ afterEach(() => {
   testIntl.locale = 'ko';
   if (typeof document !== 'undefined') document.documentElement.lang = '';
 });
+
+// jsdom엔 레이아웃이 없어 ResizeObserver도 없다 — 크기 변화를 듣는 컴포넌트가 렌더될 수 있게 아무것도 안 하는 관찰자를 둔다
+if (typeof window !== 'undefined' && !window.ResizeObserver) {
+  window.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}

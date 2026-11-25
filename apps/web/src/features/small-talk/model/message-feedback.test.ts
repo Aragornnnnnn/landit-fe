@@ -16,6 +16,7 @@ const messageOf = (
   emotion: null,
   innerThought: null,
   innerThoughtType: null,
+  sentences: [],
   ...overrides,
 });
 

@@ -109,4 +109,23 @@ describe('useInnerThought', () => {
     // then
     await expect(resolving).resolves.toMatchObject({ emotion: 'SULKY' });
   });
+
+  it.each([
+    ['화면을 떠나면', (r: { unmount: () => void }) => r.unmount()],
+    [
+      '대화를 접으면',
+      (r: { result: { current: { cancel: () => void } } }) =>
+        r.result.current.cancel(),
+    ],
+  ] as const)(
+    '%s 더는 살아 있지 않다고 알린다 — 늦게 도는 타이머가 떠난 화면을 건드리지 않게',
+    (_, leave) => {
+      const rendered = renderHook(() => useInnerThought());
+      const { isActive } = rendered.result.current;
+
+      leave(rendered as never);
+
+      expect(isActive()).toBe(false);
+    },
+  );
 });

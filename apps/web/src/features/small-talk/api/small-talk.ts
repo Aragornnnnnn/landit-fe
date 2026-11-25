@@ -164,6 +164,31 @@ export interface SmallTalkCorrection {
   memoryTag: string | null;
 }
 
+// 문장 안의 범위 — 0부터, end는 빼고 센다(JS slice와 같은 UTF-16 단위). 시작 순으로 오고 겹치지 않는다
+export interface TextRange {
+  start: number;
+  end: number;
+}
+
+// 한 문장의 교정 — 고친 문장과 그 안에서 바뀐 범위, 한국어 팁
+export interface SentenceCorrection {
+  fixed: string;
+  // fixed 안에서 초록으로 칠할 범위. 지우기만 한 교정이면 비어 있을 수 있다
+  changes: TextRange[];
+  tip: string;
+  // 장기기억을 근거로 고친 교정에만 있다. label은 날짜까지 들어간 완성 문구다
+  memory: { label: string; sourceDate: string } | null;
+}
+
+// 발화를 나눈 문장 하나 — 순서대로 이어 붙이면 원문이 된다(공백만 다를 수 있다)
+export interface TranscriptSentence {
+  text: string;
+  // text 안에서 취소선을 그을 범위. 교정이 없는 문장은 비어 있다
+  strikes: TextRange[];
+  // 고칠 게 없는 문장은 null
+  correction: SentenceCorrection | null;
+}
+
 // 배운 표현을 이 메시지에서 실제로 썼다
 export interface SmallTalkReusedExpression {
   expressionId: number;
@@ -183,9 +208,12 @@ export interface SmallTalkHistoryMessage {
   emotion: string | null;
   innerThought: string | null;
   innerThoughtType: string | null;
+  // 문장별 교정. 상대 말이면 비어 있고, 내 말이면 한 문장 이상이다.
+  // 교정을 만드는 중이거나 실패했으면 교정 없는 원문 한 문장이다
+  sentences: TranscriptSentence[];
   // 아래 셋은 사용자 메시지에만 온다 — AI 메시지엔 필드 자체가 없다
   correctionStatus?: CorrectionStatus;
-  // 고칠 게 없거나(COMPLETED) 만들다 실패했으면(FAILED) null
+  // 옛 앱 호환용으로 남은 첫 교정 한 문장. 화면은 sentences를 읽는다
   correction?: SmallTalkCorrection | null;
   reusedExpression?: SmallTalkReusedExpression | null;
 }

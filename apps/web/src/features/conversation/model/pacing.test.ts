@@ -1,7 +1,7 @@
-// 발화 페이싱 — 음성이 없을 때 쓰는 추정 시간이 말하기 속도 설정을 따라간다
+// 발화 페이싱 — 음성이 없을 때 쓰는 추정 시간이 말하기 속도 설정을 따라가고, 속마음 기다림은 보낸 순간부터 센다
 import { describe, expect, it } from 'vitest';
 
-import { speechTypingMs } from './pacing';
+import { speechTypingMs, thoughtWaitLeftMs, thoughtWaitMs } from './pacing';
 
 describe('speechTypingMs', () => {
   it('배속을 주지 않으면 1배 기준으로 센다', () => {
@@ -23,5 +23,15 @@ describe('speechTypingMs', () => {
 
     expect(speechTypingMs(short)).toBe(1400);
     expect(speechTypingMs(short, 0.5)).toBe(2800);
+  });
+});
+
+describe('thoughtWaitLeftMs', () => {
+  it('보낸 지 얼마 안 됐으면 상한에서 지난 시간만큼 뺀 만큼 더 기다린다', () => {
+    expect(thoughtWaitLeftMs(1000, 2000)).toBe(thoughtWaitMs - 1000);
+  });
+
+  it('대답이 상한보다 늦게 왔으면 더 기다리지 않는다', () => {
+    expect(thoughtWaitLeftMs(1000, 1000 + thoughtWaitMs + 500)).toBe(0);
   });
 });
