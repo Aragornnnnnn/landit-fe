@@ -415,6 +415,25 @@ describe('PartnerCharacter 표정 머리', () => {
     ).toBe('none');
   });
 
+  it('감춘 몸통에는 숨쉬기 값을 쓰지 않는다 — 안 보이는 요소를 매 프레임 고치는 낭비다', async () => {
+    // Given
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+    await settle();
+    const before = partOf(container, 'torso')?.getAttribute('transform');
+
+    // When 숨쉬기 한 주기 가까이 지나도
+    await act(() => vi.advanceTimersByTimeAsync(2000));
+
+    // Then
+    expect(partOf(container, 'torso')?.getAttribute('transform')).toBe(before);
+  });
+
   it('클로이는 표정 머리에 머리카락 틈을 다시 판다 — 표정 데이터에선 틈 조각이 빠져 있다', async () => {
     // Given
     const { container } = render(

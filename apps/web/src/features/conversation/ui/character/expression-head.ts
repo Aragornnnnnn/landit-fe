@@ -138,6 +138,11 @@ export const mountExpressionHead = ({
     // 숙이는 표정이어도 원래 자리 아래로는 내려가지 않는다 — 몸통이 따로라 목선이 깃 밖으로 빠진다
     player.adjust('head', 'y', { scale, max: headTarget.base.y });
   }
+  // 감춘 몸통은 숨쉬기 값을 고정한다 — 안 보이는 요소에 매 프레임 값을 쓰지 않게
+  const torsoTarget = data.targets[data.names.torso];
+  if (torsoTarget?.kind === 'xf')
+    for (const [prop, value] of Object.entries(torsoTarget.base))
+      player.adjust('torso', prop, { set: value });
   // 떠오름은 전신 층의 머리 상자가 이미 한다 — 플레이어의 머리 숨쉬기는 꺼서 두 번 뜨지 않게
   const innerTarget = data.targets[data.names['head-inner']];
   if (innerTarget?.kind === 'xf')
