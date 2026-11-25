@@ -72,7 +72,7 @@
     "reusedExpressionBadge": "学んだフレーズ「{expression}」を使いました",
     "goodJobBadge": "よくできました！",
     "fixedSentenceLabel": "直した文",
-    "correctedCountBadge": "直した文 {count}件"
+    "correctedCountBadge": "より自然な文 {count}件"
   },
   "transcriptSkeleton": {
     "loadingLabel": "会話を読み込み中"
