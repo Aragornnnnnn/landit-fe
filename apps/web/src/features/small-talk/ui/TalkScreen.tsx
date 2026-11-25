@@ -14,9 +14,9 @@ import {
   type Partner,
 } from '@/features/conversation/model/character-look';
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
+import { useBubbleChoices } from '@/features/conversation/model/useBubbleChoices';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
-import { useTextReveal } from '@/features/conversation/model/useTextReveal';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
@@ -88,8 +88,8 @@ export const TalkScreen = ({
   const t = useTranslations('conversation.smallTalkConversation');
   const router = useRouter();
   const display = useTalkDisplay();
-  // 말풍선마다 사용자가 글자를 펼치거나 가린 대로 — 지난 대화가 돼도 유지하고, 고른 적 없으면 설정을 따른다
-  const textReveal = useTextReveal(display.textHidden);
+  // 말풍선마다 사용자가 고른 것(글자 보임·해석 펼침) — 지난 대화가 돼도 이어 간다. 글자는 고른 적 없으면 설정을 따른다
+  const bubbleChoices = useBubbleChoices(display.textHidden);
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 시간이 무한이 된다
   const { unlimited } = useSpeakingLimit();
@@ -206,9 +206,15 @@ export const TalkScreen = ({
                   opened,
                 })
               }
-              textHidden={textReveal.hiddenFor(entry.turnIndex)}
+              textHidden={bubbleChoices.hiddenFor(entry.turnIndex)}
+              collapseTranslation={bubbleChoices.translationWasOpen(
+                entry.turnIndex,
+              )}
+              onTranslationCollapsed={() =>
+                bubbleChoices.recordTranslation(entry.turnIndex, false)
+              }
               onTextToggled={(visible) => {
-                textReveal.record(entry.turnIndex, visible);
+                bubbleChoices.recordText(entry.turnIndex, visible);
                 track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                   session_id: sessionId,
                   turn_index: entry.turnIndex,
@@ -227,17 +233,18 @@ export const TalkScreen = ({
                 question={turn.aiMessage}
                 translation={turn.aiTranslation}
                 speaking={phase === 'AI_SPEAKING'}
-                onTranslationToggled={(opened) =>
+                onTranslationToggled={(opened) => {
+                  bubbleChoices.recordTranslation(turnIndex, opened);
                   track(EVENTS.TRANSLATION_TOGGLED, {
                     session_id: sessionId,
                     turn_index: turnIndex,
                     opened,
-                  })
-                }
+                  });
+                }}
                 replay={replay}
-                textHidden={textReveal.hiddenFor(turnIndex)}
+                textHidden={bubbleChoices.hiddenFor(turnIndex)}
                 onTextToggled={(visible) => {
-                  textReveal.record(turnIndex, visible);
+                  bubbleChoices.recordText(turnIndex, visible);
                   track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                     session_id: sessionId,
                     turn_index: turnIndex,

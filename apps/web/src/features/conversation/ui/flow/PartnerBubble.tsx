@@ -40,6 +40,10 @@ interface PartnerBubbleProps {
   thought?: BubbleThought | null;
   // 지난 대화로 넘어간 말풍선 — 등장 연출 없이 제자리에 두고, 칸 스크롤을 부탁하지 않는다
   past?: boolean;
+  // 해석을 펼친 채 지난 대화가 됐다 — 펼친 채로 나타나 곧바로 접히는 움직임으로 닫는다(새로 그려지며 툭 사라지지 않게)
+  collapseTranslation?: boolean;
+  // 펼친 채 넘어온 해석을 접은 순간 — 화면은 이 턴을 더는 펼친 것으로 기억하지 않는다(다시 그려져도 또 접히지 않게)
+  onTranslationCollapsed?: () => void;
 }
 
 /**
@@ -109,6 +113,8 @@ export const PartnerBubble = ({
   onTextToggled,
   thought = null,
   past = false,
+  collapseTranslation = false,
+  onTranslationCollapsed,
 }: PartnerBubbleProps) => {
   const t = useTranslations('conversation.partnerBubble');
   // 대화 칸 스크롤 — 말하는 줄과 펼친 해석을 보이게 하고, 다 말하면 첫 줄로 돌려 달라고 부탁한다
@@ -121,7 +127,17 @@ export const PartnerBubble = ({
   const [opened, setOpened] = useState<{
     question: string;
     on: boolean;
-  } | null>(null);
+  } | null>(() => (collapseTranslation ? { question, on: true } : null));
+  // 펼친 채 넘어온 해석은 첫 그림 다음 프레임에 접는다 — 접힘 애니메이션을 타고 닫힌다
+  useEffect(() => {
+    if (!collapseTranslation) return;
+    const frame = requestAnimationFrame(() => {
+      setOpened({ question, on: false });
+      onTranslationCollapsed?.();
+    });
+    return () => cancelAnimationFrame(frame);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 나타난 순간 한 번만 접는다
+  }, []);
   const translationOpen =
     opened?.question === question ? opened.on : translationDefaultOpen;
   // 글자 보임도 해석 펼침과 같은 규칙 — 이 말풍선에서 직접 바꾼 값만 저장하고, 다음 질문은 다시 기본값으로 시작한다

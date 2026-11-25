@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 
 import { toCharacterLook } from '@/features/conversation/model/character-look';
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
+import { useBubbleChoices } from '@/features/conversation/model/useBubbleChoices';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
-import { useTextReveal } from '@/features/conversation/model/useTextReveal';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
 import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmSheet';
@@ -52,8 +52,8 @@ export const ScenarioTalkFlow = ({
     setShowExitModal(true);
   };
   const display = useTalkDisplay();
-  // 말풍선마다 사용자가 글자를 펼치거나 가린 대로 — 지난 대화가 돼도 유지하고, 고른 적 없으면 설정을 따른다
-  const textReveal = useTextReveal(display.textHidden);
+  // 말풍선마다 사용자가 고른 것(글자 보임·해석 펼침) — 지난 대화가 돼도 이어 간다. 글자는 고른 적 없으면 설정을 따른다
+  const bubbleChoices = useBubbleChoices(display.textHidden);
   // 진입 시점의 완료 여부(재대화 판별) — 세션이 끝나면 시나리오 리스트가 invalidate돼
   // scenario.completed가 뒤늦게 true로 바뀌므로, 첫 완료와 구분하려면 진입 값으로 고정해야 한다.
   // 피드백 화면은 이 값을 다시 구할 수 없어 주소로 넘긴다
@@ -220,9 +220,15 @@ export const ScenarioTalkFlow = ({
                   opened,
                 })
               }
-              textHidden={textReveal.hiddenFor(entry.turnIndex)}
+              textHidden={bubbleChoices.hiddenFor(entry.turnIndex)}
+              collapseTranslation={bubbleChoices.translationWasOpen(
+                entry.turnIndex,
+              )}
+              onTranslationCollapsed={() =>
+                bubbleChoices.recordTranslation(entry.turnIndex, false)
+              }
               onTextToggled={(visible) => {
-                textReveal.record(entry.turnIndex, visible);
+                bubbleChoices.recordText(entry.turnIndex, visible);
                 track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                   session_id: sessionId ?? undefined,
                   turn_index: entry.turnIndex,
@@ -242,17 +248,18 @@ export const ScenarioTalkFlow = ({
                 translation={turn.aiTranslation}
                 speaking={phase === 'AI_SPEAKING'}
                 lastQuestion={gauge.lastQuestion}
-                onTranslationToggled={(opened) =>
+                onTranslationToggled={(opened) => {
+                  bubbleChoices.recordTranslation(turnIndex, opened);
                   track(EVENTS.TRANSLATION_TOGGLED, {
                     session_id: sessionId ?? undefined,
                     turn_index: turnIndex,
                     opened,
-                  })
-                }
+                  });
+                }}
                 replay={replay}
-                textHidden={textReveal.hiddenFor(turnIndex)}
+                textHidden={bubbleChoices.hiddenFor(turnIndex)}
                 onTextToggled={(visible) => {
-                  textReveal.record(turnIndex, visible);
+                  bubbleChoices.recordText(turnIndex, visible);
                   track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                     session_id: sessionId ?? undefined,
                     turn_index: turnIndex,
