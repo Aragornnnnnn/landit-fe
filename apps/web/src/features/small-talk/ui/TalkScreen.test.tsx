@@ -34,6 +34,7 @@ const toFlow = (
   ({
     phase,
     waitingForSound,
+    preparingAnswer: phase === 'AI_THINKING' || waitingForSound,
     turnIndex: 1,
     log,
     turn: {

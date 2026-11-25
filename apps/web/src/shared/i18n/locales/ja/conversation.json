@@ -35,13 +35,6 @@
     "jumpToLatestButton": "最新の会話へ",
     "newReplyLabel": "新しい返事があります"
   },
-  "userTranscript": {
-    "editLabel": "回答を直す：{text}",
-    "headerLabel": "あなたの回答",
-    "unsentError": "接続が不安定です",
-    "editBadge": "修正",
-    "editHint": "話した内容と違ったらタップして直せます"
-  },
   "transcriptEditor": {
     "headerLabel": "あなたの回答",
     "cancelButton": "入力をキャンセル",
@@ -71,8 +64,15 @@
   "conversationWaiting": {
     "exitButton": "会話をやめる"
   },
+  "myBubble": {
+    "editLabel": "回答を直す：{text}",
+    "editBadge": "修正",
+    "editHint": "話した内容と違ったらタップして直せます",
+    "unsentLabel": "送信できなかった回答"
+  },
   "conversationTurns": {
-    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください"
+    "connectionToast": "接続に問題が発生しました。時間をおいて再度お試しください",
+    "unsentToast": "接続が不安定で回答を送信できませんでした"
   },
   "conversationInput": {
     "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",
@@ -108,8 +108,7 @@
     "homeButton": "ホームへ"
   },
   "answerGuideChip": {
-    "openButton": "例を見ます",
-    "hint": "思いつかないときはタップしてみてください"
+    "openButton": "例を見ます"
   },
   "answerGuideCard": {
     "regionLabel": "回答の例",

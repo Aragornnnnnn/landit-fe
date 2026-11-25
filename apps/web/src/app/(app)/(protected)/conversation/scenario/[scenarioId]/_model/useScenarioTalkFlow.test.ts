@@ -23,6 +23,7 @@ import type { AuthMember } from '@/shared/auth/api/social-login';
 import { useAuthStore } from '@/shared/auth/auth-store';
 import type { SttResultMeta } from '@/shared/stt/deepgram-stt';
 import type { TtsVoice } from '@/shared/tts/voice';
+import { showToast } from '@/shared/ui/toast';
 
 import * as scenarioTalkApi from '../_api/scenario-session';
 import type { ScenarioTalkSubmitResponse } from '../_api/scenario-session';
@@ -43,6 +44,7 @@ const monitoringMock = vi.hoisted(() => ({
 const sendAdEventOnce = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/analytics', () => ({ track: vi.fn(), sendAdEventOnce }));
 vi.mock('@/shared/monitoring/report', () => monitoringMock);
+vi.mock('@/shared/ui/toast', () => ({ showToast: vi.fn() }));
 
 vi.mock('@/features/conversation/api/session', () => ({
   getInnerThought: vi.fn(),
@@ -453,8 +455,9 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.gauge.lastQuestion).toBe(true);
   });
 
-  it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 된다', async () => {
+  it('제출하면 응답이 오기 전까지 대기(생각 중) 상태가 되고, 상대가 대답을 준비하는 중으로 본다', async () => {
     const { result } = await renderUserFirst();
+    expect(result.current.preparingAnswer).toBe(false);
     let resolve: (value: ScenarioTalkSubmitResponse) => void = () => {};
     submitScenarioTalkMessage.mockReturnValue(
       new Promise((r) => {
@@ -473,6 +476,7 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => result.current.input.submitReviewed());
 
     expect(result.current.phase).toBe('AI_THINKING');
+    expect(result.current.preparingAnswer).toBe(true);
 
     await act(async () => resolve(submitResponse()));
   });
@@ -538,6 +542,21 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.phase).toBe('USER_READY');
     expect(result.current.resend).toEqual(expect.any(Function));
     expect(result.current.input.transcript).toBe('Hello!');
+  });
+
+  it('다시 보내기를 띄우면 보내지 못했다고 토스트로 알린다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockRejectedValue(new TypeError('Load failed'));
+
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+
+    expect(showToast).toHaveBeenCalledWith(
+      '연결이 불안정해 답변을 보내지 못했어요',
+      'error',
+    );
   });
 
   it('다시 보내기를 띄울 때 한 번만 Sentry로 보고한다', async () => {

@@ -59,8 +59,6 @@ export const ConversationWaiting = ({
             </div>
           )}
         </section>
-        {/* 내 답변 칸 — 아직 쓸 말이 없어 빈 칸으로 둔다 */}
-        <div className="mt-3 h-28 w-full flex-none rounded-2xl border border-border/60 bg-muted" />
       </div>
 
       <footer className="flex-none pb-[max(var(--safe-area-inset-bottom),16px)]">

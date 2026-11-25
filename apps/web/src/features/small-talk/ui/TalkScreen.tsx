@@ -13,6 +13,7 @@ import {
   toCharacterLook,
   type Partner,
 } from '@/features/conversation/model/character-look';
+import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
@@ -21,10 +22,11 @@ import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
+import { MyBubble } from '@/features/conversation/ui/flow/MyBubble';
 import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
 import { ThinkingBubble } from '@/features/conversation/ui/flow/ThinkingBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
-import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
+import { TranscriptEditor } from '@/features/conversation/ui/flow/TranscriptEditor';
 import { track } from '@/shared/analytics';
 import { useBackPress } from '@/shared/bridge/useBackPress';
 import { useDocumentScrollPin } from '@/shared/lib/useDocumentScrollPin';
@@ -46,6 +48,7 @@ export type TalkScreenFlow = Pick<
   | 'expressedThought'
   | 'speech'
   | 'waitingForSound'
+  | 'preparingAnswer'
   | 'replay'
   | 'interruptible'
   | 'input'
@@ -99,6 +102,7 @@ export const TalkScreen = ({
     expressedThought,
     speech,
     waitingForSound,
+    preparingAnswer,
     replay,
     interruptible,
     input,
@@ -128,12 +132,15 @@ export const TalkScreen = ({
   } = input;
 
   const ended = phase === 'DONE';
-  const thinking = phase === 'AI_THINKING';
-  // 상대가 대답을 준비하는 중 — 답을 기다리거나, 대답은 왔지만 소리가 아직 안 났다.
-  // 그동안 대화 칸엔 점 말풍선을 띄운다. 소리 없이 글자나 입부터 움직이면 어색하다
-  const preparingAnswer = thinking || waitingForSound;
-  // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
+  // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 대화 칸 아래에 입력창을 열고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
+  const myBubble = toMyBubbleState({
+    phase,
+    reviewing,
+    typing,
+    unsent: resend != null,
+    text: transcript,
+  });
   const keyboardInset = useKeyboardInset();
   // 키보드가 입력 박스를 밀어 올린 상태 — 하단 inset 영역은 키보드가 덮는다
   const keyboardLifted = typing && keyboardInset > 0;
@@ -180,7 +187,7 @@ export const TalkScreen = ({
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
-      {/* 대화 칸과 내 답변 칸이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
+      {/* 대화 칸과 키보드 입력창이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
           키보드가 올라오면 대화 칸을 접고 무대가 먼저 줄어 입력창에 자리를 내준다 */}
       <div
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
@@ -217,6 +224,14 @@ export const TalkScreen = ({
               thought={turn.thought}
             />
           )}
+          {myBubble && (
+            <MyBubble
+              state={myBubble}
+              text={transcript}
+              speechPending={speechPending}
+              onEdit={editTranscript}
+            />
+          )}
           {preparingAnswer && <ThinkingBubble />}
         </ConversationLog>
 
@@ -227,19 +242,14 @@ export const TalkScreen = ({
           </div>
         )}
 
-        {/* 답변 칸은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
-        {!ended && (
+        {/* 키보드 입력창은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+        {typing && (
           <div className="flex min-h-0 shrink flex-col px-5">
-            <UserTranscript
+            <TranscriptEditor
               text={transcript}
-              speechPending={speechPending}
-              phase={phase}
-              unsent={resend != null}
-              editing={typing}
               onChange={setTranscript}
               onSubmit={submitText}
               onCancel={closeTyping}
-              onEdit={reviewing && !typing ? editTranscript : undefined}
             />
           </div>
         )}
@@ -262,12 +272,13 @@ export const TalkScreen = ({
                 0이 돼도 하던 말은 끊지 않고, 그 발화를 끝으로 상대가 대화를 마무리한다.
                 무제한이면 이 줄째 없다 — "무제한"이라 써 둘 것도 없다 */}
             {!unlimited && (
-              <p className="mt-3 text-center text-sm font-medium text-muted-foreground">
-                {/* 남은 시간만 강조색으로 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
+              // 캐릭터 다리 위에 겹쳐도 읽히게 흰 글자에 그림자를 둔다
+              <p className="mt-3 text-center text-sm font-medium text-on-stage">
+                {/* 남은 시간만 굵게 — 언어마다 앞뒤 말 순서가 달라 문구 안에 자리를 둔다 */}
                 {t.rich('remainingTimeLabel', {
                   time: toCountdownLabel(remainingMs),
                   emphasis: (chunks) => (
-                    <span className="font-bold text-primary">{chunks}</span>
+                    <span className="font-bold">{chunks}</span>
                   ),
                 })}
               </p>
