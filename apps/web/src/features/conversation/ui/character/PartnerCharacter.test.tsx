@@ -14,6 +14,7 @@ import {
 import { reportWarning } from '@/shared/monitoring/report';
 
 import type { PlayingSpeech } from '../../model/useAiSpeech';
+import { forgetExpressionData } from './expression-head';
 import type { ExpressionData } from './expression-player';
 import chloeExpressions from './expressions/chloe.json';
 import { PartnerCharacter } from './PartnerCharacter';
@@ -42,6 +43,7 @@ vi.mock('./expression-head', async (importOriginal) => {
 vi.mock('@/shared/monitoring/report', () => ({ reportWarning: vi.fn() }));
 beforeEach(() => {
   expressionHead.load.mockReturnValue(new Promise(() => {}));
+  forgetExpressionData();
 });
 
 // 원본 그림 전체 — 상자를 자르지 않고 입 상자가 제 그림 영역 그대로 잡힌다
@@ -533,6 +535,32 @@ describe('PartnerCharacter 표정 머리', () => {
     // Then 표정 머리 자리에는 입 변형이 없다
     const headHost = partOf(container, 'head')?.closest('svg')?.parentElement;
     expect(headHost?.style.transform).toBe('');
+  });
+
+  it('한 번 받은 표정 데이터는 다음 화면에서 바로 쓴다 — 대기 화면에서 대화 화면으로 넘어갈 때 원래 머리가 번쩍이지 않게', async () => {
+    // Given 대기 화면에서 표정 데이터를 받아 그린 뒤 화면이 바뀌면
+    const first = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+    await settle();
+    first.unmount();
+
+    // When 같은 상대를 새 화면이 그리면
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+
+    // Then 데이터를 다시 기다리지 않고 첫 그림부터 표정 머리를 그린다 — 원래 입 층도, 머리가 빈 프레임도 없다
+    expect(container.querySelector('[data-layer="mouth"]')).toBeNull();
+    expect(partOf(container, 'head')).not.toBeNull();
   });
 
   it('표정 데이터를 못 받으면 원래 머리 층으로 남고 경고만 남긴다', async () => {

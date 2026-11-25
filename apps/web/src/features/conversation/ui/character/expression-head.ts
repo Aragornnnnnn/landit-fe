@@ -18,6 +18,22 @@ const LOADERS: Record<Partner, () => Promise<{ default: unknown }>> = {
 export const loadExpressionData = (partner: Partner) =>
   LOADERS[partner]().then((m) => m.default as ExpressionData);
 
+// 한 번 받은 데이터 — 대기 화면에서 대화 화면으로 넘어가며 캐릭터가 새로 그려져도, 다시 받기를 기다리며 원래 머리로 번쩍이지 않게 첫 그림부터 쓴다
+const remembered = new Map<Partner, ExpressionData>();
+
+export const rememberExpressionData = (
+  partner: Partner,
+  data: ExpressionData,
+) => {
+  remembered.set(partner, data);
+};
+
+export const rememberedExpressionData = (partner: Partner) =>
+  remembered.get(partner) ?? null;
+
+/** 테스트 사이에 기억을 비운다 */
+export const forgetExpressionData = () => remembered.clear();
+
 /**
  * 표정이 고개를 돌리고 옮기는 폭. 표정 데이터의 고개 움직임은 원래 몸통의 목까지 함께 움직이는 전제라,
  * 따로 그린 전신 몸통 위에서 크게 돌면 목 그림자가 기울어 비뚤어 보인다. 테디 원래 폭(최대 약 1도)에 맞춘다

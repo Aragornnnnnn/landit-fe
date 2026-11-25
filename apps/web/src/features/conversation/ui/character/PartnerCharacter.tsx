@@ -40,6 +40,8 @@ import {
   mimeMouth,
   mountExpressionHead,
   releaseMouth,
+  rememberedExpressionData,
+  rememberExpressionData,
   showMouth,
 } from './expression-head';
 import type { ExpressionData, ExpressionPlayer } from './expression-player';
@@ -514,7 +516,11 @@ export const PartnerCharacter = ({
     partner: Partner;
     data: ExpressionData;
   } | null>(null);
-  const expressionData = loaded?.partner === partner ? loaded.data : null;
+  // 이 상대 데이터를 전에 받아 뒀으면 첫 그림부터 쓴다 — 화면이 바뀌어 새로 그려질 때 원래 머리로 번쩍이지 않게
+  const expressionData =
+    loaded?.partner === partner
+      ? loaded.data
+      : rememberedExpressionData(partner);
   const headHostRef = useRef<HTMLDivElement>(null);
   const headPlayerRef = useRef<ExpressionPlayer | null>(null);
   const restingMouthRef = useRef<ReturnType<typeof createRestingMouth> | null>(
@@ -527,9 +533,11 @@ export const PartnerCharacter = ({
   });
 
   useEffect(() => {
+    if (rememberedExpressionData(partner)) return;
     let alive = true;
     loadExpressionData(partner).then(
       (data) => {
+        rememberExpressionData(partner, data);
         if (alive) setLoaded({ partner, data });
       },
       (error: unknown) => {
@@ -542,7 +550,8 @@ export const PartnerCharacter = ({
     };
   }, [partner]);
 
-  useEffect(() => {
+  // 화면을 그리기 전에 붙인다 — 그린 뒤에 붙이면 머리 자리가 빈 프레임이 한 번 보인다(받아 둔 데이터로 첫 그림부터 그릴 때 두드러진다)
+  useLayoutEffect(() => {
     const host = headHostRef.current;
     const area = layoutBoxes(partner, frameBox).head;
     if (!host || !expressionData || !area) return;
