@@ -69,11 +69,11 @@ export const CharacterStage = ({
           viewBox={STAGE_VIEWBOX[partner]}
         />
       </motion.div>
-      {/* 아래 어둡게 — 몸통·다리 위에 쌓이는 말풍선과 흰 버튼 이름이 옷 색에 묻히지 않게, 대화 칸이 놓이는 아래 72%를 회색으로 눌러 준다.
-          무대 그림 안에 둬서 대화 칸·버튼보다 늘 뒤에 깔린다 */}
+      {/* 아래 어둡게 — 몸통·다리 위에 쌓이는 말풍선과 흰 버튼 이름이 옷 색에 묻히지 않게, 대화 칸이 시작하는 선(턱 조금 아래)부터 회색으로 눌러 준다.
+          화면 높이 비율로 시작하면 얼굴이 낮은 캐릭터(테디)는 얼굴까지 덮인다. 무대 그림 안에 둬서 대화 칸·버튼보다 늘 뒤에 깔린다 */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[72%]"
-        style={{ background: STAGE_SHADE }}
+        className="absolute inset-x-0 bottom-0"
+        style={{ top: CHAT_TOP_LINE, background: STAGE_SHADE }}
       />
     </div>
   </div>
