@@ -64,6 +64,7 @@ describe('SmallTalkHistoryDetail 더 자연스러운 말 뱃지', () => {
     emotion: null,
     innerThought: null,
     innerThoughtType: null,
+    sentences: [{ text: 'Hi.', strikes: [], correction: null }],
   };
 
   const renderWithCorrections = (correctionCount: number) => {
