@@ -16,6 +16,7 @@ import {
 import { toMyBubbleState } from '@/features/conversation/model/my-bubble';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
+import { useTextReveal } from '@/features/conversation/model/useTextReveal';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
 import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
@@ -87,6 +88,8 @@ export const TalkScreen = ({
   const t = useTranslations('conversation.smallTalkConversation');
   const router = useRouter();
   const display = useTalkDisplay();
+  // 말풍선마다 사용자가 글자를 펼치거나 가린 대로 — 지난 대화가 돼도 유지하고, 고른 적 없으면 설정을 따른다
+  const textReveal = useTextReveal(display.textHidden);
   // 결제가 열리면 하루 한도가 없다 — 남은 시간과 타이머 링을 그리지 않는다 (잔량 계산은 뒤에서 그대로 돈다)
   // 한도가 있는 무료 사용자에겐 키보드도 없다 — 타이핑은 말한 시간 0으로 보내 한도를 안 깎아, 무료 시간이 무한이 된다
   const { unlimited } = useSpeakingLimit();
@@ -186,7 +189,7 @@ export const TalkScreen = ({
           latestOnly={keyboardLifted}
           // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
           latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
-          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
+          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 영어 글자는 그 말풍선에서 고른 대로(고른 적 없으면 설정대로) 둔다
           renderPartner={(entry) => (
             <PartnerBubble
               past
@@ -203,13 +206,15 @@ export const TalkScreen = ({
                   opened,
                 })
               }
-              onTextToggled={(visible) =>
+              textHidden={textReveal.hiddenFor(entry.turnIndex)}
+              onTextToggled={(visible) => {
+                textReveal.record(entry.turnIndex, visible);
                 track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                   session_id: sessionId,
                   turn_index: entry.turnIndex,
                   hidden: !visible,
-                })
-              }
+                });
+              }}
             />
           )}
         >
@@ -230,14 +235,15 @@ export const TalkScreen = ({
                   })
                 }
                 replay={replay}
-                textHidden={display.textHidden}
-                onTextToggled={(visible) =>
+                textHidden={textReveal.hiddenFor(turnIndex)}
+                onTextToggled={(visible) => {
+                  textReveal.record(turnIndex, visible);
                   track(EVENTS.ENGLISH_TEXT_TOGGLED, {
                     session_id: sessionId,
                     turn_index: turnIndex,
                     hidden: !visible,
-                  })
-                }
+                  });
+                }}
                 translationDefaultOpen={display.translationDefaultOpen}
                 thought={turn.thought}
               />
