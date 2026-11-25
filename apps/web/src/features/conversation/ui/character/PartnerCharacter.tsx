@@ -645,6 +645,7 @@ export const PartnerCharacter = ({
     return () => accents.stopAll();
   }, [partner, posture, speech, stillness, frameBox]);
 
+  // 원래 입 층은 표정 데이터가 오기 전에만 있다 — 데이터가 오면 다시 돌아 입 층을 놓아준다
   useEffect(() => {
     const mouth = rootRef.current?.querySelector<HTMLElement>(
       '[data-layer="mouth"]',
@@ -656,7 +657,7 @@ export const PartnerCharacter = ({
       speech,
       unitsOf(layoutBoxes(partner, frameBox)).mouth,
     );
-  }, [speech, partner, frameBox]);
+  }, [speech, partner, frameBox, expressionData]);
 
   const Parts = PARTS[partner];
   // 층 SVG는 제 상자 영역만 그린다 — 상자가 원래 한 장 안 같은 자리에 놓여 있어 그대로 맞물린다
@@ -699,17 +700,24 @@ export const PartnerCharacter = ({
               {expressionData ? (
                 <>
                   {/* 원래 머리 그림은 그리지 않고 고개 기준점을 재는 데만 쓴다 */}
-                  <div data-measure className={styles.measure}>
+                  {/* 갈래마다 key를 달아 원래 입 층 div가 표정 머리 자리로 재사용되지 않게 한다 —
+                      재사용되면 아직 돌던 입 움직임(세로 누름)이 머리 전체에 걸리고, 플레이어가 바꿔치기한 안쪽을 React가 못 찾는다 */}
+                  <div key="measure" data-measure className={styles.measure}>
                     {draw('head-back', head)}
                     {draw('head-front', head)}
                   </div>
-                  <div ref={headHostRef} className={styles.expressionHead} />
+                  <div
+                    key="expression-head"
+                    ref={headHostRef}
+                    className={styles.expressionHead}
+                  />
                 </>
               ) : (
                 <>
                   {draw('head-back', head)}
                   {mouth && (
                     <div
+                      key="mouth"
                       data-layer="mouth"
                       className={styles.mouth}
                       style={boxStyle(mouth, head)}
