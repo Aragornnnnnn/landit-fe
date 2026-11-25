@@ -13,6 +13,7 @@ import {
 
 import type { PlayingSpeech } from '../../model/useAiSpeech';
 import { PartnerCharacter } from './PartnerCharacter';
+import { LAYER_AREAS } from './parts-by-partner';
 
 const lipsync = vi.hoisted(() => ({
   loadLoudnessTrack: vi.fn(),
@@ -27,6 +28,18 @@ vi.mock('../../model/lipsync', async (importOriginal) => {
     advanceMouth: lipsync.advanceMouth,
   };
 });
+
+// 원본 그림 전체 — 상자를 자르지 않고 입 상자가 제 그림 영역 그대로 잡힌다
+const WHOLE = '0 0 1024 1536';
+const mouthArea = LAYER_AREAS.chloe.mouth!;
+const mouthGroup = {
+  x: mouthArea.x + 10,
+  y: mouthArea.y + 20,
+  width: 40,
+  height: 20,
+};
+// 입 그룹의 (가로 50%, 세로 15%) 자리를 입 상자 영역 기준 %로
+const expectedMouthPivot = `${(((mouthGroup.x + 20 - mouthArea.x) / mouthArea.width) * 100).toFixed(3)}% ${(((mouthGroup.y + 3 - mouthArea.y) / mouthArea.height) * 100).toFixed(3)}%`;
 
 const speech: PlayingSpeech = {
   text: 'Oh nice, tell me more.',
@@ -212,7 +225,7 @@ describe('PartnerCharacter 층', () => {
     ).toHaveLength(1);
   });
 
-  it('끄덕임은 머리 상자를 viewBox 높이 대비 %로 움직인다 — 상자는 CSS 픽셀이라 SVG 단위를 그대로 쓰면 크기마다 깊이가 달라진다', () => {
+  it('끄덕임은 머리 상자를 그 상자 높이 대비 %로 움직인다 — 상자는 CSS 픽셀이라 SVG 단위를 그대로 쓰면 크기마다 깊이가 달라진다', () => {
     // Given
     const animate = vi.fn(
       () => ({ cancel: vi.fn(), onfinish: null }) as unknown as Animation,
@@ -239,11 +252,11 @@ describe('PartnerCharacter 층', () => {
     expect(JSON.stringify(nods[0][1])).not.toMatch(/px/);
   });
 
-  it('입 상자의 변형 기준점은 원래 입 그룹 영역의 같은 비율 자리를 상자 기준 %로 옮긴 것이다', () => {
-    // Given — 입 그룹이 viewBox(100 200 400 800) 안 (300,500)에서 40×20을 차지한다
+  it('입 상자의 변형 기준점은 원래 입 그룹 영역의 같은 비율 자리를 입 상자(제 그림 영역) 기준 %로 옮긴 것이다', () => {
+    // Given — 입 그룹이 입 상자 안 (+10,+20)에서 40×20을 차지한다
     plant(svgPrototype, 'getBBox', function (this: SVGElement) {
       return this.id === 'mouth'
-        ? ({ x: 300, y: 500, width: 40, height: 20 } as DOMRect)
+        ? ({ ...mouthGroup } as DOMRect)
         : ({ x: 0, y: 0, width: 0, height: 0 } as DOMRect);
     });
 
@@ -253,15 +266,15 @@ describe('PartnerCharacter 층', () => {
         partner="chloe"
         look={{ posture: 'idle', expression: 'neutral' }}
         speech={null}
-        viewBox="100 200 400 800"
+        viewBox={WHOLE}
       />,
     );
 
-    // Then — 가로 50%·세로 15% 자리: x (320-100)/400, y (503-200)/800
+    // Then — 입 그룹의 가로 50%·세로 15% 자리
     const mouthLayer = container.querySelector<HTMLElement>(
       '[data-layer="mouth"]',
     );
-    expect(mouthLayer?.style.transformOrigin).toBe('55.000% 37.875%');
+    expect(mouthLayer?.style.transformOrigin).toBe(expectedMouthPivot);
   });
 
   it('입이 숨은 채 처음 그려져도 표정이 풀리면 입 기준점을 잡는다 — 찡그린 동안엔 입이 숨어 잴 수 없다', () => {
@@ -269,7 +282,7 @@ describe('PartnerCharacter 층', () => {
     let mouthHidden = true;
     plant(svgPrototype, 'getBBox', function (this: SVGElement) {
       return this.id === 'mouth' && !mouthHidden
-        ? ({ x: 300, y: 500, width: 40, height: 20 } as DOMRect)
+        ? ({ ...mouthGroup } as DOMRect)
         : ({ x: 0, y: 0, width: 0, height: 0 } as DOMRect);
     });
     const { container, rerender } = render(
@@ -277,7 +290,7 @@ describe('PartnerCharacter 층', () => {
         partner="chloe"
         look={{ posture: 'idle', expression: 'frown' }}
         speech={null}
-        viewBox="100 200 400 800"
+        viewBox={WHOLE}
       />,
     );
     const mouthLayer = container.querySelector<HTMLElement>(
@@ -291,11 +304,37 @@ describe('PartnerCharacter 층', () => {
         partner="chloe"
         look={{ posture: 'idle', expression: 'neutral' }}
         speech={null}
-        viewBox="100 200 400 800"
+        viewBox={WHOLE}
       />,
     );
 
     // Then
-    expect(mouthLayer?.style.transformOrigin).toBe('55.000% 37.875%');
+    expect(mouthLayer?.style.transformOrigin).toBe(expectedMouthPivot);
+  });
+
+  it('그릴 영역이 몸 중간에서 잘리면 몸통 상자도 그 안쪽까지만 잡는다 — 보이지 않는 다리까지 레이어를 잡지 않게', () => {
+    // Given — 상반신만 그리는 소비처(초상화·퀴즈)처럼 허리 위에서 자른다
+    const { container } = render(
+      <PartnerCharacter
+        partner="marco"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+        viewBox="292 40 440 610"
+      />,
+    );
+
+    // When
+    const torso = container.querySelector<HTMLElement>('[data-layer="torso"]');
+    const mouth = container.querySelector<HTMLElement>('[data-layer="mouth"]');
+
+    // Then — 몸통은 프레임 아래 끝을 넘지 않고, 입은 머리 상자 안에 놓인다
+    const percent = (value?: string) => Number.parseFloat(value ?? 'NaN');
+    expect(
+      percent(torso?.style.top) + percent(torso?.style.height),
+    ).toBeCloseTo(100, 2);
+    expect(percent(mouth?.style.left)).toBeGreaterThanOrEqual(0);
+    expect(
+      percent(mouth?.style.top) + percent(mouth?.style.height),
+    ).toBeLessThanOrEqual(100);
   });
 });

@@ -106,8 +106,10 @@ export const UserTranscript = ({
   const toneClass = () => {
     // 확인 중엔 흰 칸에 회색 테두리 — 주황 테두리는 키보드로 입력하는 동안에만 쓴다
     if (reviewing) return 'border-border bg-card';
-    if (unsent) return 'border-transparent bg-destructive/5';
-    return 'border-border/60 bg-muted/50';
+    // 칸 뒤로 전신 캐릭터가 지나가므로 바탕은 불투명하게 — 반투명이면 옷이 비쳐 글자가 묻힌다
+    if (unsent)
+      return 'border-transparent bg-[color-mix(in_srgb,var(--destructive)_5%,var(--card))]';
+    return 'border-border/60 bg-muted';
   };
 
   return (

@@ -1,11 +1,19 @@
-// 캐릭터 무대 — 대화 상대가 마주 서 있는 상단 섹션. 속마음 연출은 ThoughtOverlay가 전면에서 담당한다.
+// 캐릭터 무대 — 대화 상대가 전신으로 서 있는 화면 전체 배경. 대화 칸은 턱 선(STAGE_CHIN_LINE) 아래에 놓인다
 'use client';
 
+import type { CSSProperties } from 'react';
 import { motion } from 'motion/react';
 
 import type { CharacterLook, Partner } from '../../model/character-look';
 import type { PlayingSpeech } from '../../model/useAiSpeech';
 import { PartnerCharacter } from '../character/PartnerCharacter';
+import { STAGE_VIEWBOX } from '../character/parts-by-partner';
+import {
+  CHARACTER_BOX,
+  STAGE_BACKGROUND_CLASS,
+  STAGE_CHIN_LINE,
+  STAGE_SWAY_TURN,
+} from './stage-layout';
 
 /**
  * partner는 세션 TTS 음성 성별을 따르고, look은 대화 단계에 맞춘 자세와 표정,
@@ -17,34 +25,46 @@ interface CharacterStageProps {
   speech: PlayingSpeech | null;
 }
 
+/**
+ * 두 겹이다.
+ * - 자리 — 화면 흐름 안에서 턱 선 높이만큼 차지해, 뒤따르는 대화 칸이 턱 바로 아래에서 시작한다.
+ *   키보드가 올라와 자리가 모자랄 때만 먼저 줄어든다(줄어드는 비율 1000). 닫기(X)가 위에 떠 있어 그 높이 밑으로는 줄지 않는다.
+ * - 배경 — 자리에서 화면 바닥까지 뻗는 그림. 대화 칸 뒤로 깔리도록 -z로 둔다(화면 루트가 isolate여야 앱 배경 위에 그려진다).
+ *   크기가 화면으로 정해져 있어 contain: strict로 가둔다 — 대화 칸 글자가 바뀌어도 무대는 다시 배치·페인트하지 않는다.
+ *   자리가 줄어도 캐릭터는 그대로다 — 화면 위 끝 기준으로 놓이기 때문이다.
+ */
 export const CharacterStage = ({
   partner,
   look,
   speech,
 }: CharacterStageProps) => (
-  // 무대는 명확한 한 섹션 — 상태바 밑까지 이어지되 safe area만큼 키워서 캐릭터는 항상 인셋 아래에 선다
-  // 캐릭터 에셋 배경을 앱 배경색(bg-background)에 맞춰 둬서 무대도 같은 색 — 배경이 이음매 없이 이어진다
-  // 높이 고정 — 텍스트가 길어져도 무대는 그대로 두고, 질문/답변이 각자 칸 안에서 스크롤된다
-  // 작은 화면에선 질문 자리가 부족하지 않게 상한만 뷰포트에 맞춘다(대화 중엔 변하지 않는 기기별 고정값)
-  // 키보드가 올라와 자리가 모자랄 때만 줄어든다 — 그대로 두면 입력창 아래가 키보드 뒤로 밀린다. 캐릭터는 높이에 맞춰 작아진다.
-  // 입력창보다 먼저 최소 높이까지 줄고(줄어드는 비율 1000), 닫기(X)가 무대 위에 떠 있어 그 높이 밑으로는 줄지 않는다
   <div
-    className="relative flex w-full shrink-[1000] items-end justify-center overflow-hidden rounded-b-3xl border-b border-border bg-background shadow-lg shadow-black/5"
+    className="relative w-full flex-none shrink-[1000]"
     style={{
-      height: 'calc(min(17rem, 34dvh) + max(var(--safe-area-inset-top), 8px))',
+      height: STAGE_CHIN_LINE,
       minHeight: 'calc(3.5rem + max(var(--safe-area-inset-top), 8px))',
     }}
   >
-    <motion.div
-      initial={{ y: 24, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="relative flex h-full items-end justify-center"
+    <div
+      aria-hidden
+      className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-dvh overflow-hidden [contain:strict] ${STAGE_BACKGROUND_CLASS}`}
+      // 전신이라 흔들림 각도를 줄인다(STAGE_SWAY_TURN 참고) — 캐릭터 상자까지 상속된다
+      style={{ '--sway-turn': STAGE_SWAY_TURN } as CSSProperties}
     >
-      {/* 상체 — 무대와 같은 배경색째로 얹혀 마주 서 있는 구도. 작은 무대에선 머리가 잘리지 않게 무대 높이에 맞춰 담는다 */}
-      <div className="h-full max-h-64">
-        <PartnerCharacter partner={partner} look={look} speech={speech} />
-      </div>
-    </motion.div>
+      <motion.div
+        initial={{ y: 24, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="absolute left-1/2 flex justify-center"
+        style={{ x: '-50%', ...CHARACTER_BOX }}
+      >
+        <PartnerCharacter
+          partner={partner}
+          look={look}
+          speech={speech}
+          viewBox={STAGE_VIEWBOX[partner]}
+        />
+      </motion.div>
+    </div>
   </div>
 );
