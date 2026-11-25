@@ -578,7 +578,8 @@ export const PartnerCharacter = ({
     headPlayerRef.current?.setExpression(expression);
   }, [expression, expressionData]);
 
-  // 표정 머리의 입 — 말하면 소리에, 소리 없이 말하면 음절 흉내에, 쉬면 중립의 쉬는 입(다른 표정이면 표정 입)에 맡긴다
+  // 표정 머리의 말하는 입 — 소리가 있으면 소리에, 없으면 음절 흉내에 맡긴다.
+  // 표정은 의존성에 넣지 않는다 — 말하는 중 속마음이 와 표정이 바뀌어도 입 맞추기를 다시 시작하지 않게(다시 시작하면 음량 표를 새로 읽는 동안 입이 멈춘다)
   useEffect(() => {
     const player = headPlayerRef.current;
     const restingMouth = restingMouthRef.current;
@@ -592,12 +593,18 @@ export const PartnerCharacter = ({
       restingMouth.to(0, { instant: true });
       return mimeMouth(player);
     }
-    restingMouth.to(expression === 'neutral' ? 1 : 0);
+  }, [speech, posture, stillness, expressionData, partner, frameBox]);
+
+  // 표정 머리의 쉬는 입 — 말하지 않을 때만. 중립이면 쉬는 입으로, 다른 표정이면 표정 입으로 섞어 넘긴다
+  useEffect(() => {
+    const talking = speech || (posture === 'speaking' && !stillness);
+    if (talking) return;
+    restingMouthRef.current?.to(expression === 'neutral' ? 1 : 0);
   }, [
+    expression,
     speech,
     posture,
     stillness,
-    expression,
     expressionData,
     partner,
     frameBox,
@@ -605,10 +612,12 @@ export const PartnerCharacter = ({
 
   // 첫 페인트 전에 기준점을 놓는다 — 늦으면 쉬는 입이 엉뚱한 축으로 눌린 채 한 번 그려진다.
   // 표정이 바뀔 때도 다시 잰다 — 찡그린 입 대신 숨은 입은 잴 수 없어, 찡그린 채 처음 그려지면 입 기준점이 비어 있다
+  // 표정 머리를 그릴 땐 원래 입이 없어 표정마다 다시 잴 필요가 없다 — 표정 전환 프레임에 강제 레이아웃을 일으키지 않게 건너뛴다
   useLayoutEffect(() => {
     const root = rootRef.current;
-    if (root) placePivots(root, layoutBoxes(partner, frameBox));
-  }, [partner, frameBox, posture, expression]);
+    if (root && !expressionData)
+      placePivots(root, layoutBoxes(partner, frameBox));
+  }, [partner, frameBox, posture, expression, expressionData]);
 
   // 숨긴 채 그려졌다가 보이게 되면(크기가 생기면) 그때 잰다
   useEffect(() => {
