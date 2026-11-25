@@ -36,13 +36,14 @@ describe('raceThought', () => {
   it('상한 안에 속마음이 오면 속마음을 들고 바로 시작한다', async () => {
     const { thought, onStart, onArrive } = setup();
 
-    thought.resolve({ text: '반갑네.', type: 'GOOD' });
+    thought.resolve({ text: '반갑네.', type: 'GOOD', emotion: null });
     await vi.advanceTimersByTimeAsync(0);
 
     expect(onStart).toHaveBeenCalledExactlyOnceWith({
       status: 'shown',
       text: '반갑네.',
       type: 'GOOD',
+      emotion: null,
     });
     await vi.advanceTimersByTimeAsync(WAIT_MS);
     expect(onStart).toHaveBeenCalledTimes(1);
@@ -52,7 +53,7 @@ describe('raceThought', () => {
   it('상한 안에 빈 속마음이 오면 줄 없이 바로 시작한다', async () => {
     const { thought, onStart } = setup();
 
-    thought.resolve({ text: '', type: null });
+    thought.resolve({ text: '', type: null, emotion: null });
     await vi.advanceTimersByTimeAsync(0);
 
     expect(onStart).toHaveBeenCalledExactlyOnceWith(null);
@@ -64,12 +65,13 @@ describe('raceThought', () => {
     await vi.advanceTimersByTimeAsync(WAIT_MS);
     expect(onStart).toHaveBeenCalledExactlyOnceWith({ status: 'pending' });
 
-    thought.resolve({ text: '좀 머쓱하네.', type: 'BAD' });
+    thought.resolve({ text: '좀 머쓱하네.', type: 'BAD', emotion: null });
     await vi.advanceTimersByTimeAsync(0);
     expect(onArrive).toHaveBeenCalledExactlyOnceWith({
       status: 'shown',
       text: '좀 머쓱하네.',
       type: 'BAD',
+      emotion: null,
     });
   });
 
@@ -77,16 +79,33 @@ describe('raceThought', () => {
     const { thought, onArrive } = setup();
 
     await vi.advanceTimersByTimeAsync(WAIT_MS);
-    thought.resolve({ text: '', type: null });
+    thought.resolve({ text: '', type: null, emotion: null });
     await vi.advanceTimersByTimeAsync(0);
 
     expect(onArrive).toHaveBeenCalledExactlyOnceWith(null);
   });
 
+  it('속마음 감정은 줄에 그대로 실어 표정이 고를 수 있게 한다', async () => {
+    // Given 감정이 붙은 속마음이 상한 안에 오면
+    const { thought, onStart } = setup();
+
+    // When
+    thought.resolve({ text: '흥.', type: 'BAD', emotion: 'SULKY' });
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Then
+    expect(onStart).toHaveBeenCalledWith({
+      status: 'shown',
+      text: '흥.',
+      type: 'BAD',
+      emotion: 'SULKY',
+    });
+  });
+
   it('모르는 속마음 종류는 보통으로 읽는다', async () => {
     const { thought, onStart } = setup();
 
-    thought.resolve({ text: '음.', type: 'SURPRISED' });
+    thought.resolve({ text: '음.', type: 'SURPRISED', emotion: null });
     await vi.advanceTimersByTimeAsync(0);
 
     expect(onStart).toHaveBeenCalledWith(

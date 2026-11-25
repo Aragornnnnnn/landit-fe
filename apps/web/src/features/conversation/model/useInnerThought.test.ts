@@ -40,7 +40,7 @@ describe('useInnerThought', () => {
     );
 
     // 빈 말풍선을 띄우는 대신 호출부가 다음 턴으로 건너뛸 수 있게 빈 텍스트를 준다
-    expect(resolved).toEqual({ text: '', type: null });
+    expect(resolved).toEqual({ text: '', type: null, emotion: null });
   });
 
   it('폴링하다 생성이 실패하면 제출 응답 값으로 물러선다 — 그때도 속마음이 없으면 빈 문자열이다', async () => {
@@ -64,7 +64,50 @@ describe('useInnerThought', () => {
     await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
 
     // 실패해도 호출부가 다음 턴으로 넘어갈 수 있게 빈 텍스트를 준다
-    await expect(resolving).resolves.toEqual({ text: '', type: null });
+    await expect(resolving).resolves.toEqual({
+      text: '',
+      type: null,
+      emotion: null,
+    });
+  });
+  it('제출 응답에 준비된 속마음의 감정이 있으면 함께 돌려준다', async () => {
+    // given
+    const { result } = renderHook(() => useInnerThought());
+
+    // when
+    const resolved = await result.current.resolve(
+      7,
+      submitted({ emotion: 'LOVE' }),
+    );
+
+    // then
+    expect(resolved?.emotion).toBe('LOVE');
+  });
+
+  it('폴링으로 받은 속마음의 감정을 함께 돌려준다', async () => {
+    // given
+    vi.useFakeTimers();
+    getInnerThought.mockResolvedValue({
+      processingStatus: 'COMPLETED',
+      innerThought: '귀엽다.',
+      innerThoughtType: 'GOOD',
+      emotion: 'SULKY',
+    });
+    const { result } = renderHook(() => useInnerThought());
+
+    // when
+    const resolving = result.current.resolve(
+      7,
+      submitted({
+        innerThoughtProcessingStatus: 'PREPARING',
+        innerThought: null,
+        innerThoughtType: null,
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
+
+    // then
+    await expect(resolving).resolves.toMatchObject({ emotion: 'SULKY' });
   });
 
   it.each([

@@ -10,6 +10,7 @@ const toBubbleThought = (resolved: ResolvedThought): BubbleThought | null =>
         status: 'shown',
         text: resolved.text,
         type: toThoughtType(resolved.type),
+        emotion: resolved.emotion,
       }
     : null;
 

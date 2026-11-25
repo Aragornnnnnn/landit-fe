@@ -1,4 +1,4 @@
-// PartnerCharacter — 립싱크 입력과, 움직임이 SVG 안이 아니라 층 상자에 걸리는지를 검증한다
+// PartnerCharacter — 립싱크 입력, 움직임이 SVG 안이 아니라 층 상자에 걸리는지, 표정 데이터를 받으면 얼굴을 표정 머리로 바꾸는지 검증한다
 // @vitest-environment jsdom
 import { act, cleanup, render } from '@testing-library/react';
 import {
@@ -11,7 +11,11 @@ import {
   vi,
 } from 'vitest';
 
+import { reportWarning } from '@/shared/monitoring/report';
+
 import type { PlayingSpeech } from '../../model/useAiSpeech';
+import type { ExpressionData } from './expression-player';
+import chloeExpressions from './expressions/chloe.json';
 import { PartnerCharacter } from './PartnerCharacter';
 import { LAYER_AREAS } from './parts-by-partner';
 
@@ -27,6 +31,17 @@ vi.mock('../../model/lipsync', async (importOriginal) => {
     loadLoudnessTrack: lipsync.loadLoudnessTrack,
     advanceMouth: lipsync.advanceMouth,
   };
+});
+
+// 표정 데이터는 기본으로 오지 않는 것으로 둔다 — 원래 머리 층(입 층 상자)의 동작을 본다. 표정 머리 테스트만 데이터를 준다
+const expressionHead = vi.hoisted(() => ({ load: vi.fn() }));
+vi.mock('./expression-head', async (importOriginal) => {
+  const original = await importOriginal<typeof import('./expression-head')>();
+  return { ...original, loadExpressionData: expressionHead.load };
+});
+vi.mock('@/shared/monitoring/report', () => ({ reportWarning: vi.fn() }));
+beforeEach(() => {
+  expressionHead.load.mockReturnValue(new Promise(() => {}));
 });
 
 // 원본 그림 전체 — 상자를 자르지 않고 입 상자가 제 그림 영역 그대로 잡힌다
@@ -336,5 +351,161 @@ describe('PartnerCharacter 층', () => {
     expect(
       percent(mouth?.style.top) + percent(mouth?.style.height),
     ).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('PartnerCharacter 표정 머리', () => {
+  const chloeData = chloeExpressions as unknown as ExpressionData;
+  // 표정 데이터의 파츠 이름 → 플레이어가 그린 요소 (id 앞머리는 플레이어마다 다르다)
+  const partOf = (container: HTMLElement, name: string) =>
+    container.querySelector(
+      `[id$="-${chloeData.targets[chloeData.names[name]].el}"]`,
+    );
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    lipsync.loadLoudnessTrack.mockResolvedValue(null);
+    expressionHead.load.mockResolvedValue(chloeData);
+  });
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  const settle = async () => {
+    await act(() => vi.advanceTimersByTimeAsync(0));
+    nextFrame();
+  };
+
+  it('표정 데이터를 받으면 얼굴은 표정 머리가 그리고, 원래 머리 그림은 고개 기준점을 재는 데만 남긴다', async () => {
+    // Given
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+
+    // When
+    await settle();
+
+    // Then
+    expect(partOf(container, 'head')).not.toBeNull();
+    expect(container.querySelector('[data-measure]')).not.toBeNull();
+    expect(container.querySelector('[data-layer="mouth"]')).toBeNull();
+  });
+
+  it('표정 머리는 몸통을 감춘다 — 몸·팔은 전신 층이 따로 그린다', async () => {
+    // Given
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+
+    // When
+    await settle();
+
+    // Then
+    expect(
+      (partOf(container, 'torso') as SVGElement | null)?.style.display,
+    ).toBe('none');
+  });
+
+  it('감춘 몸통에는 숨쉬기 값을 쓰지 않는다 — 안 보이는 요소를 매 프레임 고치는 낭비다', async () => {
+    // Given
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+    await settle();
+    const before = partOf(container, 'torso')?.getAttribute('transform');
+
+    // When 숨쉬기 한 주기 가까이 지나도
+    await act(() => vi.advanceTimersByTimeAsync(2000));
+
+    // Then
+    expect(partOf(container, 'torso')?.getAttribute('transform')).toBe(before);
+  });
+
+  it('클로이는 표정 머리에 머리카락 틈을 다시 판다 — 표정 데이터에선 틈 조각이 빠져 있다', async () => {
+    // Given
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+
+    // When
+    await settle();
+
+    // Then
+    expect(partOf(container, 'head-inner')?.getAttribute('mask')).toMatch(
+      /^url\(#hair-gaps-\d+\)$/,
+    );
+  });
+
+  it('말하는 동안 표정 머리의 벌린 입을 소리에 맞춰 보인다', async () => {
+    // Given
+    const { container } = renderSpeaking();
+
+    // When
+    await settle();
+    nextFrame();
+
+    // Then
+    expect(partOf(container, 'mouth-open')?.getAttribute('opacity')).toBe(
+      '1.000',
+    );
+    expect(lipsync.advanceMouth).toHaveBeenCalled();
+  });
+
+  it('말을 마치고 중립으로 쉬면 벌린 입이 쉬는 입으로 섞여 돌아간다', async () => {
+    // Given
+    const { container, rerender } = renderSpeaking();
+    await settle();
+
+    // When
+    rerender(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+    await act(() => vi.advanceTimersByTimeAsync(600));
+
+    // Then — 쉬는 입은 원래 웃는 입을 세로로 눌러 만든 미소다
+    expect(partOf(container, 'mouth-open')?.getAttribute('transform')).toMatch(
+      /scale\(0\.8400 0\.4000\)/,
+    );
+  });
+
+  it('표정 데이터를 못 받으면 원래 머리 층으로 남고 경고만 남긴다', async () => {
+    // Given
+    const failure = new Error('chunk failed');
+    expressionHead.load.mockRejectedValue(failure);
+
+    // When
+    const { container } = render(
+      <PartnerCharacter
+        partner="chloe"
+        look={{ posture: 'idle', expression: 'neutral' }}
+        speech={null}
+      />,
+    );
+    await settle();
+
+    // Then
+    expect(container.querySelector('[data-layer="mouth"]')).not.toBeNull();
+    expect(reportWarning).toHaveBeenCalledWith(failure, { partner: 'chloe' });
   });
 });

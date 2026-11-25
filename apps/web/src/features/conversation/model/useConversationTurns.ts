@@ -3,7 +3,7 @@
 // 완료 후 무엇이 일어나는지는 호출자 소관이다.
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { EVENTS } from '@landit/analytics';
 import { useTranslations } from 'next-intl';
 
@@ -26,7 +26,7 @@ import {
   type ConversationEvent,
 } from './conversation-machine';
 import { SPEECH_INTERRUPT_ENABLED } from './interrupt-flag';
-import { expressionHoldMs, thoughtWaitLeftMs } from './pacing';
+import { thoughtWaitLeftMs } from './pacing';
 import { sendWithResend } from './resend';
 import type { BubbleThought, FloatingThought } from './thought';
 import { raceThought } from './thought-race';
@@ -115,7 +115,7 @@ export const useConversationTurns = ({
     thoughtRef.current = next;
     setThought(next);
   };
-  // 말풍선에 막 뜬 속마음 — 화면이 표정으로 반응할 수 있게 그 사실만 남긴다.
+  // 말풍선에 마지막으로 뜬 속마음 — 화면은 이걸로 표정을 짓고, 다음 속마음이 올 때까지 그 표정을 유지한다.
   // 매번 새 객체라 같은 종류가 연달아 와도 서로 다른 반응으로 구분된다
   const [expressedThought, setExpressedThought] =
     useState<FloatingThought | null>(null);
@@ -270,20 +270,17 @@ export const useConversationTurns = ({
     turnIndex: number,
   ) => {
     if (line?.status !== 'shown') return;
-    setExpressedThought({ text: line.text, type: line.type });
+    setExpressedThought({
+      text: line.text,
+      type: line.type,
+      emotion: line.emotion,
+    });
     track(EVENTS.INNER_THOUGHT_VIEWED, {
       session_id: activeSessionId,
       turn_index: turnIndex,
       thought_type: line.type,
     });
   };
-
-  // 표정 여운 — 말풍선에 뜬 속마음을 잠깐 들고 있다가 지운다. 화면은 이걸 보고 표정을 짓는다
-  useEffect(() => {
-    if (!expressedThought) return;
-    const id = setTimeout(() => setExpressedThought(null), expressionHoldMs);
-    return () => clearTimeout(id);
-  }, [expressedThought]);
 
   // 발화 제출 — 대기(생각 중)로 넘긴 뒤, 응답이 오면 속마음을 잠깐 기다렸다가 다음 발화를 시작한다.
   // 세션이 백그라운드로 아직 안 끝났으면 sessionId 확보를 기다린다.

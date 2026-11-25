@@ -40,6 +40,8 @@ export interface SubmittedMessage {
   innerThoughtProcessingStatus: ProcessingStatus;
   innerThought: string | null;
   innerThoughtType: string | null;
+  // 속마음에 드러난 캐릭터 감정 (HAPPY·FROWN·NEUTRAL·ANGRY·SAD·LOVE·SULKY·EMBARRASSED). 이전 서버는 보내지 않는다
+  emotion?: string | null;
 }
 
 // 속마음 폴링 응답 — 준비되면(COMPLETED) 속마음이 채워진다.
@@ -48,6 +50,8 @@ export interface SessionInnerThoughtResponse {
   processingStatus: ProcessingStatus;
   innerThought: string | null;
   innerThoughtType: string | null;
+  // 속마음에 드러난 캐릭터 감정. 이전 서버는 보내지 않는다
+  emotion?: string | null;
 }
 
 // 다음 AI 질문 — 속마음 없이 발화 내용만

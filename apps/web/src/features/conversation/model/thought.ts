@@ -4,6 +4,8 @@ export type ThoughtType = 'GOOD' | 'NORMAL' | 'BAD';
 export interface FloatingThought {
   text: string;
   type: ThoughtType;
+  // 서버가 판별한 캐릭터 감정 (백엔드 문자열 그대로). 없으면 표정은 종류로 정한다
+  emotion?: string | null;
 }
 
 /**

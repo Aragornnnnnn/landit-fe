@@ -15,3 +15,6 @@ apps/mobile/modules/alarm-scheduler/
 
 # 로컬 모듈의 안드로이드 빌드 산출물 (gitignore와 같음)
 apps/mobile/modules/*/android/build/
+
+# 표정 데이터 — Rive 원본에서 생성(apps/web/assets/rive), 손대지 않는다
+apps/web/src/features/conversation/ui/character/expressions/
