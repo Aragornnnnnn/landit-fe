@@ -109,7 +109,6 @@ const SCROLL_EXCEPTIONS = new Set([
   'features/survey/ui/ChoiceList.tsx',
   'features/survey/ui/steps/TextStep.tsx',
   'features/onboarding/ui/common/AccentForm.tsx',
-  'features/conversation/ui/flow/QuestionCard.tsx',
   // 대화 칸 — 마이크·답변 칸 위에서 끝나 바닥에 닿지 않는다
   'features/conversation/ui/flow/ConversationLog.tsx',
   'app/(app)/(protected)/(tabs)/roleplay/_ui/RoleplayHome.tsx',

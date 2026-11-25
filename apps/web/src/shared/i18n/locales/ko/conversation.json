@@ -20,7 +20,7 @@
     "keyboardButton": "키보드로 입력",
     "speakButton": "말하기"
   },
-  "questionCard": {
+  "partnerBubble": {
     "lastQuestionBadge": "마지막 질문이에요",
     "instructionCaption": "내가 먼저 말해보는 상황",
     "replayButton": "다시 듣기",

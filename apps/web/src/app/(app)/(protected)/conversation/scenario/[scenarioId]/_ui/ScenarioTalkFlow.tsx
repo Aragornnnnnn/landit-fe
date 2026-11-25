@@ -12,11 +12,12 @@ import { userIntroHoldMs } from '@/features/conversation/model/pacing';
 import type { FloatingThought } from '@/features/conversation/model/thought';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
+import { ConversationLog } from '@/features/conversation/ui/flow/ConversationLog';
 import { ExitConfirmSheet } from '@/features/conversation/ui/flow/ExitConfirmSheet';
 import { ExitHeader } from '@/features/conversation/ui/flow/ExitHeader';
 import { MicControl } from '@/features/conversation/ui/flow/MicControl';
 import { MicPermissionSheet } from '@/features/conversation/ui/flow/MicPermissionSheet';
-import { QuestionCard } from '@/features/conversation/ui/flow/QuestionCard';
+import { PartnerBubble } from '@/features/conversation/ui/flow/PartnerBubble';
 import { ThoughtOverlay } from '@/features/conversation/ui/flow/ThoughtOverlay';
 import { UserTranscript } from '@/features/conversation/ui/flow/UserTranscript';
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -60,6 +61,7 @@ export const ScenarioTalkFlow = ({
     phase,
     turnIndex,
     turn,
+    log,
     partner,
     finishedThought,
     speech,
@@ -191,52 +193,43 @@ export const ScenarioTalkFlow = ({
 
       <CharacterStage partner={partner} look={characterLook} speech={speech} />
 
-      {/* 질문과 답변 칸이 무대 아래 높이를 나눠 쓴다 — 둘 다 글 길이만큼 서고, 모자라면 질문이 최소 높이까지 먼저 줄어(줄어드는 비율 1000) 안에서 스크롤된다. 지금 읽고 고칠 건 내 답이다.
-          키보드가 없을 땐 무대 높이를 건드리지 않고, 키보드가 올라오면 무대가 먼저 줄어 입력창에 자리를 내준다 */}
+      {/* 대화 칸과 내 답변 칸이 턱 선 아래 높이를 나눠 쓴다 — 무대 바로 다음이라 캐릭터 턱 아래에서 시작하고, 대화 칸이 남는 높이를 다 쓰며 넘치면 안에서 스크롤된다.
+          키보드가 올라오면 대화 칸을 접고 무대가 먼저 줄어 입력창에 자리를 내준다 */}
       <div
-        className={`flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
+        className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        {/* 무대·답변·마이크는 고정. 질문만 남는 공간을 채우는 스크롤 영역에 담아, 길어져도 겹치지 않고 카드 안에서 스크롤된다 */}
-        {/* 질문은 글자 크기와 상관없이 한 줄은 온전히 보이게 남긴다(카드 여백·버튼 4.75rem + 17px 글 한 줄). 더 크게 잡으면 짧은 질문 밑이 빈다.
-          키보드가 올라와 있는 동안엔 질문을 접는다 — 입력창이 캐릭터 바로 아래에 붙고, 남는 높이는 입력창과 키보드 사이로 간다 */}
-        <section
-          className={
-            keyboardLifted
-              ? 'hidden'
-              : 'flex min-h-[calc(4.75rem+1.46rem*var(--font-scale))] flex-auto shrink-[1000] flex-col px-5'
-          }
+        <ConversationLog
+          entries={log}
+          latestKey={turnIndex}
+          hidden={keyboardLifted}
         >
-          {/* pt-5는 무대와의 간격이자 페이드 구간 — 위로 스크롤될 때 무대 밑에서 그림자·글자가 직각으로 잘리지 않고 서서히 사라진다 */}
-          {/* 카드가 남는 높이를 다 쓰되 넘치진 않는다 — 넘치는 글은 카드 안에서 스크롤된다 */}
-          <div className="flex min-h-0 flex-1 flex-col pt-2">
-            <QuestionCard
-              question={turn.aiMessage}
-              translation={turn.aiTranslation}
-              speaking={phase === 'AI_SPEAKING'}
-              instruction={turn.isUserOpening}
-              lastQuestion={gauge.lastQuestion}
-              onTranslationToggled={(opened) =>
-                track(EVENTS.TRANSLATION_TOGGLED, {
-                  session_id: sessionId ?? undefined,
-                  turn_index: turnIndex,
-                  opened,
-                })
-              }
-              replay={replay}
-              textHidden={display.textHidden}
-              onTextToggled={(visible) =>
-                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
-                  session_id: sessionId ?? undefined,
-                  turn_index: turnIndex,
-                  hidden: !visible,
-                })
-              }
-              translationDefaultOpen={display.translationDefaultOpen}
-            />
-          </div>
-        </section>
+          <PartnerBubble
+            question={turn.aiMessage}
+            translation={turn.aiTranslation}
+            speaking={phase === 'AI_SPEAKING'}
+            instruction={turn.isUserOpening}
+            lastQuestion={gauge.lastQuestion}
+            onTranslationToggled={(opened) =>
+              track(EVENTS.TRANSLATION_TOGGLED, {
+                session_id: sessionId ?? undefined,
+                turn_index: turnIndex,
+                opened,
+              })
+            }
+            replay={replay}
+            textHidden={display.textHidden}
+            onTextToggled={(visible) =>
+              track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                session_id: sessionId ?? undefined,
+                turn_index: turnIndex,
+                hidden: !visible,
+              })
+            }
+            translationDefaultOpen={display.translationDefaultOpen}
+          />
+        </ConversationLog>
 
-        {/* 답변 칸은 질문 영역 밖에 둔다 — 키보드가 올라와 자리가 모자라면 질문이 아니라 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+        {/* 답변 칸은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
         <div className="flex min-h-0 shrink flex-col px-5">
           {/* 대화가 끝나면 내 답변·마이크를 감춘다. 키보드 입력 중엔 이 박스가 그대로 입력창이 된다.
               가이드를 펼치면 칩이 그 자리에서 예시 카드로 커져 칸 위에 겹친다 */}
