@@ -15,9 +15,9 @@ import {
   STAGE_SWAY_TURN,
 } from './stage-layout';
 
-// 아래로 갈수록 짙어지는 회색 — 피그마 「아래 어둡게」 레이어 값 그대로
+// 아래로 갈수록 짙어지는 회색 — 대화 칸 뒤까지 깔아 말풍선이 캐릭터 옷 위에서도 떠오르게 한다(얼굴은 밝게 둔다)
 const STAGE_SHADE =
-  'linear-gradient(to bottom, rgb(115 115 112 / 0), rgb(115 115 112 / 0.28) 55%, rgb(102 102 99 / 0.5))';
+  'linear-gradient(to bottom, rgb(60 60 58 / 0), rgb(60 60 58 / 0.38) 45%, rgb(50 50 48 / 0.6))';
 
 /**
  * partner는 세션 TTS 음성 성별을 따르고, look은 대화 단계에 맞춘 자세와 표정,
@@ -69,10 +69,10 @@ export const CharacterStage = ({
           viewBox={STAGE_VIEWBOX[partner]}
         />
       </motion.div>
-      {/* 아래 어둡게 — 다리 위에 놓이는 흰 말풍선·흰 버튼 이름이 옷 색에 묻히지 않게 화면 아래를 회색으로 눌러 준다(피그마 「아래 어둡게」).
+      {/* 아래 어둡게 — 몸통·다리 위에 쌓이는 말풍선과 흰 버튼 이름이 옷 색에 묻히지 않게, 대화 칸이 놓이는 아래 72%를 회색으로 눌러 준다.
           무대 그림 안에 둬서 대화 칸·버튼보다 늘 뒤에 깔린다 */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[40%]"
+        className="absolute inset-x-0 bottom-0 h-[72%]"
         style={{ background: STAGE_SHADE }}
       />
     </div>
