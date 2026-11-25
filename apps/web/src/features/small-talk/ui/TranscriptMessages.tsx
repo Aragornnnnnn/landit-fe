@@ -15,7 +15,6 @@ import type {
 import {
   countCorrectedSentences,
   groupSentences,
-  hasSentenceCorrection,
   splitByRanges,
   type CorrectedSentence,
 } from '../model/sentence-corrections';
@@ -66,7 +65,8 @@ export const MyMessage = ({
   lateCorrection: boolean;
 }) => {
   const t = useTranslations('smallTalk.transcript');
-  const corrected = hasSentenceCorrection(message.sentences);
+  const correctedCount = countCorrectedSentences(message.sentences);
+  const corrected = correctedCount > 0;
   return (
     <div className="flex flex-col items-end gap-1.5">
       {corrected ? (
@@ -84,10 +84,7 @@ export const MyMessage = ({
           </p>
         </div>
       )}
-      <BelowLine
-        message={message}
-        correctedCount={countCorrectedSentences(message.sentences)}
-      />
+      <BelowLine message={message} correctedCount={correctedCount} />
       {message.correctionStatus === 'PREPARING' && !waitExpired && (
         <p className="text-12 text-muted-foreground">{t('preparingCaption')}</p>
       )}

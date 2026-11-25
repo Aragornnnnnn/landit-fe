@@ -187,7 +187,7 @@ describe('SmallTalkTranscript 문장별 교정', () => {
     expect(screen.queryByText(/스몰톡에서 말한/)).not.toBeInTheDocument();
   });
 
-  it('스크린 리더엔 원문과 고친 문장 사이에 고친 문장이라고 알린다', () => {
+  it('스크린 리더엔 원문과 고친 문장 사이에 더 자연스러운 문장이라고 알린다', () => {
     // 화살표는 그림이라 읽히지 않는다 — 없으면 두 문장이 구분 없이 이어 읽힌다
     renderTranscript([
       messageOf({
@@ -196,7 +196,7 @@ describe('SmallTalkTranscript 문장별 교정', () => {
       }),
     ]);
 
-    expect(screen.getByText('고친 문장')).toBeInTheDocument();
+    expect(screen.getByText('더 자연스러운 문장')).toBeInTheDocument();
   });
 
   it('고칠 게 없는 문장은 고친 문장 앞뒤에 원문대로 이어 붙여 보여 준다', () => {

@@ -71,7 +71,7 @@
     "preparingCaption": "より自然な言い方を探しています…",
     "reusedExpressionBadge": "学んだフレーズ「{expression}」を使いました",
     "goodJobBadge": "よくできました！",
-    "fixedSentenceLabel": "直した文",
+    "fixedSentenceLabel": "より自然な文",
     "correctedCountBadge": "より自然な文 {count}件"
   },
   "transcriptSkeleton": {
