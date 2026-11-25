@@ -1,7 +1,7 @@
 // 대화 화면 스켈레톤 — 실제 대화 화면과 같은 자리·크기로 그려, 진짜 화면이 떠도 칸이 움직이지 않게 한다
 'use client';
 
-import { STAGE_BACKGROUND_CLASS, STAGE_CHIN_LINE } from './flow/stage-layout';
+import { CHAT_TOP_LINE, STAGE_BACKGROUND_CLASS } from './flow/stage-layout';
 
 // 진짜 내용이 올 자리에만 빛이 흐른다
 const PLACEHOLDER_CLASS = 'animate-skeleton-flow';
@@ -11,7 +11,7 @@ export const ConversationSkeleton = () => (
     {/* 무대 — 상대가 설 자리. 진짜 무대와 같은 턱 선 높이·배경이라 캐릭터만 나타나고 칸은 움직이지 않는다 */}
     <div
       className="relative w-full flex-none"
-      style={{ height: STAGE_CHIN_LINE }}
+      style={{ height: CHAT_TOP_LINE }}
     >
       <div
         aria-hidden

@@ -700,6 +700,50 @@ describe('useScenarioTalkFlow', async () => {
     expect(second[3]).not.toBe(first[3]);
   });
 
+  it('지난 상대 말은 해석·속마음·턴 번호를 함께 기록에 남긴다', async () => {
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+
+    await speakAndSubmit(result, 'Second answer.');
+
+    const partners = result.current.log.filter(
+      (entry) => entry.speaker === 'PARTNER',
+    );
+    expect(partners.at(-1)).toMatchObject({
+      text: 'What size would you like?',
+      translation: '사이즈는 어떻게 드릴까요?',
+      thought: { text: '또렷하게 잘 말했어.', type: 'GOOD' },
+      turnIndex: 1,
+    });
+  });
+
+  it('지난 상대 말을 다시 들으면 그 말이 나온 턴으로 계측한다', async () => {
+    const { result } = await renderAiFirstReady();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'First answer.');
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+    const [opening] = result.current.log;
+    vi.mocked(track).mockClear();
+
+    act(() => {
+      if (opening.speaker === 'PARTNER')
+        result.current.replayPast(opening)?.toggle();
+    });
+
+    expect(track).toHaveBeenCalledWith('Speech Replayed', {
+      session_id: 1,
+      turn_index: 0,
+    });
+  });
+
   it('다음 질문이 있으면 속마음이 끝난 뒤 다음 AI 질문으로 이어간다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
@@ -1170,6 +1214,58 @@ describe('useScenarioTalkFlow', async () => {
       status: 'shown',
       text: '좀 머쓱하네.',
       type: 'BAD',
+    });
+  });
+
+  it('다음 답을 기다리는 사이 늦게 온 속마음도 그 말풍선의 기록에 남긴다', async () => {
+    // Given 첫 대답의 속마음이 상한을 넘겨 뼈대로 시작했다
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
+    let thoughtReady = false;
+    getInnerThought.mockImplementation(async () =>
+      thoughtReady
+        ? {
+            processingStatus: 'COMPLETED',
+            innerThought: '좀 머쓱하네.',
+            innerThoughtType: 'BAD',
+          }
+        : {
+            processingStatus: 'PREPARING',
+            innerThought: null,
+            innerThoughtType: null,
+          },
+    );
+    await speakAndSubmit(result, 'Hello!');
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(thoughtWaitMs);
+    });
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    await act(async () => ttsMock.state.onEnd?.());
+    // And 다음 답을 보냈고 응답을 기다린다
+    let resolveNext: (value: ScenarioTalkSubmitResponse) => void = () => {};
+    submitScenarioTalkMessage.mockReturnValue(
+      new Promise((r) => {
+        resolveNext = r;
+      }),
+    );
+    await speakAndSubmit(result, 'Medium, please.');
+
+    // When 그사이 앞 속마음이 도착하고, 이어서 다음 응답이 온다
+    thoughtReady = true;
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
+    });
+    await act(async () => resolveNext(submitResponse()));
+
+    // Then 기록된 그 말풍선에 도착한 속마음이 남아 있다
+    const partners = result.current.log.filter(
+      (entry) => entry.speaker === 'PARTNER',
+    );
+    expect(partners.at(-1)).toMatchObject({
+      text: 'What size would you like?',
+      thought: { text: '좀 머쓱하네.', type: 'BAD' },
     });
   });
 

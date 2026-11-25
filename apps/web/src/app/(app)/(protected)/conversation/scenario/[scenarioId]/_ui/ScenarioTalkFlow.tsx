@@ -68,6 +68,8 @@ export const ScenarioTalkFlow = ({
     waitingForSound,
     preparingAnswer,
     replay,
+    replayPast,
+    stopReplaying,
     interruptible,
     input,
     resend,
@@ -159,8 +161,8 @@ export const ScenarioTalkFlow = ({
   // 라우트 전환은 새 화면이 준비될 때까지 이 화면에 머문다 — 그동안 버튼이 돌아가야 눌린 줄 안다
   const [leavingForFeedback, startLeaving] = useTransition();
   const goToFeedback = () => {
-    // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사를 다시 듣던 중이면 여기서 끊는다
-    if (replay?.playing) replay.toggle();
+    // 화면은 피드백으로 갈아타도 이 훅은 살아 있다 — 작별 인사든 지난 말풍선이든 다시 듣던 중이면 여기서 끊는다
+    stopReplaying();
     startLeaving(() => router.replace(feedbackPath));
   };
 
@@ -192,13 +194,42 @@ export const ScenarioTalkFlow = ({
       <div
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        <ConversationLog entries={log} latestKey={turnIndex}>
+        <ConversationLog
+          entries={log}
+          latestKey={turnIndex}
+          latestOnly={keyboardLifted}
+          // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
+          latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
+          // 지난 상대 말도 지금 차례처럼 다시 듣기·해석·가리기·속마음을 단다. 이미 들은 말이라 영어는 보인 채로 둔다
+          renderPartner={(entry) => (
+            <PartnerBubble
+              past
+              question={entry.text}
+              translation={entry.translation}
+              speaking={false}
+              thought={entry.thought && { status: 'shown', ...entry.thought }}
+              replay={replayPast(entry)}
+              translationDefaultOpen={display.translationDefaultOpen}
+              onTranslationToggled={(opened) =>
+                track(EVENTS.TRANSLATION_TOGGLED, {
+                  session_id: sessionId ?? undefined,
+                  turn_index: entry.turnIndex,
+                  opened,
+                })
+              }
+              onTextToggled={(visible) =>
+                track(EVENTS.ENGLISH_TEXT_TOGGLED, {
+                  session_id: sessionId ?? undefined,
+                  turn_index: entry.turnIndex,
+                  hidden: !visible,
+                })
+              }
+            />
+          )}
+        >
           {/* 내가 먼저 거는 대화의 첫 턴엔 상대 말 대신 상황 카드를 둔다. 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
           {turn.isUserOpening ? (
-            <SituationCard
-              text={turn.aiMessage}
-              alone={!myBubble && !preparingAnswer}
-            />
+            <SituationCard text={turn.aiMessage} />
           ) : (
             !waitingForSound && (
               <PartnerBubble

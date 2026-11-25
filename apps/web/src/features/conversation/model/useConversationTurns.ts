@@ -14,7 +14,11 @@ import type { TtsVoice } from '@/shared/tts/voice';
 import { showToast } from '@/shared/ui/toast';
 
 import type { NextMessage, SubmittedMessage } from '../api/session';
-import { recordExchange, type LogEntry } from './conversation-log';
+import {
+  recordExchange,
+  type LogEntry,
+  type PartnerLogEntry,
+} from './conversation-log';
 import {
   canInterruptSpeech,
   initialConversationState,
@@ -104,6 +108,13 @@ export const useConversationTurns = ({
   // 대화가 진행되기 전까지는 오프닝이 현재 발화다 — 뒤늦게 도착(세션 응답 폴백)해도 그대로 반영된다
   const currentMessage = aiMessage ?? opening;
   const [thought, setThought] = useState<BubbleThought | null>(null);
+  // 지금 말풍선의 속마음 — 기록으로 옮길 때 읽는다. 제출 때 만든 콜백이 옮기므로 상태가 아니라 이 값을 봐야
+  // 그사이 늦게 도착해 채운 속마음까지 남는다
+  const thoughtRef = useRef<BubbleThought | null>(null);
+  const showThought = (next: BubbleThought | null) => {
+    thoughtRef.current = next;
+    setThought(next);
+  };
   // 말풍선에 막 뜬 속마음 — 화면이 표정으로 반응할 수 있게 그 사실만 남긴다.
   // 매번 새 객체라 같은 종류가 연달아 와도 서로 다른 반응으로 구분된다
   const [expressedThought, setExpressedThought] =
@@ -178,21 +189,40 @@ export const useConversationTurns = ({
       void submitContent(content, inputType, utteranceDurationMs),
   });
 
-  // 방금 들은 상대 발화를 한 번 더(재생 중이면 멈춤) — 재생만 다시 할 뿐 턴은 그대로다. 멈추려고 누른 건 세지 않는다
-  const toggleReplay = () => {
-    if (aiSpeech.replay())
+  // 상대 발화를 한 번 더(재생 중이면 멈춤) — 재생만 다시 할 뿐 턴은 그대로다. 멈추려고 누른 건 세지 않는다.
+  // 지난 말풍선이면 그 발화와 그 턴 번호를 넘긴다
+  const toggleReplay = (past?: { source: SpeechSource; turnIndex: number }) => {
+    if (aiSpeech.replay(past?.source))
       track(EVENTS.SPEECH_REPLAYED, {
         session_id: sessionId ?? undefined,
-        turn_index: state.turnIndex,
+        turn_index: past?.turnIndex ?? state.turnIndex,
       });
   };
 
-  // 다시 들을 소리가 없으면(음성 미배정 대화, 아직 상대 발화가 없는 선발화 안내) 버튼 자체를 두지 않는다
+  // 다시 들을 소리가 없으면(음성 미배정 대화, 아직 상대 발화가 없는 선발화 안내) 버튼 자체를 두지 않는다.
+  // 지금 차례 버튼은 지난 말풍선 것이 아닌 소리(지금 말 다시 듣기·남겨 둔 소리)가 들리는 동안 재생 중으로 보인다.
+  // 오프닝은 렌더마다 새 객체로 올 수 있어 지금 말과 직접 견주지 않는다
   const replay: ReplayControl | undefined =
     voice && currentMessage
       ? {
-          toggle: toggleReplay,
-          playing: aiSpeech.replaying,
+          toggle: () => toggleReplay(),
+          playing:
+            aiSpeech.replaying &&
+            !log.some(
+              (entry) =>
+                entry.speaker === 'PARTNER' &&
+                entry.source === aiSpeech.replayingSource,
+            ),
+          enabled: replayAllowed,
+        }
+      : undefined;
+
+  // 지난 상대 말풍선의 다시 듣기 — 지금 차례와 같은 규칙(내 차례에만, 한 번에 하나)을 따른다
+  const replayPast = (entry: PartnerLogEntry): ReplayControl | undefined =>
+    voice
+      ? {
+          toggle: () => toggleReplay(entry),
+          playing: aiSpeech.replayingSource === entry.source,
           enabled: replayAllowed,
         }
       : undefined;
@@ -204,13 +234,27 @@ export const useConversationTurns = ({
     const answered = answeredRef.current;
     answeredRef.current = null;
     const opener = currentMessage
-      ? { speaker: 'PARTNER' as const, text: currentMessage.content }
+      ? {
+          speaker: 'PARTNER' as const,
+          text: currentMessage.content,
+          translation: currentMessage.translatedContent,
+          // 뼈대인 채로 끝났으면(끝내 안 옴) 남길 속마음이 없다
+          thought:
+            thoughtRef.current?.status === 'shown'
+              ? {
+                  text: thoughtRef.current.text,
+                  type: thoughtRef.current.type,
+                }
+              : null,
+          source: currentMessage,
+          turnIndex: state.turnIndex,
+        }
       : openingInstruction
         ? { speaker: 'SITUATION' as const, text: openingInstruction }
         : null;
     if (answered != null)
       setLog((prev) => recordExchange(prev, opener, answered));
-    setThought(initialThought);
+    showThought(initialThought);
     if (nextMessageRef.current) {
       setAiMessage(nextMessageRef.current);
       nextMessageRef.current = null;
@@ -311,7 +355,7 @@ export const useConversationTurns = ({
         onArrive: (line) => {
           // 그사이 다음 답을 보냈다면 이 속마음의 말풍선은 이미 지난 대화다
           if (race !== thoughtRaceRef.current) return;
-          setThought(line);
+          showThought(line);
           markThoughtShown(line, activeSessionId, thoughtTurnIndex);
         },
       });
@@ -376,6 +420,9 @@ export const useConversationTurns = ({
     // 화면은 이 동안 점 말풍선을 띄우고 캐릭터를 생각하는 자세로 둔다
     preparingAnswer: state.phase === 'AI_THINKING' || aiSpeech.waitingForSound,
     replay,
+    replayPast,
+    // 어느 말풍선 것이든 다시 듣던 소리를 끊는다 — 대화를 떠나 다음 화면으로 갈 때
+    stopReplaying: aiSpeech.stopReplaying,
     interruptible,
     // 입력은 하위 훅 결과를 통째로 — 낱개 중계를 안 해야 input의 반환 형태에 flow가 결합하지 않는다
     input,

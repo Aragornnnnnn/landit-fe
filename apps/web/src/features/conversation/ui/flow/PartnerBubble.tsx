@@ -38,6 +38,8 @@ interface PartnerBubbleProps {
   onTextToggled?: (visible: boolean) => void;
   // 내 말에 대한 상대 속마음 — 오는 중이면 뼈대, 없으면(속마음 없는 대화·생성 실패) 줄 자체를 두지 않는다
   thought?: BubbleThought | null;
+  // 지난 대화로 넘어간 말풍선 — 등장 연출 없이 제자리에 두고, 칸 스크롤을 부탁하지 않는다
+  past?: boolean;
 }
 
 /**
@@ -106,6 +108,7 @@ export const PartnerBubble = ({
   textHidden = false,
   onTextToggled,
   thought = null,
+  past = false,
 }: PartnerBubbleProps) => {
   const t = useTranslations('conversation.partnerBubble');
   // 대화 칸 스크롤 — 말하는 줄과 펼친 해석을 보이게 하고, 다 말하면 첫 줄로 돌려 달라고 부탁한다
@@ -173,7 +176,7 @@ export const PartnerBubble = ({
 
   // 다 말하면 첫 줄로 돌아간다 — 읽기 시작할 땐 첫 줄부터 보여야 한다
   useEffect(() => {
-    if (!speaking) scroll?.settle();
+    if (!speaking && !past) scroll?.settle();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 위와 같은 이유
   }, [speaking]);
 
@@ -188,7 +191,7 @@ export const PartnerBubble = ({
   return (
     <motion.div
       key={question}
-      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      initial={past ? false : { opacity: 0, y: 16, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       // 왼쪽 위 꼬리 쪽에서 커져 나온다 — 상대가 말을 꺼내는 쪽

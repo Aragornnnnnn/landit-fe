@@ -8,7 +8,15 @@ import { ConversationLog } from './ConversationLog';
 afterEach(() => cleanup());
 
 const entries: LogEntry[] = [
-  { id: 0, speaker: 'PARTNER', text: 'Where do you live?' },
+  {
+    id: 0,
+    speaker: 'PARTNER',
+    text: 'Where do you live?',
+    translation: null,
+    thought: null,
+    source: { content: 'Where do you live?' },
+    turnIndex: 0,
+  },
   { id: 1, speaker: 'ME', text: 'I live in Seoul.' },
 ];
 
@@ -54,6 +62,32 @@ describe('ConversationLog', () => {
             Node.DOCUMENT_POSITION_FOLLOWING,
       ),
     ).toBe(true);
+  });
+
+  it('지금 차례만 보일 때(키보드로 쓰는 중)는 지난 대화를 숨기고 지금 차례의 말만 둔다', () => {
+    layOut();
+    render(
+      <ConversationLog entries={entries} latestKey={1} latestOnly>
+        <p>Nice! Which part?</p>
+      </ConversationLog>,
+    );
+
+    expect(screen.queryByText('I live in Seoul.')).not.toBeVisible();
+    expect(screen.getByText('Nice! Which part?')).toBeVisible();
+  });
+
+  it('지금 차례의 말을 칸 가운데에 두라고 하면 그 묶음이 칸 높이를 채워 가운데 정렬한다', () => {
+    layOut();
+    render(
+      <ConversationLog entries={[]} latestKey={0} latestCentered>
+        <p>상황 카드</p>
+      </ConversationLog>,
+    );
+
+    expect(screen.getByText('상황 카드').parentElement).toHaveClass(
+      'flex-1',
+      'justify-center',
+    );
   });
 
   it('최신 대화를 보는 중엔 알약을 띄우지 않는다', () => {

@@ -5,6 +5,7 @@
 
 import {
   createContext,
+  Fragment,
   use,
   useEffect,
   useLayoutEffect,
@@ -21,7 +22,7 @@ import {
   scrollTopForLatest,
   scrollTopToFollow,
 } from '../../model/chat-scroll';
-import type { LogEntry } from '../../model/conversation-log';
+import type { LogEntry, PartnerLogEntry } from '../../model/conversation-log';
 import { PastBubble } from './ChatBubbles';
 
 // 칸 위 끝 흐림 폭 — 옛 말풍선이 직각으로 잘리지 않고 캐릭터 위로 서서히 사라진다
@@ -45,6 +46,13 @@ interface ConversationLogProps {
   entries: readonly LogEntry[];
   // 지금 차례의 말이 바뀌면 달라지는 값 — 바뀐 순간 새 말풍선 자리로 맞추거나, 지난 대화를 보는 중이면 새 답변 점을 켠다
   latestKey: string | number;
+  // 지금 차례만 보일 때(키보드로 쓰는 중) — 좁아진 칸에서 답할 질문이 바로 보이게 지난 대화를 숨긴다.
+  // 빼지 않고 숨겨 두어 말풍선 상태(해석 펼침 등)가 그대로 남는다
+  latestOnly?: boolean;
+  // 지금 차례의 말을 칸 가운데에 둔다 — 내가 먼저 거는 대화의 첫 상황 카드처럼 칸에 그것 하나뿐일 때
+  latestCentered?: boolean;
+  // 지난 상대 말을 그리는 법 — 주면 지금 차례 말풍선처럼 다시 듣기·해석·속마음을 단다. 없으면 대사만 둔다
+  renderPartner?: (entry: PartnerLogEntry) => React.ReactNode;
   // 지금 차례의 말(상대 말풍선·생각 중 점 등) — useChatScroll로 칸에 스크롤을 부탁한다
   children: React.ReactNode;
 }
@@ -52,6 +60,9 @@ interface ConversationLogProps {
 export const ConversationLog = ({
   entries,
   latestKey,
+  latestOnly = false,
+  latestCentered = false,
+  renderPartner,
   children,
 }: ConversationLogProps) => {
   const t = useTranslations('conversation.conversationLog');
@@ -204,15 +215,27 @@ export const ConversationLog = ({
           className="flex min-h-full flex-col justify-end gap-2.5 px-4 pb-3"
           style={{ paddingTop: FADE_PX }}
         >
-          {entries.map((entry) => (
-            <PastBubble
-              key={entry.id}
-              speaker={entry.speaker}
-              text={entry.text}
-            />
-          ))}
+          <div
+            hidden={latestOnly}
+            className={latestOnly ? undefined : 'contents'}
+          >
+            {entries.map((entry) =>
+              entry.speaker === 'PARTNER' && renderPartner ? (
+                <Fragment key={entry.id}>{renderPartner(entry)}</Fragment>
+              ) : (
+                <PastBubble
+                  key={entry.id}
+                  speaker={entry.speaker}
+                  text={entry.text}
+                />
+              ),
+            )}
+          </div>
           {/* 지금 차례의 말(상대 말풍선·상황 카드·예시·내 말풍선·점)도 지난 대화와 같은 간격으로 쌓는다 */}
-          <div ref={latestRef} className="flex flex-col gap-2.5">
+          <div
+            ref={latestRef}
+            className={`flex flex-col gap-2.5 ${latestCentered ? 'flex-1 justify-center' : ''}`}
+          >
             <ChatScrollContext value={scroll}>{children}</ChatScrollContext>
           </div>
         </div>
