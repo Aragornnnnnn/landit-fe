@@ -43,8 +43,6 @@ export const useChatScroll = () => use(ChatScrollContext);
 
 interface ConversationLogProps {
   entries: readonly LogEntry[];
-  // 키보드로 쓰는 동안 칸을 접는다 — 빼지 않고 숨겨 두어 말풍선 상태(해석 펼침·글자 보기)와 보던 자리가 그대로 남는다
-  hidden?: boolean;
   // 지금 차례의 말이 바뀌면 달라지는 값 — 바뀐 순간 새 말풍선 자리로 맞추거나, 지난 대화를 보는 중이면 새 답변 점을 켠다
   latestKey: string | number;
   // 지금 차례의 말(상대 말풍선·생각 중 점 등) — useChatScroll로 칸에 스크롤을 부탁한다
@@ -53,7 +51,6 @@ interface ConversationLogProps {
 
 export const ConversationLog = ({
   entries,
-  hidden = false,
   latestKey,
   children,
 }: ConversationLogProps) => {
@@ -187,9 +184,7 @@ export const ConversationLog = ({
 
   return (
     // 칸이 아무리 눌려도 상대 말 한 줄과 버튼 줄은 보이게 남긴다(말풍선 여백·버튼 4.75rem + 16px 글 한 줄) — 모자라면 무대가 먼저 줄어든다
-    <div
-      className={`relative min-h-[calc(4.75rem+1.35rem*var(--font-scale))] flex-1 flex-col ${hidden ? 'hidden' : 'flex'}`}
-    >
+    <div className="relative flex min-h-[calc(4.75rem+1.35rem*var(--font-scale))] flex-1 flex-col">
       <div
         ref={boxRef}
         onScroll={syncFollowing}

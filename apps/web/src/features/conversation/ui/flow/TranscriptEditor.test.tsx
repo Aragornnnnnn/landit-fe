@@ -103,6 +103,60 @@ describe('TranscriptEditor', () => {
       ).toBeInTheDocument();
     });
 
+    it('닫기 버튼 없이 입력창 밖을 누르면 닫는다', () => {
+      const { onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.pointerUp(document.body, { clientX: 10, clientY: 12 });
+
+      expect(screen.queryByRole('button', { name: '입력 취소' })).toBeNull();
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('입력창 밖을 끌어 대화를 스크롤하면 닫지 않는다', () => {
+      const { onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.pointerUp(document.body, { clientX: 10, clientY: 60 });
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('보내서 입력창이 사라질 때는 닫지 않는다 — 보낸 글이 확인으로 남지 않게', () => {
+      const { input, onClose } = renderEditing('Hello');
+
+      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.blur(input);
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('보내기 버튼을 눌러도 입력창을 닫지 않는다', () => {
+      const { onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(screen.getByRole('button', { name: '답변 전송' }));
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('키보드를 내려 입력창을 떠나면 닫는다', () => {
+      const { input, onClose } = renderEditing('Hello');
+
+      fireEvent.blur(input);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('밖을 누르고 이어서 입력창을 떠나도 한 번만 닫는다', () => {
+      const { input, onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.pointerUp(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.blur(input);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
     it('한도와 멀면 글자 수를 보이지 않는다', () => {
       renderEditing('Hello');
 
@@ -113,6 +167,7 @@ describe('TranscriptEditor', () => {
     const renderEditing = (initial = '') => {
       const onChange = vi.fn();
       const onSubmit = vi.fn();
+      const onClose = vi.fn();
       const Host = () => {
         const [text, setText] = useState(initial);
         return (
@@ -123,6 +178,7 @@ describe('TranscriptEditor', () => {
               setText(value);
             }}
             onSubmit={onSubmit}
+            onClose={onClose}
           />
         );
       };
@@ -132,7 +188,12 @@ describe('TranscriptEditor', () => {
           <Toaster />
         </>,
       );
-      return { input: screen.getByRole('textbox'), onChange, onSubmit };
+      return {
+        input: screen.getByRole('textbox'),
+        onChange,
+        onSubmit,
+        onClose,
+      };
     };
     const englishNotice = () => screen.queryByText('영어로만 입력할 수 있어요');
 

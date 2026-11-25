@@ -123,6 +123,7 @@ export const TalkScreen = ({
     setTranscript,
     submitText,
     reviewing,
+    reviewedInputType,
     speakAgain,
     editTranscript,
     submitReviewed,
@@ -192,11 +193,7 @@ export const TalkScreen = ({
       <div
         className={`relative z-10 flex min-h-0 flex-col ${keyboardLifted ? 'flex-initial' : 'flex-1'}`}
       >
-        <ConversationLog
-          entries={log}
-          latestKey={turnIndex}
-          hidden={keyboardLifted}
-        >
+        <ConversationLog entries={log} latestKey={turnIndex}>
           {/* 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
           {!waitingForSound && (
             <PartnerBubble
@@ -230,6 +227,7 @@ export const TalkScreen = ({
               text={transcript}
               speechPending={speechPending}
               onEdit={editTranscript}
+              typed={reviewedInputType === 'TEXT'}
             />
           )}
           {preparingAnswer && <ThinkingBubble />}
@@ -242,21 +240,20 @@ export const TalkScreen = ({
           </div>
         )}
 
-        {/* 키보드 입력창은 대화 칸 밖에 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력창은 그대로 키보드 위에 선다 */}
+        {/* 키보드 입력바는 대화 칸 밖, 화면 폭으로 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력바는 그대로 키보드 위에 선다.
+            닫기 버튼 없이 위쪽을 누르거나 키보드를 내리면 닫히고, 쓴 글은 확인 말풍선으로 남는다 */}
         {typing && (
-          <div className="flex min-h-0 shrink flex-col px-5">
-            <TranscriptEditor
-              text={transcript}
-              onChange={setTranscript}
-              onSubmit={submitText}
-              onCancel={closeTyping}
-            />
-          </div>
+          <TranscriptEditor
+            text={transcript}
+            onChange={setTranscript}
+            onSubmit={submitText}
+            onClose={closeTyping}
+          />
         )}
       </div>
 
       <footer
-        className={`flex-none ${keyboardLifted ? 'pb-4' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
+        className={`flex-none ${keyboardLifted ? '' : 'pb-[max(var(--safe-area-inset-bottom),16px)]'}`}
       >
         {ended ? (
           // 버튼은 끝내는 말이 아니라 다음에 볼 것으로 부른다 — 여기서 대화는 이미 끝났다

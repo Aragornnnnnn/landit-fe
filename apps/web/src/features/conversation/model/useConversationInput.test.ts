@@ -621,20 +621,31 @@ describe('useConversationInput', () => {
       vi.useRealTimers();
     });
 
-    it('입력창을 닫으면 고친 내용을 버리고 처음 인식된 문장으로 확인 단계에 돌아간다', () => {
+    it('고치다 입력창을 닫으면 고친 문장을 남긴 채 확인 단계에 돌아간다', () => {
       const { result, onInputCancel } = renderReviewing();
 
       act(() => result.current.editTranscript());
-      act(() => result.current.setTranscript('something else'));
+      act(() => result.current.setTranscript('I went to the beach.'));
       act(() => result.current.closeTyping());
 
       expect(result.current.keyboardMode).toBe(false);
       expect(result.current.reviewing).toBe(true);
-      expect(result.current.transcript).toBe('I went to the bitch.');
+      expect(result.current.transcript).toBe('I went to the beach.');
       expect(onInputCancel).not.toHaveBeenCalled();
     });
 
-    it('키보드로 쓰던 입력창을 닫으면 지금처럼 입력을 취소한다', () => {
+    it('고치다 다 지우고 닫으면 말하기 대기로 돌아간다', () => {
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+      act(() => result.current.setTranscript('  '));
+      act(() => result.current.closeTyping());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('키보드로 쓰던 입력창을 빈 채로 닫으면 입력을 취소한다', () => {
       const { result, onInputCancel } = renderInput();
 
       act(() => result.current.pressKeyboard());
@@ -642,6 +653,41 @@ describe('useConversationInput', () => {
 
       expect(result.current.keyboardMode).toBe(false);
       expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('키보드로 쓰다 닫으면 쓴 글이 확인 단계에 남는다', () => {
+      const { result, onInputCancel } = renderInput();
+
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript('Nice to meet you!'));
+      act(() => result.current.closeTyping());
+
+      expect(result.current.keyboardMode).toBe(false);
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.reviewedInputType).toBe('TEXT');
+      expect(result.current.transcript).toBe('Nice to meet you!');
+      expect(onInputCancel).not.toHaveBeenCalled();
+    });
+
+    it('키보드로 쓴 글은 확인에서 보내도 TEXT로 보내고 음성 확인 계측은 남기지 않는다', () => {
+      const { result, onContent } = renderInput();
+
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript('Nice to meet you!'));
+      act(() => result.current.closeTyping());
+      act(() => result.current.submitReviewed());
+
+      expect(onContent).toHaveBeenCalledWith('Nice to meet you!', 'TEXT', 0);
+      expect(trackMock).not.toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.anything(),
+      );
+    });
+
+    it('말한 답을 확인하는 중이면 음성 확인으로 알린다', () => {
+      const { result } = renderReviewing();
+
+      expect(result.current.reviewedInputType).toBe('VOICE');
     });
 
     it('고친 문장을 다 지우면 보내지 않는다', () => {

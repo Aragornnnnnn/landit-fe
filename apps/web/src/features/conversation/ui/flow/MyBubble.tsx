@@ -26,6 +26,8 @@ interface MyBubbleProps {
   speechPending?: boolean;
   // 말한 뒤 확인 중에 말풍선을 누르면 — 인식된 문장을 고치는 입력창으로 간다
   onEdit: () => void;
+  // 키보드로 쓰다 닫아 남긴 글인가 — 잘못 알아들을 일이 없어 「말한 내용과 다르면」 안내를 띄우지 않는다
+  typed?: boolean;
 }
 
 export const MyBubble = ({
@@ -33,6 +35,7 @@ export const MyBubble = ({
   text,
   speechPending = false,
   onEdit,
+  typed = false,
 }: MyBubbleProps) => {
   const scroll = useChatScroll();
   const ref = useRef<HTMLDivElement>(null);
@@ -44,7 +47,9 @@ export const MyBubble = ({
   }, [text, state]);
 
   if (state === 'review')
-    return <ReviewBubble ref={ref} text={text} onEdit={onEdit} />;
+    return (
+      <ReviewBubble ref={ref} text={text} onEdit={onEdit} hintable={!typed} />
+    );
 
   if (state === 'failed') return <FailedBubble ref={ref} text={text} />;
 
@@ -67,14 +72,16 @@ export const MyBubble = ({
 const ReviewBubble = ({
   text,
   onEdit,
+  hintable,
   ref,
 }: {
   text: string;
   onEdit: () => void;
+  hintable: boolean;
   ref: React.Ref<HTMLDivElement>;
 }) => {
   const t = useTranslations('conversation.myBubble');
-  const hintVisible = useEditHint(true);
+  const hintVisible = useEditHint(hintable);
   const hintId = useId();
   return (
     <div
