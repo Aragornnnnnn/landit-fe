@@ -26,6 +26,9 @@ const backendThenSupabase = (verifyStatus: number, insertStatus: number) =>
     .mockResolvedValueOnce(new Response(null, { status: insertStatus }));
 
 beforeEach(() => {
+  vi.stubEnv('LANDIT_SURVEY_WRITES_PAUSED', '');
+  vi.stubEnv('LANDIT_SURVEY_RDS_URL', '');
+  vi.stubEnv('LANDIT_SURVEY_RDS_TOKEN', '');
   vi.stubEnv('SUPABASE_URL', 'https://example.supabase.co');
   vi.stubEnv('SUPABASE_SECRET_KEY', 'secret');
   vi.stubEnv('NEXT_PUBLIC_API_BASE_URL', 'https://api.example.com');
@@ -267,5 +270,99 @@ describe('POST /api/survey', () => {
     const res = await POST(surveyRequest({ answers: {} }, `Bearer ${token}`));
 
     expect(res.status).toBe(502);
+  });
+});
+
+it('전환 작업창이면 두 저장 경로 모두 호출하지 않는다', async () => {
+  vi.stubEnv('LANDIT_SURVEY_WRITES_PAUSED', 'true');
+
+  const response = await POST(
+    surveyRequest({ answers: {} }, `Bearer ${token}`),
+  );
+
+  expect(response.status).toBe(503);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+describe('RDS 설문 저장', () => {
+  beforeEach(() => {
+    vi.stubEnv(
+      'LANDIT_SURVEY_RDS_URL',
+      'https://api.example.com/internal/rds/survey',
+    );
+    vi.stubEnv('LANDIT_SURVEY_RDS_TOKEN', 'rds-survey-token');
+    vi.stubEnv('SUPABASE_SECRET_KEY', '');
+  });
+
+  it.each(['general', 'paid'])(
+    '%s 중간 저장이면 유형과 토큰의 사용자 ID를 전달한다',
+    async (survey) => {
+      backendThenSupabase(200, 204);
+
+      const response = await POST(
+        surveyRequest(
+          {
+            survey,
+            responseId: RESPONSE_ID,
+            completed: false,
+            answers: {},
+            user_id: 99,
+          },
+          `Bearer ${token}`,
+        ),
+      );
+
+      expect(response.status).toBe(200);
+      const [url, init] = fetchMock.mock.calls[1];
+      expect(url).toBe('https://api.example.com/internal/rds/survey');
+      expect(init.headers.Authorization).toBe('Bearer rds-survey-token');
+      expect(JSON.parse(init.body)).toMatchObject({
+        survey,
+        response_id: RESPONSE_ID,
+        completed: false,
+        user_id: 7,
+      });
+    },
+  );
+
+  it('응답 번호 없는 일반 설문이면 기존처럼 완료 응답으로 전달한다', async () => {
+    backendThenSupabase(200, 204);
+
+    const response = await POST(
+      surveyRequest({ answers: {} }, `Bearer ${token}`),
+    );
+
+    expect(response.status).toBe(200);
+    const payload = JSON.parse(fetchMock.mock.calls[1][1].body);
+    expect(payload).toMatchObject({
+      survey: 'general',
+      completed: true,
+      user_id: 7,
+    });
+    expect(payload).not.toHaveProperty('response_id');
+  });
+
+  it('RDS 저장에 실패하면 Supabase에 다시 쓰지 않는다', async () => {
+    backendThenSupabase(200, 503);
+    vi.stubEnv('SUPABASE_SECRET_KEY', 'source-secret');
+
+    const response = await POST(
+      surveyRequest({ answers: {} }, `Bearer ${token}`),
+    );
+
+    expect(response.status).toBe(502);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('RDS 설정이 일부만 있으면 저장 요청을 보내지 않는다', async () => {
+    vi.stubEnv('LANDIT_SURVEY_RDS_TOKEN', '');
+    vi.stubEnv('SUPABASE_SECRET_KEY', 'source-secret');
+
+    const response = await POST(
+      surveyRequest({ answers: {} }, `Bearer ${token}`),
+    );
+
+    expect(response.status).toBe(500);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

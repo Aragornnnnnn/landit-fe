@@ -1,4 +1,4 @@
-// 설문 응답을 받아 슈퍼베이스에 넣는 서버 라우트 — Secret 키를 서버에만 두고, 누구의 응답인지는 토큰으로 정한다.
+// 토큰으로 응답자를 확인하고 설문을 설정된 서버 저장 경로에 전달한다.
 // 테이블: survey_responses(id bigint 기본키, survey text not null default 'general', user_id bigint, email text, answers jsonb, created_at timestamptz default now())
 // 결제자 설문을 붙이며 칸 셋을 더했다 —
 //   alter table survey_responses add column survey text not null default 'general',
@@ -45,10 +45,23 @@ const fetchUpstream = async (input: string, init: RequestInit) => {
 };
 
 export async function POST(request: Request) {
+  if (process.env.LANDIT_SURVEY_WRITES_PAUSED === 'true') {
+    return fail(
+      503,
+      '설문 저장을 잠시 쉬고 있어요. 조금 뒤에 다시 시도해 주세요',
+    );
+  }
+
   const supabaseUrl = process.env.SUPABASE_URL;
   const secretKey = process.env.SUPABASE_SECRET_KEY;
+  const rdsUrl = process.env.LANDIT_SURVEY_RDS_URL;
+  const rdsToken = process.env.LANDIT_SURVEY_RDS_TOKEN;
+  const useRds = Boolean(rdsUrl || rdsToken);
+  const storageConfigured = useRds
+    ? Boolean(rdsUrl?.startsWith('https://') && rdsToken)
+    : Boolean(supabaseUrl && secretKey);
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
-  if (!supabaseUrl || !secretKey || !apiBaseUrl) {
+  if (!storageConfigured || !apiBaseUrl) {
     return fail(500, '설문 저장소가 설정되지 않았어요');
   }
 
@@ -78,7 +91,7 @@ export async function POST(request: Request) {
   if (body.completed !== undefined && typeof body.completed !== 'boolean') {
     return fail(400, 'completed 모양이 맞지 않아요');
   }
-  const completed = body.completed ?? true;
+  const completed = responseId ? (body.completed ?? true) : true;
   // 필수 답은 다 낼 때만 본다 — 중간 저장은 아직 안 쓴 문항이 있는 게 정상이다
   if (completed && !fillsRequired(survey, body.answers)) {
     return fail(400, '필수 문항에 답하지 않았어요');
@@ -98,36 +111,51 @@ export async function POST(request: Request) {
     return fail(502, '로그인 확인에 실패했어요');
   }
 
-  // 응답 번호가 있으면 내 계정의 같은 번호 행을 덮어쓴다(upsert)
-  const target = responseId
+  const surveyRecord = {
+    ...(responseId && { response_id: responseId, completed }),
+    user_id: userId,
+    // 이메일은 참고값이며 사용자 연결은 인증한 ID를 사용한다.
+    email: typeof body.email === 'string' ? body.email : null,
+    answers: body.answers,
+  };
+  const supabaseTarget = responseId
     ? `${supabaseUrl}/rest/v1/${TABLE}?on_conflict=user_id,response_id`
     : `${supabaseUrl}/rest/v1/${TABLE}`;
-  const inserted = await fetchUpstream(target, {
-    method: 'POST',
-    headers: {
-      apikey: secretKey,
-      Authorization: `Bearer ${secretKey}`,
-      'Content-Type': 'application/json',
-      // 넣은 행을 돌려받을 필요가 없다 — 성공 여부만 본다
-      Prefer: responseId
-        ? 'resolution=merge-duplicates,return=minimal'
-        : 'return=minimal',
-    },
-    body: JSON.stringify({
-      // 일반 설문은 칸의 기본값(general)에 맡긴다 — 옛 화면이 보낸 응답도 그대로 들어가게
-      ...(survey !== 'general' && { survey }),
-      ...(responseId && { response_id: responseId, completed }),
-      user_id: userId,
-      // 이메일은 응답을 볼 때 누군지 바로 보려는 참고값 — 신원은 user_id가 정한다
-      email: typeof body.email === 'string' ? body.email : null,
-      answers: body.answers,
-    }),
-  });
+  const inserted =
+    useRds && rdsUrl && rdsToken
+      ? await fetchUpstream(rdsUrl, {
+          method: 'POST',
+          redirect: 'error',
+          headers: {
+            Authorization: `Bearer ${rdsToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...surveyRecord,
+            survey,
+            completed,
+          }),
+        })
+      : await fetchUpstream(supabaseTarget, {
+          method: 'POST',
+          headers: {
+            apikey: secretKey ?? '',
+            Authorization: `Bearer ${secretKey}`,
+            'Content-Type': 'application/json',
+            Prefer: responseId
+              ? 'resolution=merge-duplicates,return=minimal'
+              : 'return=minimal',
+          },
+          body: JSON.stringify({
+            ...surveyRecord,
+            ...(survey !== 'general' && { survey }),
+          }),
+        });
 
   if (!inserted?.ok) {
     reportError(new Error('[survey] 저장 실패'), {
       status: inserted?.status ?? 'network',
-      detail: inserted ? await inserted.text() : 'fetch 실패',
+      detail: !useRds && inserted ? await inserted.text() : undefined,
     });
     return fail(502, '설문을 저장하지 못했어요');
   }
