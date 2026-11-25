@@ -37,14 +37,10 @@ describe('toCharacterLook', () => {
     expect(posture).toBe('listening');
   });
 
-  it('제출한 뒤 속마음 오버레이가 덮는 동안은 멈춰 선다', () => {
-    // given — 이미 다 들었고 화면도 가려져 있어 끄덕일 이유가 없다
+  it('제출한 뒤 답을 기다리는 동안은 멈춰 선다', () => {
+    // given — 이미 다 들어서 끄덕일 이유가 없다
     // when / then
     expect(toCharacterLook('AI_THINKING', null)).toEqual({
-      posture: 'idle',
-      expression: 'neutral',
-    });
-    expect(toCharacterLook('AI_INNER_THOUGHT', null)).toEqual({
       posture: 'idle',
       expression: 'neutral',
     });
@@ -58,7 +54,7 @@ describe('toCharacterLook', () => {
     expect(posture).toBe('idle');
   });
 
-  it('노출을 끝낸 속마음이 있으면 그 감정이 표정으로 얹힌다', () => {
+  it('말풍선에 뜬 속마음이 있으면 그 감정이 표정으로 얹힌다', () => {
     // given / when / then
     expect(toCharacterLook('AI_SPEAKING', thoughtOf('GOOD')).expression).toBe(
       'happy',

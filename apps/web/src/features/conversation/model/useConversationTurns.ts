@@ -22,9 +22,10 @@ import {
   type ConversationEvent,
 } from './conversation-machine';
 import { SPEECH_INTERRUPT_ENABLED } from './interrupt-flag';
-import { expressionHoldMs, thoughtHoldMs, toThoughtType } from './pacing';
+import { expressionHoldMs, thoughtWaitLeftMs } from './pacing';
 import { sendWithResend } from './resend';
-import type { FloatingThought, ThoughtType } from './thought';
+import type { BubbleThought, FloatingThought } from './thought';
+import { raceThought } from './thought-race';
 import { useAiSpeech, type SpeechSource } from './useAiSpeech';
 import { useConversationInput } from './useConversationInput';
 import { useInnerThought } from './useInnerThought';
@@ -33,8 +34,8 @@ import { useInnerThought } from './useInnerThought';
 export interface ConversationTurn {
   aiMessage: string; // 크게 보이는 AI 질문(또는 USER 선발화 안내)
   aiTranslation: string | null;
-  innerThought: string; // 내 발화 뒤 상대 속마음
-  innerThoughtType: ThoughtType;
+  // 이 발화에 붙는 상대 속마음 줄 — 말풍선 맨 위에 둔다. 없으면 null
+  thought: BubbleThought | null;
   // USER 선발화 안내를 보여주는 중인가 — 카드가 발화가 아닌 '상황 안내' 구조로 그려야 한다
   isUserOpening: boolean;
 }
@@ -102,11 +103,13 @@ export const useConversationTurns = ({
   const [aiMessage, setAiMessage] = useState<TurnNextMessage | null>(null);
   // 대화가 진행되기 전까지는 오프닝이 현재 발화다 — 뒤늦게 도착(세션 응답 폴백)해도 그대로 반영된다
   const currentMessage = aiMessage ?? opening;
-  const [thought, setThought] = useState<FloatingThought | null>(null);
-  // 노출을 끝낸 속마음 — 화면이 표정으로 반응할 수 있게 그 사실만 남긴다.
+  const [thought, setThought] = useState<BubbleThought | null>(null);
+  // 말풍선에 막 뜬 속마음 — 화면이 표정으로 반응할 수 있게 그 사실만 남긴다.
   // 매번 새 객체라 같은 종류가 연달아 와도 서로 다른 반응으로 구분된다
-  const [finishedThought, setFinishedThought] =
+  const [expressedThought, setExpressedThought] =
     useState<FloatingThought | null>(null);
+  // 몇 번째 답을 기다리는 중인가 — 늦게 온 속마음이 그 뒤 새 말풍선을 채우지 않게 한다
+  const thoughtRaceRef = useRef(0);
 
   // send 클로저가 최신 값을 읽도록 ref로 들고 있는다
   const completedRef = useRef(false); // 그 발화를 끝으로 대화가 종료되는가
@@ -194,10 +197,8 @@ export const useConversationTurns = ({
         }
       : undefined;
 
-  // 다음 질문을 화면에 올리고 턴을 넘긴다 — 속마음 노출을 마쳤을 때와 건너뛸 때가 공유한다
-  const startNextTurn = (
-    event: 'INNER_THOUGHT_DONE' | 'AI_RESPONSE_SKIPPED',
-  ) => {
+  // 다음 질문을 화면에 올리고 턴을 넘긴다 — 그 말풍선 맨 위에 붙일 속마음 줄(글·뼈대·없음)과 함께
+  const startNextTurn = (initialThought: BubbleThought | null) => {
     input.resetForNextTurn();
     // 지금 차례의 상대 말과 방금 보낸 내 말을 기록으로 넘긴다 — 내가 먼저 건 첫 턴은 상대 말 없이 내 말만
     const answered = answeredRef.current;
@@ -206,35 +207,38 @@ export const useConversationTurns = ({
       setLog((prev) =>
         recordExchange(prev, currentMessage?.content ?? null, answered),
       );
-    if (event === 'INNER_THOUGHT_DONE' && thought) setFinishedThought(thought);
-    setThought(null);
+    setThought(initialThought);
     if (nextMessageRef.current) {
       setAiMessage(nextMessageRef.current);
       nextMessageRef.current = null;
       aiSpeech.markOpeningPlayed();
     }
-    send(event);
+    send('AI_RESPONSE_READY');
   };
 
-  // 표정 여운 — 노출을 끝낸 속마음을 잠깐 들고 있다가 지운다. 화면은 이걸 보고 표정을 짓는다
-  useEffect(() => {
-    if (!finishedThought) return;
-    const id = setTimeout(() => setFinishedThought(null), expressionHoldMs);
-    return () => clearTimeout(id);
-  }, [finishedThought]);
+  // 속마음 글이 말풍선에 뜬 순간 — 그 감정을 표정으로 얹고, 본 것으로 센다
+  const markThoughtShown = (
+    line: BubbleThought | null,
+    activeSessionId: number,
+    turnIndex: number,
+  ) => {
+    if (line?.status !== 'shown') return;
+    setExpressedThought({ text: line.text, type: line.type });
+    track(EVENTS.INNER_THOUGHT_VIEWED, {
+      session_id: activeSessionId,
+      turn_index: turnIndex,
+      thought_type: line.type,
+    });
+  };
 
-  // 속마음 — 잠시 보여준 뒤 다음 질문으로 갈아끼우고 다음 턴으로 넘어간다
+  // 표정 여운 — 말풍선에 뜬 속마음을 잠깐 들고 있다가 지운다. 화면은 이걸 보고 표정을 짓는다
   useEffect(() => {
-    if (state.phase !== 'AI_INNER_THOUGHT' || !thought) return;
-    const id = setTimeout(
-      () => startNextTurn('INNER_THOUGHT_DONE'),
-      thoughtHoldMs(thought.text),
-    );
+    if (!expressedThought) return;
+    const id = setTimeout(() => setExpressedThought(null), expressionHoldMs);
     return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.phase, thought]);
+  }, [expressedThought]);
 
-  // 발화 제출 — 대기(생각 중)로 넘긴 뒤, 응답이 오면 속마음으로 이어간다.
+  // 발화 제출 — 대기(생각 중)로 넘긴 뒤, 응답이 오면 속마음을 잠깐 기다렸다가 다음 발화를 시작한다.
   // 세션이 백그라운드로 아직 안 끝났으면 sessionId 확보를 기다린다.
   const submitContent = async (
     content: string,
@@ -244,6 +248,8 @@ export const useConversationTurns = ({
   ) => {
     if (submittingRef.current) return;
     submittingRef.current = true;
+    // 속마음 기다림은 사용자가 보낸 순간부터 센다
+    const sentAt = Date.now();
     // → AI_THINKING (상대가 생각 중). 다시 보낼 때는 듣기 없이 바로 넘어간다
     send(resending ? 'RESEND_STARTED' : 'USER_SPEAKING_DONE');
     try {
@@ -284,29 +290,28 @@ export const useConversationTurns = ({
       // 다음 질문이 오면 속마음을 기다리지 않고 바로 미리 준비한다 — 합성분은 미리 합성하고,
       // 질문 음원은 미리 열어 다음 발화 재생 지연을 없앤다
       if (res.nextMessage) aiSpeech.prefetch(res.nextMessage);
-      // 속마음은 준비됐으면 즉시, 아직이면 폴링으로 완료된 뒤 노출한다.
-      // 그 사이 AI_THINKING(생각 중) 연출이 화면을 가리고, 다음 질문 합성은 이미 시작됐다.
-      void innerThought
-        .resolve(activeSessionId, res.submittedMessage)
-        .then((resolved) => {
-          if (!resolved) return; // 이탈 중이면 화면을 건드리지 않는다
-          // 속마음이 비면(생성 실패·타임아웃) 빈 말풍선 대신 건너뛰고 바로 다음 턴으로 넘긴다
-          if (!resolved.text) {
-            startNextTurn('AI_RESPONSE_SKIPPED');
-            return;
-          }
-          setThought({
-            text: resolved.text,
-            type: toThoughtType(resolved.type),
-          });
-          track(EVENTS.INNER_THOUGHT_VIEWED, {
-            session_id: activeSessionId,
-            turn_index: state.turnIndex,
-            thought_type: resolved.type ?? undefined,
-          });
+      // 속마음은 보낸 뒤 상한까지만 기다린다 — 그 안에 오면 대사와 함께, 넘으면 뼈대 줄로 대사부터 시작하고 도착하면 채운다.
+      // 그동안 대화 칸엔 점 말풍선이 뜨고, 다음 질문 합성은 이미 시작됐다
+      const race = ++thoughtRaceRef.current;
+      // 계측은 지금까지처럼 내가 답한 턴으로 센다 — 속마음은 그 답에 대한 반응이다
+      const thoughtTurnIndex = state.turnIndex;
+      raceThought({
+        thought: innerThought.resolve(activeSessionId, res.submittedMessage),
+        waitMs: thoughtWaitLeftMs(sentAt, Date.now()),
+        // 대화를 접었거나 화면을 떠났으면 상한이 지나도 다음 발화를 시작하지 않는다
+        isCancelled: () => !innerThought.isActive(),
+        onStart: (line) => {
           haptic('tick'); // 상대가 응답을 시작하는 순간
-          send('AI_RESPONSE_READY'); // → AI_INNER_THOUGHT
-        });
+          startNextTurn(line);
+          markThoughtShown(line, activeSessionId, thoughtTurnIndex);
+        },
+        onArrive: (line) => {
+          // 그사이 다음 답을 보냈다면 이 속마음의 말풍선은 이미 지난 대화다
+          if (race !== thoughtRaceRef.current) return;
+          setThought(line);
+          markThoughtShown(line, activeSessionId, thoughtTurnIndex);
+        },
+      });
     } catch (error) {
       if (abandonedRef.current) return; // 이미 떠난 대화 — 이 실패는 볼 일이 없다
       console.warn('[conversation] 발화 제출 실패', error);
@@ -348,8 +353,7 @@ export const useConversationTurns = ({
   const turn: ConversationTurn = {
     aiMessage: currentMessage?.content ?? openingInstruction ?? '',
     aiTranslation: currentMessage?.translatedContent ?? null,
-    innerThought: thought?.text ?? '',
-    innerThoughtType: thought?.type ?? 'NORMAL',
+    thought,
     // 첫 AI 발화가 오기 전까지가 선발화 안내 구간
     isUserOpening: !currentMessage && Boolean(openingInstruction),
   };
@@ -359,7 +363,7 @@ export const useConversationTurns = ({
     turnIndex: state.turnIndex,
     turn,
     log,
-    finishedThought,
+    expressedThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
     speech: aiSpeech.speech,
     // 상대 차례인데 소리가 아직 안 났다 — 음성을 준비하는 중이다

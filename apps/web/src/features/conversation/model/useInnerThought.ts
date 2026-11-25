@@ -79,5 +79,8 @@ export const useInnerThought = () => {
     activeRef.current = false;
   };
 
-  return { resolve, cancel };
+  // 아직 이 화면에서 속마음을 기다리는 중인가 — 떠났거나 접었으면 false. 기다림 상한 타이머가 떠난 화면을 건드리지 않게 묻는다
+  const isActive = () => activeRef.current;
+
+  return { resolve, cancel, isActive };
 };

@@ -70,10 +70,9 @@ vi.mock('../_model/useSmallTalkFlow', () => ({
       aiMessage: 'How was your day?',
       aiTranslation: '오늘 하루 어땠어?',
       isUserOpening: false,
-      innerThought: '',
-      innerThoughtType: 'NORMAL',
+      thought: null,
     },
-    finishedThought: null,
+    expressedThought: null,
     speech: null,
     input: {
       transcript: '',

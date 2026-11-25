@@ -46,11 +46,10 @@ vi.mock('../_model/useScenarioTalkFlow', () => ({
       aiMessage: 'Hi',
       aiTranslation: null,
       isUserOpening: false,
-      innerThought: '',
-      innerThoughtType: 'NORMAL',
+      thought: null,
     },
     partner: 'teddy',
-    finishedThought: null,
+    expressedThought: null,
     speech: {},
     replay: undefined,
     input: { transcript: '', keyboardMode: false },
@@ -107,16 +106,16 @@ describe('ScenarioTalkFlow 뒤로가기', () => {
     back.mockRestore();
   });
 
-  it('답을 기다리는 연출이 X를 가린 동안은 뒤로가기로 시트를 열지 않는다', () => {
-    // Given 답을 기다리는 중 — 연출이 화면 전체를 덮어 X를 누를 수 없다
+  it('답을 기다리는 동안에도 뒤로가기는 X처럼 나가기 시트를 연다 — 화면을 덮지 않아 X가 그대로 보인다', () => {
+    // Given 답을 기다리는 중
     mocks.phase = 'AI_THINKING';
     renderTalk();
 
     // When 뒤로가기를 누르면
     pressBack();
 
-    // Then 나가기 시트를 열지 않는다
-    expect(track).not.toHaveBeenCalledWith('Confirm Sheet Opened', {
+    // Then 나가기 시트를 연다
+    expect(track).toHaveBeenCalledWith('Confirm Sheet Opened', {
       sheet: 'conversation_exit',
     });
   });

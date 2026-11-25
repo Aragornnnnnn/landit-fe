@@ -9,9 +9,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as sessionApi from '@/features/conversation/api/session';
 import type { Partner } from '@/features/conversation/model/character-look';
 import {
+  expressionHoldMs,
   innerThoughtMaxPolls,
   innerThoughtPollMs,
-  thoughtHoldMs,
+  thoughtWaitMs,
 } from '@/features/conversation/model/pacing';
 import { rewardCompletion } from '@/features/reward/model/reward.fixture';
 import { shouldAskSatisfaction } from '@/features/satisfaction/model/prompt-record';
@@ -419,14 +420,14 @@ describe('useScenarioTalkFlow', async () => {
     const { result } = await renderAiFirstReady();
     const atFirstQuestion = result.current.gauge.ratio;
 
-    // When 답을 내면 — 속마음이 도는 동안은 아직 첫 질문 카드다
-    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    // When 답을 내면 — 속마음을 기다리는 동안은 아직 첫 질문이다
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     await speakAndSubmit(result, 'First answer.');
     expect(result.current.gauge.ratio).toBe(atFirstQuestion);
 
     // Then 다음 질문이 뜨는 순간 함께 찬다
-    act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(thoughtWaitMs);
     });
     expect(result.current.gauge.ratio).toBeGreaterThan(atFirstQuestion);
   });
@@ -436,20 +437,18 @@ describe('useScenarioTalkFlow', async () => {
     const { result } = await renderAiFirstReady();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
     await speakAndSubmit(result, 'First answer.');
-    act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
-    });
     await act(async () => ttsMock.state.onEnd?.());
 
-    // When 두 번째 답을 제출해 속마음이 도는 동안 (카드는 아직 두 번째 질문이다)
+    // When 두 번째 답을 제출해 속마음을 기다리는 동안 (화면은 아직 두 번째 질문이다)
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     await speakAndSubmit(result, 'Second answer.');
 
     // Then 머리말은 아직 붙지 않는다
     expect(result.current.gauge.lastQuestion).toBe(false);
 
     // 세 번째 질문이 화면에 뜨면 그때 붙는다
-    act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(thoughtWaitMs);
     });
     expect(result.current.gauge.lastQuestion).toBe(true);
   });
@@ -478,15 +477,32 @@ describe('useScenarioTalkFlow', async () => {
     await act(async () => resolve(submitResponse()));
   });
 
-  it('발화를 제출하면 상대 속마음을 노출한다', async () => {
+  it('속마음이 바로 오면 다음 질문 말풍선 맨 위에 붙여 곧장 말하기 시작한다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
 
     await speakAndSubmit(result, 'Hello!');
 
-    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
-    expect(result.current.turn.innerThought).toBe('또렷하게 잘 말했어.');
-    expect(result.current.turn.innerThoughtType).toBe('GOOD');
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.aiMessage).toBe('What size would you like?');
+    expect(result.current.turn.thought).toEqual({
+      status: 'shown',
+      text: '또렷하게 잘 말했어.',
+      type: 'GOOD',
+    });
+  });
+
+  it('속마음이 뜨면 그 감정이 표정으로 잠깐 얹혔다가 사라진다', async () => {
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+
+    await speakAndSubmit(result, 'Hello!');
+    expect(result.current.expressedThought?.type).toBe('GOOD');
+
+    act(() => {
+      vi.advanceTimersByTime(expressionHoldMs);
+    });
+    expect(result.current.expressedThought).toBeNull();
   });
 
   it('응답이 끊기면 같은 답변을 같은 식별자로 자동으로 다시 보내 대화를 이어 간다', async () => {
@@ -502,11 +518,11 @@ describe('useScenarioTalkFlow', async () => {
       await vi.advanceTimersByTimeAsync(1000);
     });
 
-    // Then 같은 답변이 한 번 더 나가고 속마음으로 이어진다. 실패로 보지 않는다
+    // Then 같은 답변이 한 번 더 나가고 다음 질문으로 이어진다. 실패로 보지 않는다
     const [first, resent] = submitScenarioTalkMessage.mock.calls;
     expect(resent).toEqual(first);
     expect(first[3]).toEqual(expect.any(String));
-    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(result.current.phase).toBe('AI_SPEAKING');
     expect(monitoringMock.reportError).not.toHaveBeenCalled();
   });
 
@@ -581,7 +597,7 @@ describe('useScenarioTalkFlow', async () => {
     // Then 처음과 똑같은 요청이 나가고 속마음으로 이어지며, 다시 보내기는 사라진다
     const [first, resent] = submitScenarioTalkMessage.mock.calls;
     expect(resent).toEqual(first);
-    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.resend).toBeUndefined();
   });
 
@@ -637,9 +653,13 @@ describe('useScenarioTalkFlow', async () => {
       respond(submitResponse());
     });
 
-    // Then 다음 질문을 미리 합성하지 않고 속마음으로 넘어가지 않는다
+    // Then 다음 질문을 미리 합성하지 않고, 상한이 지나도 다음 질문으로 넘어가지 않는다
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(thoughtWaitMs);
+    });
     expect(ttsMock.prefetch).not.toHaveBeenCalled();
-    expect(result.current.phase).not.toBe('AI_INNER_THOUGHT');
+    expect(result.current.phase).not.toBe('AI_SPEAKING');
+    expect(result.current.turn.thought).toBeNull();
   });
 
   it('다음 턴의 발화는 새 식별자를 싣는다', async () => {
@@ -648,7 +668,7 @@ describe('useScenarioTalkFlow', async () => {
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
     await speakAndSubmit(result, 'First answer.');
     act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      vi.advanceTimersByTime(50);
     });
     await act(async () => ttsMock.state.onEnd?.());
 
@@ -667,7 +687,7 @@ describe('useScenarioTalkFlow', async () => {
     await speakAndSubmit(result, 'Hello!');
 
     act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      vi.advanceTimersByTime(50);
     });
 
     expect(result.current.phase).toBe('AI_SPEAKING');
@@ -702,7 +722,7 @@ describe('useScenarioTalkFlow', async () => {
 
     // 속마음이 끝나면 바로 종료하지 않고 종료 메시지를 발화(AI_SPEAKING)한다
     act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      vi.advanceTimersByTime(50);
     });
     expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.turn.aiMessage).toBe('Thanks for chatting!');
@@ -917,7 +937,7 @@ describe('useScenarioTalkFlow', async () => {
     );
     await speakAndSubmit(result, 'Yes, here you go.');
     act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      vi.advanceTimersByTime(50);
     });
     expect(result.current.replay?.enabled).toBe(false); // 종료 인사 발화 중
 
@@ -1043,7 +1063,7 @@ describe('useScenarioTalkFlow', async () => {
     await speakAndSubmit(result, 'Hello!');
 
     act(() => {
-      vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      vi.advanceTimersByTime(50);
     });
 
     expect(result.current.phase).toBe('AI_SPEAKING');
@@ -1054,7 +1074,7 @@ describe('useScenarioTalkFlow', async () => {
     );
   });
 
-  it('속마음이 아직 준비 중이면 다음 질문은 바로 합성하고, 속마음은 폴링으로 완료를 기다렸다 노출한다', async () => {
+  it('속마음이 아직 준비 중이면 다음 질문은 바로 합성하고, 상한 안에 완료되면 속마음과 함께 말하기 시작한다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought
@@ -1084,13 +1104,54 @@ describe('useScenarioTalkFlow', async () => {
     });
     expect(result.current.phase).toBe('AI_THINKING');
 
-    // 0.5s 폴링 2회 — COMPLETED → 속마음 노출
+    // 0.5s 폴링 2회 — COMPLETED → 속마음을 붙여 말하기 시작
     await act(async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
-    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
-    expect(result.current.turn.innerThought).toBe('자연스럽게 잘 말했어.');
-    expect(result.current.turn.innerThoughtType).toBe('GOOD');
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.thought).toEqual({
+      status: 'shown',
+      text: '자연스럽게 잘 말했어.',
+      type: 'GOOD',
+    });
+  });
+
+  it('보낸 뒤 상한이 지나도 속마음이 안 오면 뼈대로 먼저 말하기 시작하고, 오면 그 자리를 채운다', async () => {
+    // Given 속마음이 상한보다 늦게 완료된다
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
+    const pollsBeforeWait = thoughtWaitMs / innerThoughtPollMs;
+    for (let i = 0; i < pollsBeforeWait; i++)
+      getInnerThought.mockResolvedValueOnce({
+        processingStatus: 'PREPARING',
+        innerThought: null,
+        innerThoughtType: null,
+      });
+    getInnerThought.mockResolvedValue({
+      processingStatus: 'COMPLETED',
+      innerThought: '좀 머쓱하네.',
+      innerThoughtType: 'BAD',
+    });
+    await speakAndSubmit(result, 'Hello!');
+
+    // When 상한이 지나면
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(thoughtWaitMs);
+    });
+
+    // Then 대사부터 말하고 속마음 자리는 뼈대로 잡아 둔다
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.thought).toEqual({ status: 'pending' });
+
+    // When 다음 폴링에서 속마음이 오면 Then 그 자리를 채운다
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
+    });
+    expect(result.current.turn.thought).toEqual({
+      status: 'shown',
+      text: '좀 머쓱하네.',
+      type: 'BAD',
+    });
   });
 
   it('StrictMode 재마운트 뒤에도 속마음 폴링이 죽지 않고 완료를 노출한다', async () => {
@@ -1113,11 +1174,13 @@ describe('useScenarioTalkFlow', async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
-    expect(result.current.turn.innerThought).toBe('좋아, 자연스러웠어.');
+    expect(result.current.phase).toBe('AI_SPEAKING');
+    expect(result.current.turn.thought).toEqual(
+      expect.objectContaining({ text: '좋아, 자연스러웠어.' }),
+    );
   });
 
-  it('속마음 생성이 실패(FAILED)하면 빈 말풍선 대신 건너뛰고 다음 질문으로 넘어간다', async () => {
+  it('속마음 생성이 실패(FAILED)하면 속마음 줄 없이 다음 질문으로 넘어간다', async () => {
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(preparingSubmitResponse());
     getInnerThought.mockResolvedValue({
@@ -1133,10 +1196,9 @@ describe('useScenarioTalkFlow', async () => {
       await vi.advanceTimersByTimeAsync(500);
     });
 
-    // 속마음 노출(AI_INNER_THOUGHT) 없이 바로 다음 AI 발화로
     expect(result.current.phase).toBe('AI_SPEAKING');
     expect(result.current.turn.aiMessage).toBe('What size would you like?');
-    expect(result.current.turn.innerThought).toBe('');
+    expect(result.current.turn.thought).toBeNull();
   });
 
   it('속마음 생성 실패(FAILED)를 Sentry에 warning으로 보고한다 — 대화는 건너뛰고 계속된다', async () => {
@@ -1225,7 +1287,7 @@ describe('useScenarioTalkFlow', async () => {
       false,
     );
     // 제출이 이어져 속마음까지 진행된다 (submitResponse 기본은 COMPLETED)
-    expect(result.current.phase).toBe('AI_INNER_THOUGHT');
+    expect(result.current.phase).toBe('AI_SPEAKING');
   });
 
   it('키보드로 입력한 텍스트는 TEXT로 제출한다', async () => {
@@ -1308,29 +1370,28 @@ describe('useScenarioTalkFlow', async () => {
       expect(result.current.answerGuide).toEqual(openingGuide);
     });
 
-    it('다음 질문의 가이드는 그 질문이 화면에 뜬 뒤에 바뀐다 — 속마음이 도는 동안엔 보이지 않는다', async () => {
+    it('다음 질문의 가이드는 그 질문이 화면에 뜬 뒤에 바뀐다 — 속마음을 기다리는 동안엔 보이지 않는다', async () => {
       // given — 첫 질문에서 답을 내고, 다음 질문에 가이드가 실려 온다
       startScenarioTalkSession.mockResolvedValue(startResponse());
       const { result } = renderHook(() => useScenarioTalkFlow(guidedScenario));
       await act(async () => {});
       await act(async () => ttsMock.state.onEnd?.());
-      submitScenarioTalkMessage.mockResolvedValue(
-        submitResponse({
-          nextMessage: {
-            ...submitResponse().nextMessage!,
-            answerGuide: nextGuide,
-          },
-        }),
-      );
+      submitScenarioTalkMessage.mockResolvedValue({
+        ...preparingSubmitResponse(),
+        nextMessage: {
+          ...submitResponse().nextMessage!,
+          answerGuide: nextGuide,
+        },
+      });
 
-      // when — 답을 내 속마음이 도는 동안
+      // when — 답을 내 속마음을 기다리는 동안
       await speakAndSubmit(result, 'I am a student.');
 
-      // then — 이전 질문 카드에는 다음 질문 가이드가 붙지 않는다
+      // then — 이전 질문에는 다음 질문 가이드가 붙지 않는다
       expect(result.current.answerGuide).toBeNull();
 
-      act(() => {
-        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(thoughtWaitMs);
       });
       expect(result.current.answerGuide).toEqual(nextGuide);
     });
@@ -1351,7 +1412,7 @@ describe('useScenarioTalkFlow', async () => {
 
       await speakAndSubmit(result, 'I am a student.');
       act(() => {
-        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+        vi.advanceTimersByTime(50);
       });
 
       expect(result.current.answerGuide).toBeNull();
@@ -1415,7 +1476,7 @@ describe('useScenarioTalkFlow', async () => {
       act(() => result.current.markGuideViewed());
       await speakAndSubmit(result, 'I am a student.');
       act(() => {
-        vi.advanceTimersByTime(thoughtHoldMs('또렷하게 잘 말했어.') + 50);
+        vi.advanceTimersByTime(50);
       });
       await act(async () => ttsMock.state.onEnd?.());
 

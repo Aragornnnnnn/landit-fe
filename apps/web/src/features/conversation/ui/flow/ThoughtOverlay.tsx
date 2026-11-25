@@ -1,4 +1,5 @@
-// 속마음 오버레이 — 화면 전체를 어둡게 덮고 랜디가 날아들어 속마음을 전한 뒤 사라진다 (섹션 밖 전면 연출)
+// 랜디 안내 오버레이 — 화면 전체를 어둡게 덮고 랜디가 날아들어 한마디 전한 뒤 사라진다 (섹션 밖 전면 연출).
+// 상대 속마음은 말풍선 맨 위 줄로 옮겼고, 지금은 내가 먼저 거는 대화의 진입 안내만 쓴다
 'use client';
 
 import { AnimatePresence, motion } from 'motion/react';
@@ -12,20 +13,16 @@ import { preloadThoughtImages, ThoughtReveal } from '../ThoughtReveal';
 
 export const ThoughtOverlay = ({
   thought,
-  // 대기 중(응답 전) — 랜디가 먼저 날아들어 '생각 중'으로 떠 있다가, 속마음이 도착하면 같은 말풍선이 채워진다
-  loading = false,
 }: {
   thought: FloatingThought | null;
-  loading?: boolean;
 }) => {
   const t = useTranslations('conversation.thoughtOverlay');
   const mounted = useClientOnlyValue(() => true, false);
-  // 대화 화면에 들어올 때부터 받아 둔다 — 첫 속마음부터 래디가 바로 보이고, 구슬이 표정으로 바뀔 때도 비지 않는다
+  // 대화 화면에 들어올 때부터 받아 둔다 — 안내가 뜨자마자 래디가 바로 보인다
   preloadThoughtImages();
   if (!mounted) return null;
 
-  // 대기부터 속마음까지 랜디는 한 번만 등장한다 — 생성 중엔 구슬을 들고 있다가, 도착하면 표정으로 짜자잔 바뀐다
-  const visible = loading || Boolean(thought);
+  const visible = Boolean(thought);
 
   return createPortal(
     <AnimatePresence>

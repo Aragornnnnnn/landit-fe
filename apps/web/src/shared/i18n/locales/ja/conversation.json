@@ -28,7 +28,8 @@
     "showTranslationButton": "訳を見る",
     "hideTranslationButton": "訳を閉じる",
     "showTextButton": "英文を表示",
-    "hideTextButton": "英文を隠す"
+    "hideTextButton": "英文を隠す",
+    "thoughtLoadingLabel": "心の声を思い浮かべています"
   },
   "conversationLog": {
     "jumpToLatestButton": "最新の会話へ",

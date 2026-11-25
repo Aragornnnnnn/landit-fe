@@ -30,6 +30,20 @@ describe('isFollowingLatest', () => {
         clientHeight: 300,
         scrollHeight: 1000,
         latestTop: 500,
+        latestBottom: 988,
+        fadePx: 36,
+      }),
+    ).toBe(true);
+  });
+
+  it('최신 말 아래끝까지 보이게 내려와 있으면 바닥 여백이 남아도 따라가는 중이다 — 점 말풍선을 따라 내린 자리', () => {
+    expect(
+      isFollowingLatest({
+        scrollTop: 206,
+        clientHeight: 263,
+        scrollHeight: 481,
+        latestTop: 300,
+        latestBottom: 469,
         fadePx: 36,
       }),
     ).toBe(true);
@@ -42,6 +56,7 @@ describe('isFollowingLatest', () => {
         clientHeight: 300,
         scrollHeight: 1000,
         latestTop: 500,
+        latestBottom: 988,
         fadePx: 36,
       }),
     ).toBe(false);

@@ -14,7 +14,6 @@ import {
   type Partner,
 } from '@/features/conversation/model/character-look';
 import { userIntroHoldMs } from '@/features/conversation/model/pacing';
-import type { FloatingThought } from '@/features/conversation/model/thought';
 import type { useConversationTurns } from '@/features/conversation/model/useConversationTurns';
 import { useTalkDisplay } from '@/features/conversation/model/useTalkDisplay';
 import { CharacterStage } from '@/features/conversation/ui/flow/CharacterStage';
@@ -44,7 +43,7 @@ export type TalkScreenFlow = Pick<
   | 'turnIndex'
   | 'turn'
   | 'log'
-  | 'finishedThought'
+  | 'expressedThought'
   | 'speech'
   | 'waitingForSound'
   | 'replay'
@@ -72,8 +71,6 @@ interface TalkScreenProps {
   onExitRequested: () => void;
   // 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다
   userFirstHint?: string;
-  // 속마음이 없는 대화(롤플레이)는 답을 기다릴 때 화면을 덮지 않고 말풍선 자리에 점 세 개를 띄운다
-  hasInnerThought?: boolean;
   children?: React.ReactNode;
 }
 
@@ -85,7 +82,6 @@ export const TalkScreen = ({
   onShowSummary,
   onExitRequested,
   userFirstHint,
-  hasInnerThought = true,
   children,
 }: TalkScreenProps) => {
   const t = useTranslations('conversation.smallTalkConversation');
@@ -100,7 +96,7 @@ export const TalkScreen = ({
     turnIndex,
     turn,
     log,
-    finishedThought,
+    expressedThought,
     speech,
     waitingForSound,
     replay,
@@ -133,8 +129,9 @@ export const TalkScreen = ({
 
   const ended = phase === 'DONE';
   const thinking = phase === 'AI_THINKING';
-  // 속마음이 없는 대화의 답 대기 — 소리가 날 때까지 기다린다. 소리 없이 글자나 입부터 움직이면 어색하다
-  const waitingForAnswer = !hasInnerThought && (thinking || waitingForSound);
+  // 상대가 대답을 준비하는 중 — 답을 기다리거나, 대답은 왔지만 소리가 아직 안 났다.
+  // 그동안 대화 칸엔 점 말풍선을 띄운다. 소리 없이 글자나 입부터 움직이면 어색하다
+  const preparingAnswer = thinking || waitingForSound;
   // 타이핑 중(키보드로 쓰거나 말한 뒤 고치는 중) — 내 답변 박스가 입력창이 되고, 마이크 영역은 접어 키보드 위 공간을 확보한다
   const typing = keyboardMode && phase === 'USER_SPEAKING';
   const keyboardInset = useKeyboardInset();
@@ -158,16 +155,9 @@ export const TalkScreen = ({
     return () => clearTimeout(timer);
   }, [showUserFirstIntro]);
 
-  const resolveOverlayThought = (): FloatingThought | null => {
-    if (showUserFirstIntro) return { text: userFirstHint, type: 'NORMAL' };
-    if (phase === 'AI_INNER_THOUGHT')
-      return { text: turn.innerThought, type: turn.innerThoughtType };
-    return null;
-  };
-  const overlayThought = resolveOverlayThought();
   const characterLook = toCharacterLook(
-    waitingForAnswer ? 'AI_THINKING' : phase,
-    finishedThought,
+    preparingAnswer ? 'AI_THINKING' : phase,
+    expressedThought,
   );
 
   const requestExit = () => {
@@ -178,11 +168,7 @@ export const TalkScreen = ({
     router.prefetch(summaryPath);
     onExitRequested();
   };
-  useBackPress(() => {
-    // 답을 기다리는 연출이 X를 가린 동안은 뒤로가기도 받지 않는다 — 보낸 첫 답을 확인 없이 버리지 않게
-    if (thinking && hasInnerThought) return;
-    requestExit();
-  });
+  useBackPress(requestExit);
 
   return (
     <main
@@ -204,9 +190,8 @@ export const TalkScreen = ({
           latestKey={turnIndex}
           hidden={keyboardLifted}
         >
-          {waitingForAnswer ? (
-            <ThinkingBubble />
-          ) : (
+          {/* 대답이 와도 소리가 나기 전엔 새 말풍선 대신 점만 둔다 */}
+          {!waitingForSound && (
             <PartnerBubble
               question={turn.aiMessage}
               translation={turn.aiTranslation}
@@ -229,8 +214,10 @@ export const TalkScreen = ({
                 })
               }
               translationDefaultOpen={display.translationDefaultOpen}
+              thought={turn.thought}
             />
           )}
+          {preparingAnswer && <ThinkingBubble />}
         </ConversationLog>
 
         {/* 끝난 뒤엔 대화 칸 아래에 이 대화의 기록을 붙인다 — 작별 인사 바로 밑이라 이 대화의 결과로 읽힌다 */}
@@ -304,10 +291,11 @@ export const TalkScreen = ({
         )}
       </footer>
 
-      {/* 속마음 — 제출 대기(AI_THINKING)부터 랜디가 떠 있다가 속마음을 전한다 */}
+      {/* 내가 먼저 거는 대화의 진입 안내 — 랜디가 먼저 말을 걸어보라고 알려주고 잠시 후 사라진다 */}
       <ThoughtOverlay
-        loading={thinking && hasInnerThought}
-        thought={overlayThought}
+        thought={
+          showUserFirstIntro ? { text: userFirstHint, type: 'NORMAL' } : null
+        }
       />
 
       {children}

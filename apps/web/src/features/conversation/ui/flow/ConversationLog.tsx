@@ -118,6 +118,7 @@ export const ConversationLog = ({
       clientHeight: box.clientHeight,
       scrollHeight: box.scrollHeight,
       latestTop: latestTop(),
+      latestBottom: latestTop() + (latestRef.current?.offsetHeight ?? 0),
       fadePx: FADE_PX,
     });
     followingRef.current = following;

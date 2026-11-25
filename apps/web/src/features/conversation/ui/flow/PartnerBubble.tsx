@@ -1,4 +1,5 @@
 // 지금 차례의 상대 말풍선 — 상대 발화가 말하는 속도에 맞춰 글자가 생성되듯 촤르륵 나타나고, 끝나면 해석을 펼쳐보거나 그 발화를 다시 들을 수 있다.
+// 맨 위엔 내 말에 대한 상대 속마음이 회색 기울임 한 줄로 붙는다 — 늦게 오면 뼈대로 자리를 잡아 두었다가 채운다.
 // 말풍선 크기는 발화가 시작될 때 한 번에 잡는다 — 글자가 나타나는 내내 커지면 대화 칸이 계속 출렁여 산만하다.
 // 긴 발화도 안쪽에서 스크롤하지 않는다 — 대화 칸이 통째로 스크롤되며, 말하는 줄을 따라가는 일은 칸(scroll)에 맡긴다.
 // 해석은 접어 두는 게 기본이다 — 늘 펼쳐 두면 말풍선이 그만큼 길어져 작은 화면에서 지난 대화가 금방 밀려난다
@@ -13,6 +14,7 @@ import { getSpeechRate } from '@/shared/lib/speech-rate';
 import { EyeIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
+import type { BubbleThought } from '../../model/thought';
 import type { ReplayControl } from '../../model/useConversationTurns';
 import { PartnerBubbleShell } from './ChatBubbles';
 import { useChatScroll } from './ConversationLog';
@@ -36,7 +38,35 @@ interface PartnerBubbleProps {
   textHidden?: boolean;
   // 이 말풍선의 영어 문장을 보이거나 가린 순간 — 계측은 세션·턴을 아는 화면이 맡는다
   onTextToggled?: (visible: boolean) => void;
+  // 내 말에 대한 상대 속마음 — 오는 중이면 뼈대, 없으면(속마음 없는 대화·생성 실패) 줄 자체를 두지 않는다
+  thought?: BubbleThought | null;
 }
+
+/**
+ * 말풍선 맨 위 속마음 줄 — 대사와 구분되게 작은 회색 기울임으로, 길어도 두 줄까지만.
+ * 오는 중이면 한 줄 높이 뼈대를 둬서, 도착해도 대사가 크게 밀려 내려가지 않게 한다
+ */
+const ThoughtLine = ({ thought }: { thought: BubbleThought }) => {
+  const t = useTranslations('conversation.partnerBubble');
+  return (
+    <>
+      {thought.status === 'shown' ? (
+        <p className="line-clamp-2 text-13 leading-normal break-words text-muted-foreground italic">
+          {thought.text}
+        </p>
+      ) : (
+        <span
+          role="status"
+          aria-label={t('thoughtLoadingLabel')}
+          className="flex h-[1.5em] items-center text-13"
+        >
+          <span className="h-2.5 w-3/4 animate-pulse rounded-full bg-border" />
+        </span>
+      )}
+      <hr className="border-border" />
+    </>
+  );
+};
 
 /**
  * 말풍선 아래 동그란 아이콘 버튼 — 켜진 상태(재생 중·해석 펼침)는 색을 뒤집어 알린다.
@@ -78,6 +108,7 @@ export const PartnerBubble = ({
   translationDefaultOpen = false,
   textHidden = false,
   onTextToggled,
+  thought = null,
 }: PartnerBubbleProps) => {
   const t = useTranslations('conversation.partnerBubble');
   // 대화 칸 스크롤 — 말하는 줄과 펼친 해석을 보이게 하고, 다 말하면 첫 줄로 돌려 달라고 부탁한다
@@ -168,6 +199,7 @@ export const PartnerBubble = ({
       className="self-start"
     >
       <PartnerBubbleShell>
+        {!instruction && thought && <ThoughtLine thought={thought} />}
         {lastQuestion && (
           <p className="text-xs font-bold text-primary">
             {t('lastQuestionBadge')}

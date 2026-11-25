@@ -28,7 +28,8 @@
     "showTranslationButton": "해석 보기",
     "hideTranslationButton": "해석 접기",
     "showTextButton": "영어 문장 보기",
-    "hideTextButton": "영어 문장 가리기"
+    "hideTextButton": "영어 문장 가리기",
+    "thoughtLoadingLabel": "속마음을 떠올리는 중"
   },
   "conversationLog": {
     "jumpToLatestButton": "최신 대화로",
