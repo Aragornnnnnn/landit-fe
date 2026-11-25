@@ -423,7 +423,8 @@ const ShellScreen = () => {
       setBuiltInZoomControls={false}
       // dev 빌드에서만 원격 디버깅 (Safari/Chrome 인스펙터)
       webviewDebuggingEnabled={__DEV__}
-      style={styles.webview}
+      // 웹이 뜬 뒤엔 바탕을 웹 앱 배경색으로 바꾼다 — iOS가 키보드를 띄우며 화면을 밀어 올리는 찰나에 주황 스플래시 색이 비친다
+      style={[styles.webview, isWebReady && styles.webviewReady]}
     />
   );
 };
@@ -435,6 +436,10 @@ const styles = StyleSheet.create({
     flex: 1,
     // 웹 첫 페인트 전 WebView 기본 흰 배경 대신 스플래시 색을 깔아, 로드 중 흰 번쩍임을 막는다
     backgroundColor: '#e07a3a',
+  },
+  // 웹 앱 배경(gray-50)과 같은 색
+  webviewReady: {
+    backgroundColor: '#fbfbfa',
   },
   center: {
     flex: 1,
