@@ -139,6 +139,22 @@ describe('TranscriptEditor', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
+    it('터치로 보내기를 누르면 입력창이 먼저 떠나도 닫지 않고 보낸다 — iOS는 버튼이 포커스를 받지 않아 떠나는 신호가 먼저 온다', () => {
+      // Given
+      const { input, onClose, onSubmit } = renderEditing('Hello');
+      const send = screen.getByRole('button', { name: '답변 전송' });
+
+      // When 손가락이 보내기에 닿고, 입력창이 포커스를 잃은 뒤, 눌림이 끝난다
+      fireEvent.pointerDown(send, { pointerType: 'touch' });
+      fireEvent.blur(input, { relatedTarget: null });
+      fireEvent.pointerUp(send, { pointerType: 'touch' });
+      fireEvent.click(send);
+
+      // Then 확인 단계로 닫지 않고 그대로 보낸다
+      expect(onClose).not.toHaveBeenCalled();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
     it('키보드를 내려 입력창을 떠나면 닫는다', () => {
       const { input, onClose } = renderEditing('Hello');
 

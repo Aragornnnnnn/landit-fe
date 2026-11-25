@@ -21,6 +21,9 @@ import { hasNonEnglish, removeNonEnglish } from '../../model/english-only';
 
 // 누른 채 이만큼 넘게 움직이면 누른 게 아니라 끈 것이다 — 대화 칸 스크롤을 닫기로 오해하지 않게
 const TAP_SLOP_PX = 10;
+// 입력바 안(보내기 버튼 등)을 누른 뒤 이 시간 안에 오는 떠남 신호는 닫기로 보지 않는다.
+// iOS는 버튼이 포커스를 받지 않아, 보내기를 탭하면 떠남 신호가 보내기보다 먼저 온다 — 닫히면 보낸 글이 확인 단계로 빠진다
+const PRESS_INSIDE_GRACE_MS = 600;
 
 // 글자 수를 보이기 시작하는 지점 — 한도의 90%
 const COUNTER_FROM = ANSWER_MAX_LENGTH * 0.9;
@@ -57,6 +60,8 @@ export const TranscriptEditor = ({
   // 두 줄 이상인가 — 한 줄일 땐 알약, 늘어나면 모서리를 덜 둥글게 한다
   const [multiline, setMultiline] = useState(false);
   const barRef = useRef<HTMLDivElement>(null);
+  // 입력바 안을 마지막으로 누른 시각 — 떠남 신호가 그 누름 때문인지 가린다
+  const pressedInsideAtRef = useRef(-Infinity);
   // 밖을 누른 뒤 입력창을 떠나는 신호가 이어 와도 한 번만 닫는다. 보냈거나 화면에서 빠질 때도 닫지 않는다 —
   // 입력창이 사라지며 오는 떠남 신호로 보낸 글이 확인 단계에 남지 않게
   const closedRef = useRef(false);
@@ -198,6 +203,9 @@ export const TranscriptEditor = ({
     // 화면 폭을 다 쓰는 입력바 — 키보드 바로 위에 붙고, 글이 늘면 네 줄까지 위로 자란다
     <div
       ref={barRef}
+      onPointerDown={() => {
+        pressedInsideAtRef.current = performance.now();
+      }}
       className="flex w-full flex-none flex-col border-t border-border bg-muted px-3 py-2"
     >
       <div
@@ -229,6 +237,11 @@ export const TranscriptEditor = ({
               acceptTyping(event.currentTarget);
             }
             if (barRef.current?.contains(event.relatedTarget as Node | null))
+              return;
+            if (
+              performance.now() - pressedInsideAtRef.current <
+              PRESS_INSIDE_GRACE_MS
+            )
               return;
             close();
           }}
