@@ -61,14 +61,18 @@ const ttsMock = vi.hoisted(() => {
   interface CapturedOptions {
     onEnd?: () => void;
     onStall?: (snapshot: unknown) => void;
+    onStart?: (playback: unknown) => void;
   }
   const state = {
     onEnd: undefined as (() => void) | undefined,
     onStall: undefined as ((snapshot: unknown) => void) | undefined,
+    // 소리가 실제로 나기 시작한 순간 — 상대 말풍선이 이때 화면에 뜬다
+    onStart: undefined as ((playback: unknown) => void) | undefined,
   };
   const capture = (opts?: CapturedOptions) => {
     state.onEnd = opts?.onEnd;
     state.onStall = opts?.onStall;
+    state.onStart = opts?.onStart;
   };
   return {
     state,
@@ -496,11 +500,32 @@ describe('useScenarioTalkFlow', async () => {
     });
   });
 
+  it('속마음 표정은 다음 말풍선이 뜰 때(소리가 나기 시작할 때) 바뀐다 — 말풍선보다 표정이 먼저 바뀌면 반응을 미리 들킨다', async () => {
+    // Given 답을 보내 속마음과 다음 말이 준비됐지만 아직 소리가 안 나 말풍선이 뜨기 전
+    const { result } = await renderUserFirst();
+    submitScenarioTalkMessage.mockResolvedValue(submitResponse());
+    await speakAndSubmit(result, 'Hello!');
+
+    // Then 표정은 아직 그대로다
+    expect(result.current.expressedThought).toBeNull();
+
+    // When 소리가 나기 시작해 말풍선이 뜨면
+    act(() => {
+      ttsMock.state.onStart?.({ progress: () => 0, source: 'blob:voice' });
+    });
+
+    // Then 그때 표정이 바뀐다
+    expect(result.current.expressedThought?.type).toBe('GOOD');
+  });
+
   it('속마음이 뜨면 그 감정이 표정으로 남아 다음 속마음까지 유지된다', async () => {
     // Given 속마음이 표정으로 얹힌 뒤
     const { result } = await renderUserFirst();
     submitScenarioTalkMessage.mockResolvedValue(submitResponse());
     await speakAndSubmit(result, 'Hello!');
+    act(() => {
+      ttsMock.state.onStart?.({ progress: () => 0, source: 'blob:voice' });
+    });
     expect(result.current.expressedThought?.type).toBe('GOOD');
 
     // When 내가 답할 시간만큼 지나도

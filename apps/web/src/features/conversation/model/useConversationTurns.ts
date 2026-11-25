@@ -119,6 +119,8 @@ export const useConversationTurns = ({
   // 매번 새 객체라 같은 종류가 연달아 와도 서로 다른 반응으로 구분된다
   const [expressedThought, setExpressedThought] =
     useState<FloatingThought | null>(null);
+  // 얼굴에 지금 얹힌 속마음 — 그 속마음이 붙은 말풍선이 화면에 뜬 뒤에야 바뀐다(아래에서 맞춘다)
+  const [faceThought, setFaceThought] = useState<FloatingThought | null>(null);
   // 몇 번째 답을 기다리는 중인가 — 늦게 온 속마음이 그 뒤 새 말풍선을 채우지 않게 한다
   const thoughtRaceRef = useRef(0);
 
@@ -403,12 +405,17 @@ export const useConversationTurns = ({
     isUserOpening: !currentMessage && Boolean(openingInstruction),
   };
 
+  // 다음 말풍선은 소리가 나기 시작해야 뜬다 — 표정이 말풍선보다 먼저 바뀌면 반응을 미리 들킨다.
+  // 소리를 기다리는 동안엔 이전 표정을 두고, 말풍선이 뜨는 렌더에서 맞춘다(이전 렌더 값으로 상태를 고치는 React 패턴)
+  if (!aiSpeech.waitingForSound && faceThought !== expressedThought)
+    setFaceThought(expressedThought);
+
   return {
     phase: state.phase,
     turnIndex: state.turnIndex,
     turn,
     log,
-    expressedThought,
+    expressedThought: faceThought,
     // 지금 소리 나는 발화 — 캐릭터가 입모양을 맞추는 데 쓴다 (음성이 없으면 null)
     speech: aiSpeech.speech,
     // 상대 차례인데 소리가 아직 안 났다 — 음성을 준비하는 중이다
