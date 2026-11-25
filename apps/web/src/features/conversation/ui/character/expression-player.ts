@@ -118,10 +118,15 @@ interface LayerState {
   out: Map<string, number>;
 }
 
-/** 이름 붙은 파츠 값에 얹는 조정 — set은 덮어쓰고 add는 더한다 */
+/**
+ * 이름 붙은 파츠 값에 얹는 조정 — set은 덮어쓰고 add는 더한다.
+ * scale은 애니메이션이 기본값에서 벗어난 폭만 줄이고, max는 결과가 넘지 않을 상한이다
+ */
 export interface Adjust {
   set?: number;
   add?: number;
+  scale?: number;
+  max?: number;
 }
 
 export class ExpressionPlayer {
@@ -192,6 +197,12 @@ export class ExpressionPlayer {
     return this.svg;
   }
 
+  /** 이름 붙은 파츠(머리·몸통 등)가 그려진 요소. 이름표에 없으면 null */
+  part(name: string) {
+    const target = this.data.targets[this.data.names[name]];
+    return target ? this.byId(target.el) : null;
+  }
+
   private byId(id: string) {
     return this.svg.querySelector(`[id="${this.prefix}${id}"]`);
   }
@@ -259,8 +270,17 @@ export class ExpressionPlayer {
     for (const key of this.values.keys())
       if (!frameVals.has(key)) frameVals.set(key, this.base.get(key) ?? 0);
     for (const [key, adj] of this.adjusts) {
-      const animated = frameVals.get(key) ?? this.base.get(key) ?? 0;
-      frameVals.set(key, (adj.set ?? animated) + (adj.add ?? 0));
+      const base = this.base.get(key) ?? 0;
+      const animated = frameVals.get(key) ?? base;
+      const narrowed =
+        adj.scale === undefined
+          ? animated
+          : base + (animated - base) * adj.scale;
+      const value = (adj.set ?? narrowed) + (adj.add ?? 0);
+      frameVals.set(
+        key,
+        adj.max === undefined ? value : Math.min(adj.max, value),
+      );
     }
     this.render(frameVals);
   }

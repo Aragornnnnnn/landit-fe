@@ -1,4 +1,4 @@
-// 표정 플레이어 — 바깥 조정(덮어쓰기·더하기)과 모션 줄이기 설정에서 계속 도는 층이 멈추는지 검증한다
+// 표정 플레이어 — 바깥 조정(덮어쓰기·더하기·폭 줄이기·상한)과 모션 줄이기 설정에서 계속 도는 층이 멈추는지 검증한다
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
 
@@ -54,6 +54,42 @@ describe('ExpressionPlayer', () => {
 
     // Then
     expect(headTransform(host)).toContain('translate(0.000 42.000)');
+  });
+
+  it('scale 조정은 애니메이션이 기본값에서 벗어난 폭만 줄인다', () => {
+    // Given 숨쉬기가 머리를 x 0→60으로 옮기는 중에 폭을 절반으로 줄이면
+    const host = document.createElement('div');
+    const player = new ExpressionPlayer(host, fakeData());
+    player.adjust('head', 'x', { scale: 0.5 });
+
+    // When 절반(30)까지 진행하면
+    player.step(0.5);
+
+    // Then 기본값(0)에서 15만큼만 움직인다
+    expect(headTransform(host)).toContain('translate(15.000 10.000)');
+  });
+
+  it('max 조정은 값이 상한을 넘지 않게 한다', () => {
+    // Given 머리 x에 상한 20을 걸면
+    const host = document.createElement('div');
+    const player = new ExpressionPlayer(host, fakeData());
+    player.adjust('head', 'x', { max: 20 });
+
+    // When 애니메이션이 30까지 가도
+    player.step(0.5);
+
+    // Then 20에서 멈춘다
+    expect(headTransform(host)).toContain('translate(20.000 10.000)');
+  });
+
+  it('이름으로 파츠 요소를 꺼내고, 이름표에 없으면 null이다', () => {
+    // Given
+    const host = document.createElement('div');
+    const player = new ExpressionPlayer(host, fakeData());
+
+    // When / Then
+    expect(player.part('head')).toBe(host.querySelector('g'));
+    expect(player.part('tail')).toBeNull();
   });
 
   it('모션 줄이기 설정이면 숨쉬기 층은 시간이 흘러도 움직이지 않는다', () => {
