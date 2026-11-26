@@ -1,7 +1,7 @@
 // 캐릭터 무대 — 대화 상대가 전신으로 서 있는 화면 전체 배경. 대화 칸은 턱 선에서 조금 아래(CHAT_TOP_LINE)에 놓인다
 'use client';
 
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
 
 import type { CharacterLook, Partner } from '../../model/character-look';
@@ -14,6 +14,17 @@ import {
   STAGE_BACKGROUND_CLASS,
   STAGE_SWAY_TURN,
 } from './stage-layout';
+
+// 무대가 바뀐 뒤 이 시간 안에 같은 상대 무대가 다시 그려지면 이어지는 장면으로 본다 — 대기 화면 → 대화 화면 같은 화면 교체
+const HANDOFF_MS = 1000;
+
+// 지금(또는 방금 전까지) 화면에 있던 무대 — 같은 상대가 이어 그려지면 캐릭터가 다시 떠오르지 않게 등장 연출을 건너뛴다
+let stageOnScreen: { partner: Partner; leftAt: number | null } | null = null;
+
+const continuesStage = (partner: Partner) =>
+  stageOnScreen?.partner === partner &&
+  (stageOnScreen.leftAt === null ||
+    performance.now() - stageOnScreen.leftAt < HANDOFF_MS);
 
 // 아래로 갈수록 짙어지는 회색 — 대화 칸 뒤까지 깔아 말풍선이 캐릭터 옷 위에서도 떠오르게 한다(얼굴은 밝게 둔다)
 const STAGE_SHADE =
@@ -41,40 +52,52 @@ export const CharacterStage = ({
   partner,
   look,
   speech,
-}: CharacterStageProps) => (
-  <div
-    className="relative w-full flex-none shrink-[1000]"
-    style={{
-      height: CHAT_TOP_LINE,
-      minHeight: 'calc(3.5rem + max(var(--safe-area-inset-top), 8px))',
-    }}
-  >
+}: CharacterStageProps) => {
+  // 첫 그림에서 한 번 정한다 — 이어지는 장면이면 캐릭터가 이미 서 있던 것처럼 바로 그린다
+  const [continued] = useState(() => continuesStage(partner));
+  useEffect(() => {
+    stageOnScreen = { partner, leftAt: null };
+    return () => {
+      if (stageOnScreen?.partner === partner)
+        stageOnScreen = { partner, leftAt: performance.now() };
+    };
+  }, [partner]);
+
+  return (
     <div
-      aria-hidden
-      className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-dvh overflow-hidden [contain:strict] ${STAGE_BACKGROUND_CLASS}`}
-      // 전신이라 흔들림 각도를 줄인다(STAGE_SWAY_TURN 참고) — 캐릭터 상자까지 상속된다
-      style={{ '--sway-turn': STAGE_SWAY_TURN } as CSSProperties}
+      className="relative w-full flex-none shrink-[1000]"
+      style={{
+        height: CHAT_TOP_LINE,
+        minHeight: 'calc(3.5rem + max(var(--safe-area-inset-top), 8px))',
+      }}
     >
-      <motion.div
-        initial={{ y: 24, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.35, ease: 'easeOut' }}
-        className="absolute left-1/2 flex justify-center"
-        style={{ x: '-50%', ...CHARACTER_BOX }}
-      >
-        <PartnerCharacter
-          partner={partner}
-          look={look}
-          speech={speech}
-          viewBox={STAGE_VIEWBOX[partner]}
-        />
-      </motion.div>
-      {/* 아래 어둡게 — 몸통·다리 위에 쌓이는 말풍선과 흰 버튼 이름이 옷 색에 묻히지 않게, 대화 칸이 시작하는 선(턱 조금 아래)부터 회색으로 눌러 준다.
-          화면 높이 비율로 시작하면 얼굴이 낮은 캐릭터(테디)는 얼굴까지 덮인다. 무대 그림 안에 둬서 대화 칸·버튼보다 늘 뒤에 깔린다 */}
       <div
-        className="absolute inset-x-0 bottom-0"
-        style={{ top: CHAT_TOP_LINE, background: STAGE_SHADE }}
-      />
+        aria-hidden
+        className={`pointer-events-none absolute inset-x-0 top-0 -z-10 h-dvh overflow-hidden [contain:strict] ${STAGE_BACKGROUND_CLASS}`}
+        // 전신이라 흔들림 각도를 줄인다(STAGE_SWAY_TURN 참고) — 캐릭터 상자까지 상속된다
+        style={{ '--sway-turn': STAGE_SWAY_TURN } as CSSProperties}
+      >
+        <motion.div
+          initial={continued ? false : { y: 24, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.35, ease: 'easeOut' }}
+          className="absolute left-1/2 flex justify-center"
+          style={{ x: '-50%', ...CHARACTER_BOX }}
+        >
+          <PartnerCharacter
+            partner={partner}
+            look={look}
+            speech={speech}
+            viewBox={STAGE_VIEWBOX[partner]}
+          />
+        </motion.div>
+        {/* 아래 어둡게 — 몸통·다리 위에 쌓이는 말풍선과 흰 버튼 이름이 옷 색에 묻히지 않게, 대화 칸이 시작하는 선(턱 조금 아래)부터 회색으로 눌러 준다.
+          화면 높이 비율로 시작하면 얼굴이 낮은 캐릭터(테디)는 얼굴까지 덮인다. 무대 그림 안에 둬서 대화 칸·버튼보다 늘 뒤에 깔린다 */}
+        <div
+          className="absolute inset-x-0 bottom-0"
+          style={{ top: CHAT_TOP_LINE, background: STAGE_SHADE }}
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
