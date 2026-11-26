@@ -2,6 +2,8 @@
 
 설문 두 종류 — 일반 설문(`/survey`, 마이페이지·안내 편지)과 결제자 설문(`/survey/paid`, 안내 편지로만). 한 사람이 여러 번 낼 수 있고, 응답은 백엔드(`POST /api/v1/surveys`)가 RDS `survey_responses`에 한 행씩 쌓이며 `survey` 칸이 어느 설문인지 적는다. 설문이 끝나면 통째로 걷어낸다.
 
+전환(LAN-886) 전에 슈퍼베이스에 쌓인 응답은 백엔드 전환 절차에서 RDS `survey_responses`로 옮긴다(슈퍼베이스 쓰기 중지 → 테이블·시퀀스 복원, landit-be README 「설문 저장」). 그래서 응답은 RDS 한 곳에서 뽑으면 된다.
+
 ## 걷어낼 때
 
 설문 밖에 닿은 자리는 전부 `LAN-428` 표식이 있다. `rg LAN-428 apps/web`으로 찾는다.
