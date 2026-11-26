@@ -37,14 +37,10 @@ describe('toCharacterLook', () => {
     expect(posture).toBe('listening');
   });
 
-  it('제출한 뒤 속마음 오버레이가 덮는 동안은 멈춰 선다', () => {
-    // given — 이미 다 들었고 화면도 가려져 있어 끄덕일 이유가 없다
+  it('제출한 뒤 답을 기다리는 동안은 멈춰 선다', () => {
+    // given — 이미 다 들어서 끄덕일 이유가 없다
     // when / then
     expect(toCharacterLook('AI_THINKING', null)).toEqual({
-      posture: 'idle',
-      expression: 'neutral',
-    });
-    expect(toCharacterLook('AI_INNER_THOUGHT', null)).toEqual({
       posture: 'idle',
       expression: 'neutral',
     });
@@ -58,7 +54,7 @@ describe('toCharacterLook', () => {
     expect(posture).toBe('idle');
   });
 
-  it('노출을 끝낸 속마음이 있으면 그 감정이 표정으로 얹힌다', () => {
+  it('말풍선에 뜬 속마음이 있으면 그 감정이 표정으로 얹힌다', () => {
     // given / when / then
     expect(toCharacterLook('AI_SPEAKING', thoughtOf('GOOD')).expression).toBe(
       'happy',
@@ -94,5 +90,60 @@ describe('toThoughtExpression', () => {
     // given — 하던 자세를 그대로 이어가야 한다
     // when / then
     expect(toThoughtExpression('NORMAL')).toBe('neutral');
+  });
+});
+
+describe('toCharacterLook — 속마음 감정', () => {
+  it('속마음에 감정이 실려 오면 속마음 종류 대신 그 감정의 표정을 짓는다', () => {
+    // given — 서버가 판별한 감정이 종류보다 구체적이다 (긍정이지만 부끄러워한다)
+    const thought: FloatingThought = {
+      ...thoughtOf('GOOD'),
+      emotion: 'EMBARRASSED',
+    };
+
+    // when
+    const { expression } = toCharacterLook('AI_SPEAKING', thought);
+
+    // then
+    expect(expression).toBe('shy');
+  });
+
+  it('감정이 안 오면 속마음 종류로 표정을 정한다 — 감정을 모르는 이전 서버와도 그대로 동작한다', () => {
+    // given
+    const thought = thoughtOf('GOOD');
+
+    // when
+    const { expression } = toCharacterLook('AI_SPEAKING', thought);
+
+    // then
+    expect(expression).toBe('happy');
+  });
+
+  it('모르는 감정 값이면 속마음 종류로 표정을 정한다', () => {
+    // given — 서버에 감정이 새로 늘어도 화면이 깨지지 않아야 한다
+    const thought: FloatingThought = {
+      ...thoughtOf('BAD'),
+      emotion: 'CONFUSED',
+    };
+
+    // when
+    const { expression } = toCharacterLook('AI_SPEAKING', thought);
+
+    // then
+    expect(expression).toBe('frown');
+  });
+
+  it('상속 속성 이름이 감정으로 오면 모르는 감정으로 보고 속마음 종류를 따른다', () => {
+    // given
+    const thought: FloatingThought = {
+      ...thoughtOf('BAD'),
+      emotion: 'constructor',
+    };
+
+    // when
+    const { expression } = toCharacterLook('AI_SPEAKING', thought);
+
+    // then
+    expect(expression).toBe('frown');
   });
 });

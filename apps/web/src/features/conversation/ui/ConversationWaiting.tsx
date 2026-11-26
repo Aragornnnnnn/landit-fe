@@ -9,6 +9,7 @@ import type { ConversationPhase } from '../model/conversation-machine';
 import { CharacterStage } from './flow/CharacterStage';
 import { ExitHeader } from './flow/ExitHeader';
 import { MicControl } from './flow/MicControl';
+import { SituationCardSkeleton } from './flow/SituationCard';
 import { ThinkingBubble } from './flow/ThinkingBubble';
 
 // 첫 말을 기다리는 건 대화 중 상대 답을 기다리는 단계와 같다 — 캐릭터 자세와 마이크를 그 단계에서 그대로 가져와 본편으로 넘어가도 튀지 않게
@@ -38,7 +39,7 @@ export const ConversationWaiting = ({
     onExit();
   };
   return (
-    <main className="relative mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
+    <main className="relative isolate mx-auto flex h-dvh max-w-[430px] flex-col bg-background">
       <ExitHeader label={t('exitButton')} onExit={leave} disabled={leaving} />
 
       <CharacterStage
@@ -47,20 +48,16 @@ export const ConversationWaiting = ({
         speech={null}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col px-5">
-        {/* 상대 말 칸 — 내가 먼저 말하는 대화면 안내가 올 자리라 빈 줄로 둔다 */}
-        <section className="min-h-0 flex-auto pt-2">
-          {partnerSpeaksFirst ? (
-            <ThinkingBubble />
-          ) : (
-            <div className="w-full rounded-[28px] rounded-tl-md bg-card px-5 py-5 shadow-lg shadow-black/5">
-              <div className="animate-skeleton-flow h-5 w-3/4 rounded-md" />
-              <div className="animate-skeleton-flow mt-3 h-5 w-1/2 rounded-md" />
-            </div>
-          )}
-        </section>
-        {/* 내 답변 칸 — 아직 쓸 말이 없어 빈 칸으로 둔다 */}
-        <div className="mt-3 h-28 w-full flex-none rounded-2xl border border-border/60 bg-muted/50" />
+      {/* 대화 칸 — 진짜 대화 칸처럼 아래(마이크 바로 위)부터 쌓는다. 첫 말이 오면 그 자리에 말풍선이 들어와 튀지 않는다.
+          내가 먼저 말하는 대화면 상황 카드가 올 자리(칸 가운데)에 빈 카드를 둔다 */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-end px-4 pb-3">
+        {partnerSpeaksFirst ? (
+          <ThinkingBubble />
+        ) : (
+          <div className="flex flex-1 flex-col justify-center">
+            <SituationCardSkeleton />
+          </div>
+        )}
       </div>
 
       <footer className="flex-none pb-[max(var(--safe-area-inset-bottom),16px)]">

@@ -20,26 +20,21 @@
     "keyboardButton": "키보드로 입력",
     "speakButton": "말하기"
   },
-  "questionCard": {
+  "partnerBubble": {
     "lastQuestionBadge": "마지막 질문이에요",
-    "instructionCaption": "내가 먼저 말해보는 상황",
     "replayButton": "다시 듣기",
     "stopReplayButton": "다시 듣기 멈추기",
     "showTranslationButton": "해석 보기",
     "hideTranslationButton": "해석 접기",
     "showTextButton": "영어 문장 보기",
-    "hideTextButton": "영어 문장 가리기"
+    "hideTextButton": "영어 문장 가리기",
+    "thoughtLoadingLabel": "속마음을 떠올리는 중"
   },
-  "userTranscript": {
-    "editLabel": "답변 고치기: {text}",
-    "headerLabel": "내 답변",
-    "unsentError": "연결이 불안정해요",
-    "editBadge": "수정",
-    "editHint": "말한 내용과 다르면 눌러서 고칠 수 있어요"
+  "conversationLog": {
+    "jumpToLatestButton": "최신 대화로",
+    "newReplyLabel": "새 답변이 있어요"
   },
   "transcriptEditor": {
-    "headerLabel": "내 답변",
-    "cancelButton": "입력 취소",
     "placeholder": "답변을 입력하세요",
     "sendButton": "답변 전송",
     "englishOnlyToast": "영어로만 입력할 수 있어요",
@@ -66,12 +61,23 @@
   "conversationWaiting": {
     "exitButton": "대화 나가기"
   },
+  "situationCard": {
+    "label": "내가 먼저 말해보는 상황"
+  },
+  "myBubble": {
+    "editLabel": "답변 고치기: {text}",
+    "editBadge": "수정",
+    "editHint": "말한 내용과 다르면 눌러서 고칠 수 있어요",
+    "unsentLabel": "보내지 못한 답변"
+  },
   "conversationTurns": {
-    "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요"
+    "connectionToast": "연결에 문제가 생겼어요. 잠시 후 다시 시도해 주세요",
+    "unsentToast": "연결이 불안정해 답변을 보내지 못했어요"
   },
   "conversationInput": {
     "notRecognizedToast": "말이 인식되지 않았어요. 다시 말해볼까요?",
     "sttErrorToast": "음성 인식에 문제가 생겼어요. 다시 시도해 주세요",
+    "sttDroppedToast": "연결이 끊겨서 여기까지 받았어요",
     "limitReachedToast": "답변이 길어서 여기까지 받았어요"
   },
   "smallTalkFlow": {
@@ -80,7 +86,6 @@
     "completeFailedToast": "연결에 문제가 생겨 대화를 마무리하지 못했어요"
   },
   "smallTalkConversation": {
-    "userFirstHint": "편하게 인사부터 건네 보세요!",
     "exitButton": "대화 나가기",
     "feedbackButton": "피드백 보러가기",
     "remainingTimeLabel": "남은 말하기 시간 <emphasis>{time}</emphasis>"
@@ -115,8 +120,7 @@
     "homeButton": "홈으로"
   },
   "answerGuideChip": {
-    "openButton": "예시 볼래요",
-    "hint": "말이 안 떠오르면 눌러 봐요"
+    "openButton": "예시 볼래요"
   },
   "answerGuideCard": {
     "regionLabel": "답변 예시",
@@ -124,7 +128,6 @@
     "closeButton": "접기"
   },
   "scenarioTalkFlow": {
-    "userFirstHint": "상황을 잘 읽고 먼저 말을 걸어보세요!",
     "progressLabel": "대화 진행도",
     "exitButton": "대화 나가기",
     "feedbackButton": "상세 분석 보러갈래요"

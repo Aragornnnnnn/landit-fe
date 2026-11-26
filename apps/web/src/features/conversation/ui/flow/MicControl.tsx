@@ -1,5 +1,5 @@
 // 마이크 컨트롤 — 대기(말하기·키보드) ↔ 듣는 중(X·■) ↔ 말한 뒤 확인(다시 말하기·보내기)을 전환한다.
-// 키보드 입력창도, 듣는 중이라는 안내도 내 답변 박스(UserTranscript)가 맡는다 — 같은 말을 두 군데서 하지 않는다
+// 키보드 입력창(TranscriptEditor)과 듣는 중이라는 안내(내 말풍선)는 따로 있다 — 같은 말을 두 군데서 하지 않는다
 'use client';
 
 import { motion } from 'motion/react';
@@ -63,7 +63,8 @@ export const MicControl = ({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.18 }}
-          // 이름은 버튼 아래로 늘어뜨린다 — 버튼을 X·■와 같은 높이에 둬야 답변 칸과의 간격이 그대로다.
+          // 이름은 버튼 아래로 늘어뜨린다 — 버튼을 X·■와 같은 높이에 둬야 대화 칸과의 간격이 그대로다.
+          // 이름은 캐릭터 다리 위에 겹쳐서 흰 글자에 그림자를 둔다.
           // 줄 높이를 글자 크기만큼만 둬 가장 큰 글자 크기에서도 아래 여백 안에 들어간다
           className="flex items-center gap-8"
         >
@@ -78,7 +79,7 @@ export const MicControl = ({
             </button>
             <p
               aria-hidden
-              className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
+              className="absolute top-full mt-1 text-xs leading-none font-bold whitespace-nowrap text-on-stage"
             >
               {t('retryButton')}
             </p>
@@ -93,7 +94,7 @@ export const MicControl = ({
             </button>
             <p
               aria-hidden
-              className="absolute top-full mt-1 text-xs leading-none font-semibold whitespace-nowrap text-muted-foreground"
+              className="absolute top-full mt-1 text-xs leading-none font-bold whitespace-nowrap text-on-stage"
             >
               {t('sendButton')}
             </p>
@@ -111,7 +112,8 @@ export const MicControl = ({
             <button
               onClick={onCancel}
               aria-label={t('cancelButton')}
-              className="flex size-16 items-center justify-center rounded-full bg-destructive/10 text-destructive active:scale-95"
+              // 캐릭터 다리 위에 놓여 비치지 않게 바탕을 불투명하게 섞는다
+              className="flex size-16 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--destructive)_10%,var(--card))] text-destructive shadow-[0_2px_8px_rgba(0,0,0,0.1)] active:scale-95"
             >
               <CloseIcon size={26} strokeWidth={2.5} />
             </button>
@@ -180,7 +182,7 @@ export const MicControl = ({
           >
             <ResendIcon size={34} />
           </button>
-          <p className="absolute top-full mt-1 text-xs font-semibold whitespace-nowrap text-muted-foreground">
+          <p className="absolute top-full mt-1 text-xs font-bold whitespace-nowrap text-on-stage">
             {t('resendHint')}
           </p>
         </motion.div>
@@ -192,7 +194,7 @@ export const MicControl = ({
           transition={{ duration: 0.18 }}
           className="relative flex flex-col items-center gap-2"
         >
-          {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 내 답변 박스가 입력창으로 바뀐다 */}
+          {/* 마이크는 가운데 고정, 키보드 아이콘은 오른쪽에 작게 — 누르면 대화 칸 아래에 입력창이 열린다 */}
           {onKeyboard && (
             <button
               onClick={onKeyboard}

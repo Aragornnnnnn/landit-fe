@@ -9,7 +9,8 @@
    - .parts — 한 장짜리 SVG. 아바타(PartnerAvatar)가 쓴다. 움직임이 SVG 안쪽 그룹에 걸린다
    - 층 상자 — 대화 캐릭터(PartnerCharacter)가 쓴다. 몸·머리·입·팔을 SVG 여러 장(.art)으로 나눠
      상자째 움직인다. SVG 안쪽 그룹은 합성 레이어가 못 돼서 매 프레임 캐릭터 전체를 다시 그리기 때문이다.
-     상자는 CSS 픽셀 세계라 SVG 단위 길이는 --frame-height(viewBox 높이)로 나눠 %로 쓴다
+     상자는 제 그림 영역만큼만 잡고(자리·크기는 컴포넌트가 인라인으로 놓는다), SVG 단위 길이는
+     --box-height(그 상자 영역 높이)로 나눠 %로 쓴다
    눈·눈썹·표정 교체 조각은 두 방식 모두 SVG 안에서 움직인다 — 그 규칙은 :is(.parts, .art)로 함께 건다 */
 
 .root {
@@ -26,7 +27,7 @@
   will-change: transform;
 }
 
-/* 층 상자 — 흔들림 상자(.sway)가 원래 SVG 한 장 자리를 차지하고, 층은 그 위에 같은 크기로 겹친다.
+/* 층 상자 — 흔들림 상자(.sway)가 원래 SVG 한 장 자리를 차지하고, 층은 그 안 제 그림 자리에 겹친다.
    기준점(transform-origin)은 컴포넌트가 그림 영역을 재서 인라인으로 놓는다 */
 .sway {
   position: relative;
@@ -51,8 +52,25 @@
 .mouth,
 .limb {
   position: absolute;
-  inset: 0;
   will-change: transform;
+}
+
+/* 머리 자세 상자는 머리 상자와 같은 영역이다 — 둘로 나눈 건 떠오름(1겹)과 자세(2겹)를 따로 움직이려서다 */
+.headPose {
+  inset: 0;
+}
+
+/* 표정 머리 자리 — .art와 같은 상자지만 따로 둔다. .art 아래 g·path에 거는 기준점 규칙(fill-box)이
+   표정 플레이어가 쓰는 transform 속성의 기준까지 바꿔, 눈 흰자를 오리는 클립이 어긋난다 */
+.expressionHead,
+.measure {
+  position: absolute;
+  inset: 0;
+}
+
+/* 고개 기준점을 재는 원래 머리 그림 — 영역만 있고 그리지 않는다 */
+.measure {
+  visibility: hidden;
 }
 
 .art {
@@ -168,18 +186,19 @@
     transform: translateY(0);
   }
   55% {
-    transform: translateY(calc(-300% / var(--frame-height)));
+    transform: translateY(calc(-300% / var(--box-height)));
   }
 }
 
-/* 호흡 4.2초와 주기가 어긋나 같은 자세가 반복되지 않는다 */
+/* 호흡 4.2초와 주기가 어긋나 같은 자세가 반복되지 않는다.
+   각도는 소비처가 --sway-turn으로 바꿀 수 있다 — 회전축(상자 바닥)에서 머리가 멀수록 같은 각도에도 머리가 크게 움직인다 */
 @keyframes weight-shift {
   0%,
   100% {
-    transform: rotate(0.25deg) translateX(1px);
+    transform: rotate(var(--sway-turn, 0.25deg)) translateX(1px);
   }
   50% {
-    transform: rotate(-0.25deg) translateX(-1px);
+    transform: rotate(calc(-1 * var(--sway-turn, 0.25deg))) translateX(-1px);
   }
 }
 
@@ -227,7 +246,7 @@
    기다릴 때나 들을 때나 같은 입이라 한 곳에서 정한다 (말할 땐 립싱크가 가져간다) */
 .idle .mouth,
 .listening .mouth {
-  transform: scale(0.84, 0.4) translateY(calc(300% / var(--frame-height)));
+  transform: scale(0.84, 0.4) translateY(calc(300% / var(--box-height)));
 }
 
 /* 듣기 — 살짝 기울여 귀 기울이고 눈썹을 든다 */
@@ -242,7 +261,7 @@
 
 /* 찡그림 — 눈썹을 미간으로 모아 내린다. 입 교체는 말하지 않을 때만 한다(아래) */
 .frown .headPose {
-  transform: rotate(-2deg) translateY(calc(400% / var(--frame-height)));
+  transform: rotate(-2deg) translateY(calc(400% / var(--box-height)));
 }
 
 .frown :is(.parts, .art) :global(#brow-left) {

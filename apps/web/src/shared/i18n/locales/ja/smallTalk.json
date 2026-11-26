@@ -71,7 +71,8 @@
     "preparingCaption": "より自然な言い方を探しています…",
     "reusedExpressionBadge": "学んだフレーズ「{expression}」を使いました",
     "goodJobBadge": "よくできました！",
-    "correctionTitle": "こう言うともっと自然です"
+    "fixedSentenceLabel": "より自然な文",
+    "correctedCountBadge": "より自然な文 {count}件"
   },
   "transcriptSkeleton": {
     "loadingLabel": "会話を読み込み中"

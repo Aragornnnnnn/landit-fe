@@ -75,12 +75,18 @@ describe('RoleplayFlow', () => {
     expect(screen.getByRole('status')).toHaveTextContent('답을 생각하는 중');
   });
 
-  it('상대를 모르면 기다리는 동안 빈 자리만 보여 준다', () => {
+  it('상대를 모르면 캐릭터 없이 첫 말풍선 자리에 점 말풍선만 띄워 기다린다', () => {
+    // given
     waitWith(null);
 
+    // when
     render(<RoleplayFlow roleplayId={7} entry="card" />);
 
-    expect(screen.queryByRole('status')).toBeNull();
+    // then — 대화가 곧 시작된다는 표시는 있고, 나갈 상대가 정해지지 않아 나가기는 아직 없다
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '대화 나가기' }),
+    ).not.toBeInTheDocument();
   });
 
   it('첫 말을 기다리는 동안 나가기를 누르면 롤플레이 홈으로 돌아간다', () => {

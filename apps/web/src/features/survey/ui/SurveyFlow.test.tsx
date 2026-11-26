@@ -34,8 +34,8 @@ vi.mock('@/shared/auth/auth-store', () => {
 });
 
 const fetchMock = vi.fn();
-// 서버 라우트는 백엔드와 같은 봉투로 답한다. 넘길 때마다 저장 요청이 가서 응답은 요청마다 새로 만든다(본문은 한 번만 읽힌다)
-const routeReply = (status: number, body: unknown) =>
+// 백엔드 봉투로 답한다. 넘길 때마다 저장 요청이 가서 응답은 요청마다 새로 만든다(본문은 한 번만 읽힌다)
+const backendReply = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status });
 
 // 제목의 줄바꿈은 화면에선 그대로지만 매처는 공백 하나로 봐야 찾는다
@@ -176,9 +176,9 @@ describe('SurveyFlow', () => {
     expect(next).toHaveProperty('disabled', false);
   });
 
-  it('마지막 주관식을 비운 채 제출하면 그 답 없이 서버 라우트로 보내고 완료 화면을 보여준다', async () => {
+  it('마지막 주관식을 비운 채 제출하면 그 답 없이 백엔드로 보내고 완료 화면을 보여준다', async () => {
     fetchMock.mockImplementation(async () =>
-      routeReply(200, { success: true, data: { result: 'saved' } }),
+      backendReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="general" />);
     await answerUntilLast();
@@ -190,7 +190,7 @@ describe('SurveyFlow', () => {
     expect(await screen.findByText('소중한 의견 고마워요!')).toBeTruthy();
     expect(hapticMock).toHaveBeenCalledWith('success');
     const [url, init] = fetchMock.mock.calls.at(-1)!;
-    expect(url).toBe('/api/survey');
+    expect(url).toBe('/api/v1/surveys');
     expect(init.headers.get('Authorization')).toBe('Bearer token');
     const body = JSON.parse(init.body);
     expect(body.survey).toBe('general');
@@ -201,7 +201,7 @@ describe('SurveyFlow', () => {
 
   it('저장에 실패하면 문항에 머문다', async () => {
     fetchMock.mockImplementation(async () =>
-      routeReply(502, { success: false, error: { message: '실패' } }),
+      backendReply(503, { success: false, error: { message: '실패' } }),
     );
     render(<SurveyFlow kind="general" />);
     await answerUntilLast();
@@ -220,7 +220,7 @@ describe('SurveyFlow', () => {
 
   it('시작·문항 노출·제출 성공을 계측한다 — 답 내용은 싣지 않는다', async () => {
     fetchMock.mockImplementation(async () =>
-      routeReply(200, { success: true, data: { result: 'saved' } }),
+      backendReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="general" />);
     expect(
@@ -265,7 +265,7 @@ describe('SurveyFlow', () => {
 
   it('저장에 실패하면 제출을 계측하지 않는다', async () => {
     fetchMock.mockImplementation(async () =>
-      routeReply(502, { success: false, error: { message: '실패' } }),
+      backendReply(503, { success: false, error: { message: '실패' } }),
     );
     render(<SurveyFlow kind="general" />);
     await answerUntilLast();
@@ -314,7 +314,7 @@ describe('SurveyFlow', () => {
 
   it('결제자 설문은 결제자 문항을 묻고 결제자 설문으로 저장·계측한다', async () => {
     fetchMock.mockImplementation(async () =>
-      routeReply(200, { success: true, data: { result: 'saved' } }),
+      backendReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="paid" />);
     for (const question of PAID_QUESTIONS) {
@@ -396,7 +396,7 @@ describe('SurveyFlow', () => {
 
   it('다음으로 넘길 때마다 같은 응답 번호로 지금까지의 답을 저장하고, 제출은 완료로 저장한다', async () => {
     fetchMock.mockImplementation(async () =>
-      routeReply(200, { success: true, data: { result: 'saved' } }),
+      backendReply(200, { success: true, data: { result: 'saved' } }),
     );
     render(<SurveyFlow kind="paid" />);
     const bodies = () =>

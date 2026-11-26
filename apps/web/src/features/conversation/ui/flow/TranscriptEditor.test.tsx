@@ -1,4 +1,4 @@
-// UserTranscript — 듣는 중 점(물결)이 언제 보이고 언제 사라지는지 검증한다
+// TranscriptEditor — 키보드 입력창이 영어만 받고, 한도를 지키고, 조합 입력을 깨지 않는지 검증한다
 import { useState } from 'react';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -6,8 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Toaster } from '@/shared/ui/toast';
 
 import { ANSWER_MAX_LENGTH } from '../../model/answer-length';
-import { editHintSeen } from '../../model/edit-hint-seen';
-import { UserTranscript } from './UserTranscript';
+import { TranscriptEditor } from './TranscriptEditor';
 
 // 진동은 경계(네이티브 셸)라 목으로 둔다
 const hapticMock = vi.hoisted(() => vi.fn());
@@ -19,92 +18,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-const listeningDots = () => screen.queryByRole('img', { name: '듣는 중' });
-
-describe('UserTranscript', () => {
-  it('아직 아무 말도 확정되지 않았으면 듣는 중 표시로 점이 보인다', () => {
-    render(
-      <UserTranscript text="" phase="USER_SPEAKING" speechPending={false} />,
-    );
-
-    expect(listeningDots()).toBeInTheDocument();
-  });
-
-  it('확정 전 말이 남아 있으면 글자 뒤에 점이 보인다', () => {
-    render(
-      <UserTranscript
-        text="I went to the park"
-        phase="USER_SPEAKING"
-        speechPending
-      />,
-    );
-
-    expect(listeningDots()).toBeInTheDocument();
-  });
-
-  it('말한 것이 모두 확정되면 점이 사라진다', () => {
-    render(
-      <UserTranscript
-        text="I went to the park"
-        phase="USER_SPEAKING"
-        speechPending={false}
-      />,
-    );
-
-    expect(listeningDots()).not.toBeInTheDocument();
-  });
-
-  it('듣는 중이 아니면 점이 보이지 않는다', () => {
-    render(<UserTranscript text="" phase="AI_THINKING" speechPending />);
-
-    expect(listeningDots()).not.toBeInTheDocument();
-  });
-
-  it('글이 넘친 상태에서 점이 다시 나타나면 끝으로 다시 붙인다', () => {
-    // 점이 다음 줄로 넘어가면 높이가 늘어난다 — 글자가 그대로여도 스크롤을 다시 맞춰야 점이 잘리지 않는다
-    let scrollHeight = 100;
-    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockImplementation(
-      () => scrollHeight,
-    );
-    const text = 'I went to the park with my friend yesterday';
-    const { rerender } = render(
-      <UserTranscript
-        text={text}
-        phase="USER_SPEAKING"
-        speechPending={false}
-      />,
-    );
-
-    scrollHeight = 140;
-    rerender(
-      <UserTranscript text={text} phase="USER_SPEAKING" speechPending />,
-    );
-
-    // 글자를 담은 스크롤 상자
-    const box = screen.getByText(text).parentElement!;
-    expect(box.scrollTop).toBe(140);
-  });
-
-  it('넘친 답변을 맨 위까지 올려 보면 윗변 흐림을 거둔다', () => {
-    // 스크롤로 앞부분을 다시 볼 때 첫 줄이 흐려져 있으면 읽을 수 없다
-    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(140);
-    const text = 'I went to the park with my friend yesterday';
-    render(
-      <UserTranscript
-        text={text}
-        phase="USER_SPEAKING"
-        speechPending={false}
-      />,
-    );
-    const box = screen.getByText(text).parentElement!;
-    expect(box.className).toContain('mask-image');
-
-    box.scrollTop = 0;
-    fireEvent.scroll(box);
-
-    expect(box.className).not.toContain('mask-image');
-  });
-
+describe('TranscriptEditor', () => {
   describe('키보드 입력', () => {
     it('열리면 커서가 문장 끝에 놓인다 — 말한 문장을 이어 쓰거나 고치기 시작하는 자리다', () => {
       const { input } = renderEditing('I went to the beach.');
@@ -189,6 +103,76 @@ describe('UserTranscript', () => {
       ).toBeInTheDocument();
     });
 
+    it('닫기 버튼 없이 입력창 밖을 누르면 닫는다', () => {
+      const { onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.pointerUp(document.body, { clientX: 10, clientY: 12 });
+
+      expect(screen.queryByRole('button', { name: '입력 취소' })).toBeNull();
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('입력창 밖을 끌어 대화를 스크롤하면 닫지 않는다', () => {
+      const { onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.pointerUp(document.body, { clientX: 10, clientY: 60 });
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('보내서 입력창이 사라질 때는 닫지 않는다 — 보낸 글이 확인으로 남지 않게', () => {
+      const { input, onClose } = renderEditing('Hello');
+
+      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.blur(input);
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('보내기 버튼을 눌러도 입력창을 닫지 않는다', () => {
+      const { onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(screen.getByRole('button', { name: '답변 전송' }));
+
+      expect(onClose).not.toHaveBeenCalled();
+    });
+
+    it('터치로 보내기를 누르면 입력창이 먼저 떠나도 닫지 않고 보낸다 — iOS는 버튼이 포커스를 받지 않아 떠나는 신호가 먼저 온다', () => {
+      // Given
+      const { input, onClose, onSubmit } = renderEditing('Hello');
+      const send = screen.getByRole('button', { name: '답변 전송' });
+
+      // When 손가락이 보내기에 닿고, 입력창이 포커스를 잃은 뒤, 눌림이 끝난다
+      fireEvent.pointerDown(send, { pointerType: 'touch' });
+      fireEvent.blur(input, { relatedTarget: null });
+      fireEvent.pointerUp(send, { pointerType: 'touch' });
+      fireEvent.click(send);
+
+      // Then 확인 단계로 닫지 않고 그대로 보낸다
+      expect(onClose).not.toHaveBeenCalled();
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+    });
+
+    it('키보드를 내려 입력창을 떠나면 닫는다', () => {
+      const { input, onClose } = renderEditing('Hello');
+
+      fireEvent.blur(input);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
+    it('밖을 누르고 이어서 입력창을 떠나도 한 번만 닫는다', () => {
+      const { input, onClose } = renderEditing('Hello');
+
+      fireEvent.pointerDown(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.pointerUp(document.body, { clientX: 10, clientY: 10 });
+      fireEvent.blur(input);
+
+      expect(onClose).toHaveBeenCalledTimes(1);
+    });
+
     it('한도와 멀면 글자 수를 보이지 않는다', () => {
       renderEditing('Hello');
 
@@ -199,18 +183,18 @@ describe('UserTranscript', () => {
     const renderEditing = (initial = '') => {
       const onChange = vi.fn();
       const onSubmit = vi.fn();
+      const onClose = vi.fn();
       const Host = () => {
         const [text, setText] = useState(initial);
         return (
-          <UserTranscript
+          <TranscriptEditor
             text={text}
-            phase="USER_SPEAKING"
-            editing
             onChange={(value) => {
               onChange(value);
               setText(value);
             }}
             onSubmit={onSubmit}
+            onClose={onClose}
           />
         );
       };
@@ -220,7 +204,12 @@ describe('UserTranscript', () => {
           <Toaster />
         </>,
       );
-      return { input: screen.getByRole('textbox'), onChange, onSubmit };
+      return {
+        input: screen.getByRole('textbox'),
+        onChange,
+        onSubmit,
+        onClose,
+      };
     };
     const englishNotice = () => screen.queryByText('영어로만 입력할 수 있어요');
 
@@ -383,14 +372,7 @@ describe('UserTranscript', () => {
     const renderEditor = (initial = 'hello') => {
       const Host = () => {
         const [text, setText] = useState(initial);
-        return (
-          <UserTranscript
-            text={text}
-            phase="USER_SPEAKING"
-            editing
-            onChange={setText}
-          />
-        );
+        return <TranscriptEditor text={text} onChange={setText} />;
       };
       render(
         <>
@@ -477,141 +459,6 @@ describe('UserTranscript', () => {
       const input = renderEditor();
 
       expect(press(input, 'deleteContentBackward')).toBe(false);
-    });
-  });
-
-  describe('말한 뒤 확인', () => {
-    it('확인 중이면 문장 끝에 커서를 띄워 입력된 글처럼 보인다', () => {
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(screen.getByText('|')).toBeInTheDocument();
-    });
-
-    it('확인 중이면 고칠 수 있다는 수정 버튼 표시를 띄운다', () => {
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(screen.getByText('수정')).toBeInTheDocument();
-    });
-
-    it('처음 확인 화면이면 고칠 수 있다는 안내를 한 번 띄운다', () => {
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(
-        screen.getByText('말한 내용과 다르면 눌러서 고칠 수 있어요'),
-      ).toBeInTheDocument();
-    });
-
-    it('스크린 리더도 고치기 버튼에서 인식된 문장을 듣는다', () => {
-      // 확인 단계는 문장을 확인하는 화면이다 — 버튼 이름이 문장을 가리면 들을 수 없다
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(
-        screen.getByRole('button', { name: /I went to the bitch\./ }),
-      ).toBeInTheDocument();
-    });
-
-    it('첫 안내는 고치기 버튼의 설명으로 함께 읽힌다', () => {
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(
-        screen.getByRole('button', { name: /답변 고치기/ }),
-      ).toHaveAccessibleDescription('말한 내용과 다르면 눌러서 고칠 수 있어요');
-    });
-
-    it('안내를 이미 본 기기면 띄우지 않는다', () => {
-      editHintSeen.mark();
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(
-        screen.queryByText('말한 내용과 다르면 눌러서 고칠 수 있어요'),
-      ).not.toBeInTheDocument();
-    });
-
-    it('확인 중이 아니면 커서가 없다', () => {
-      render(
-        <UserTranscript text="I went to the bitch." phase="USER_SPEAKING" />,
-      );
-
-      expect(screen.queryByText('|')).not.toBeInTheDocument();
-    });
-
-    it('글자를 눌러도 칸 전체가 버튼이라 바로 고치기로 간다', () => {
-      const onEdit = vi.fn();
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={onEdit}
-        />,
-      );
-
-      fireEvent.click(screen.getByText('I went to the bitch.'));
-
-      expect(onEdit).toHaveBeenCalledTimes(1);
-    });
-
-    it('확인 중엔 머리 자리의 다른 칩(답변 예시)을 내린다', () => {
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          onEdit={vi.fn()}
-          headerAction={<button>예시 볼래요</button>}
-        />,
-      );
-
-      expect(
-        screen.queryByRole('button', { name: '예시 볼래요' }),
-      ).not.toBeInTheDocument();
-    });
-
-    it('확인 중이면 말하는 중이어도 듣는 중 점을 띄우지 않는다', () => {
-      render(
-        <UserTranscript
-          text="I went to the bitch."
-          phase="USER_SPEAKING"
-          speechPending
-          onEdit={vi.fn()}
-        />,
-      );
-
-      expect(listeningDots()).not.toBeInTheDocument();
     });
   });
 });

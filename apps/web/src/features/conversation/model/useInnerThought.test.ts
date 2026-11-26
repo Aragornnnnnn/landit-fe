@@ -40,7 +40,7 @@ describe('useInnerThought', () => {
     );
 
     // 빈 말풍선을 띄우는 대신 호출부가 다음 턴으로 건너뛸 수 있게 빈 텍스트를 준다
-    expect(resolved).toEqual({ text: '', type: null });
+    expect(resolved).toEqual({ text: '', type: null, emotion: null });
   });
 
   it('폴링하다 생성이 실패하면 제출 응답 값으로 물러선다 — 그때도 속마음이 없으면 빈 문자열이다', async () => {
@@ -64,6 +64,68 @@ describe('useInnerThought', () => {
     await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
 
     // 실패해도 호출부가 다음 턴으로 넘어갈 수 있게 빈 텍스트를 준다
-    await expect(resolving).resolves.toEqual({ text: '', type: null });
+    await expect(resolving).resolves.toEqual({
+      text: '',
+      type: null,
+      emotion: null,
+    });
   });
+  it('제출 응답에 준비된 속마음의 감정이 있으면 함께 돌려준다', async () => {
+    // given
+    const { result } = renderHook(() => useInnerThought());
+
+    // when
+    const resolved = await result.current.resolve(
+      7,
+      submitted({ emotion: 'LOVE' }),
+    );
+
+    // then
+    expect(resolved?.emotion).toBe('LOVE');
+  });
+
+  it('폴링으로 받은 속마음의 감정을 함께 돌려준다', async () => {
+    // given
+    vi.useFakeTimers();
+    getInnerThought.mockResolvedValue({
+      processingStatus: 'COMPLETED',
+      innerThought: '귀엽다.',
+      innerThoughtType: 'GOOD',
+      emotion: 'SULKY',
+    });
+    const { result } = renderHook(() => useInnerThought());
+
+    // when
+    const resolving = result.current.resolve(
+      7,
+      submitted({
+        innerThoughtProcessingStatus: 'PREPARING',
+        innerThought: null,
+        innerThoughtType: null,
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(innerThoughtPollMs);
+
+    // then
+    await expect(resolving).resolves.toMatchObject({ emotion: 'SULKY' });
+  });
+
+  it.each([
+    ['화면을 떠나면', (r: { unmount: () => void }) => r.unmount()],
+    [
+      '대화를 접으면',
+      (r: { result: { current: { cancel: () => void } } }) =>
+        r.result.current.cancel(),
+    ],
+  ] as const)(
+    '%s 더는 살아 있지 않다고 알린다 — 늦게 도는 타이머가 떠난 화면을 건드리지 않게',
+    (_, leave) => {
+      const rendered = renderHook(() => useInnerThought());
+      const { isActive } = rendered.result.current;
+
+      leave(rendered as never);
+
+      expect(isActive()).toBe(false);
+    },
+  );
 });

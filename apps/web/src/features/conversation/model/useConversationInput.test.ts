@@ -276,6 +276,7 @@ describe('useConversationInput', () => {
       session_id: 1,
       engine: 'deepgram',
       reason: 'connect_failed',
+      char_count: 0,
     });
   });
 
@@ -436,7 +437,8 @@ describe('useConversationInput', () => {
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onError?.(error, ERROR_META));
 
-    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error);
+    // 소켓 실패가 아니면 원인 단서가 없다
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error, undefined);
   });
 
   it('마이크 권한 거부는 Sentry에 보고하지 않는다 — 유저의 선택이지 결함이 아니다', () => {
@@ -464,6 +466,109 @@ describe('useConversationInput', () => {
 
     act(() => result.current.dismissMicPermissionNotice());
     expect(result.current.micPermissionDenied).toBe(false);
+  });
+
+  describe('말하다 연결이 끊김', () => {
+    const dropped = (transcript: string) =>
+      new SttError('STT 연결이 끊겼습니다.', 'closed', {
+        transcript,
+        closeCode: 1006,
+        aliveMs: 26000,
+        wasHidden: true,
+      });
+
+    it('끊기기 전에 받아 적은 글자가 있으면 지우지 않고 확인 단계에 올린다', () => {
+      const { result, onInputCancel } = renderInput();
+
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onError?.(dropped('I went to'), ERROR_META));
+
+      expect(onInputCancel).not.toHaveBeenCalled();
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to');
+    });
+
+    it('살린 글자를 보내면 VOICE로, 끊길 때까지 말한 시간과 함께 전달한다', () => {
+      vi.useFakeTimers();
+      const { result, onContent } = renderInput();
+
+      act(() => result.current.pressMic());
+      act(() => vi.advanceTimersByTime(4000));
+      act(() => sttMock.callbacks.onError?.(dropped('I went to'), ERROR_META));
+      act(() => result.current.submitReviewed());
+
+      expect(onContent).toHaveBeenCalledWith('I went to', 'VOICE', 4000);
+      vi.useRealTimers();
+    });
+
+    it('끊김을 계측할 때 살린 글자 수와 끊긴 원인 단서를 함께 남긴다', () => {
+      const { result } = renderInput();
+
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onError?.(dropped('I went to'), ERROR_META));
+
+      expect(trackMock).toHaveBeenCalledWith('Speech Recognition Failed', {
+        session_id: 1,
+        engine: 'deepgram',
+        reason: 'closed',
+        char_count: 9,
+        close_code: 1006,
+        alive_ms: 26000,
+        was_hidden: true,
+      });
+    });
+
+    it('Sentry에는 원인 단서만 보내고 받아 적은 말은 보내지 않는다', () => {
+      // 사용자가 한 말은 개인 정보다 — 글자 수로만 남긴다
+      const { result } = renderInput();
+      const error = dropped('I went to');
+
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onError?.(error, ERROR_META));
+
+      expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error, {
+        charCount: 9,
+        closeCode: 1006,
+        aliveMs: 26000,
+        wasHidden: true,
+      });
+    });
+
+    it('글자를 살렸으면 다시 시도하라는 대신 여기까지 받았다고 화면 언어로 알린다', () => {
+      setTestLocale('ja');
+      const { result } = renderInput();
+
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onError?.(dropped('I went to'), ERROR_META));
+
+      expect(toastMock).toHaveBeenCalledWith(
+        '接続が切れたため、ここまで受け取りました',
+        'warning',
+      );
+    });
+
+    it('받아 적은 글자가 공백뿐이면 지금처럼 듣기 취소로 되돌린다', () => {
+      const { result, onInputCancel } = renderInput();
+
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onError?.(dropped('   '), ERROR_META));
+
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+      expect(result.current.reviewing).toBe(false);
+      expect(result.current.transcript).toBe('');
+    });
+
+    it('다시 말하다 끊겨도 새로 받아 적은 글자가 있으면 그 글자로 확인에 오른다', () => {
+      const { result } = renderInput();
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onFinal?.('I went home.', FINAL_META));
+      act(() => result.current.speakAgain());
+
+      act(() => sttMock.callbacks.onError?.(dropped('I went to'), ERROR_META));
+
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.transcript).toBe('I went to');
+    });
   });
 
   describe('말한 뒤 확인', () => {
@@ -621,20 +726,31 @@ describe('useConversationInput', () => {
       vi.useRealTimers();
     });
 
-    it('입력창을 닫으면 고친 내용을 버리고 처음 인식된 문장으로 확인 단계에 돌아간다', () => {
+    it('고치다 입력창을 닫으면 고친 문장을 남긴 채 확인 단계에 돌아간다', () => {
       const { result, onInputCancel } = renderReviewing();
 
       act(() => result.current.editTranscript());
-      act(() => result.current.setTranscript('something else'));
+      act(() => result.current.setTranscript('I went to the beach.'));
       act(() => result.current.closeTyping());
 
       expect(result.current.keyboardMode).toBe(false);
       expect(result.current.reviewing).toBe(true);
-      expect(result.current.transcript).toBe('I went to the bitch.');
+      expect(result.current.transcript).toBe('I went to the beach.');
       expect(onInputCancel).not.toHaveBeenCalled();
     });
 
-    it('키보드로 쓰던 입력창을 닫으면 지금처럼 입력을 취소한다', () => {
+    it('고치다 다 지우고 닫으면 말하기 대기로 돌아간다', () => {
+      const { result, onInputCancel } = renderReviewing();
+
+      act(() => result.current.editTranscript());
+      act(() => result.current.setTranscript('  '));
+      act(() => result.current.closeTyping());
+
+      expect(result.current.reviewing).toBe(false);
+      expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('키보드로 쓰던 입력창을 빈 채로 닫으면 입력을 취소한다', () => {
       const { result, onInputCancel } = renderInput();
 
       act(() => result.current.pressKeyboard());
@@ -642,6 +758,41 @@ describe('useConversationInput', () => {
 
       expect(result.current.keyboardMode).toBe(false);
       expect(onInputCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('키보드로 쓰다 닫으면 쓴 글이 확인 단계에 남는다', () => {
+      const { result, onInputCancel } = renderInput();
+
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript('Nice to meet you!'));
+      act(() => result.current.closeTyping());
+
+      expect(result.current.keyboardMode).toBe(false);
+      expect(result.current.reviewing).toBe(true);
+      expect(result.current.reviewedInputType).toBe('TEXT');
+      expect(result.current.transcript).toBe('Nice to meet you!');
+      expect(onInputCancel).not.toHaveBeenCalled();
+    });
+
+    it('키보드로 쓴 글은 확인에서 보내도 TEXT로 보내고 음성 확인 계측은 남기지 않는다', () => {
+      const { result, onContent } = renderInput();
+
+      act(() => result.current.pressKeyboard());
+      act(() => result.current.setTranscript('Nice to meet you!'));
+      act(() => result.current.closeTyping());
+      act(() => result.current.submitReviewed());
+
+      expect(onContent).toHaveBeenCalledWith('Nice to meet you!', 'TEXT', 0);
+      expect(trackMock).not.toHaveBeenCalledWith(
+        'Transcript Reviewed',
+        expect.anything(),
+      );
+    });
+
+    it('말한 답을 확인하는 중이면 음성 확인으로 알린다', () => {
+      const { result } = renderReviewing();
+
+      expect(result.current.reviewedInputType).toBe('VOICE');
     });
 
     it('고친 문장을 다 지우면 보내지 않는다', () => {

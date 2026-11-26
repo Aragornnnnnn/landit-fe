@@ -6,14 +6,13 @@ export type ConversationPhase =
   | 'AI_SPEAKING' // AI 질문 발화 중 (글자 하이라이트)
   | 'USER_READY' // 내가 말할 준비 — 마이크 대기 (말하기 버튼)
   | 'USER_SPEAKING' // 내가 말하는 중 (답변이 실시간으로 채워진다)
-  | 'AI_THINKING' // 상대가 생각하는 중 (제출 후 응답·속마음 대기 연출)
-  | 'AI_INNER_THOUGHT' // 상대 속마음 노출 (랜디 슬라이드 인)
+  | 'AI_THINKING' // 상대가 생각하는 중 (제출 후 응답 대기 — 대화 칸에 점 말풍선)
   | 'DONE'; // 모든 턴 종료
 
 /**
  * 단계를 바꾸는 사건 — `{단계·행위}_{결말}` 꼴로 단계와 짝을 이룬다.
  * 발생원: 유저 버튼(USER_SPEAKING_*·RESEND_STARTED), 재생 종료(AI_SPEAKING_DONE),
- * 서버 응답(AI_RESPONSE_*), 속마음 노출 타이머(INNER_THOUGHT_DONE).
+ * 서버 응답(AI_RESPONSE_*).
  */
 export type ConversationEvent =
   | 'AI_SPEAKING_DONE'
@@ -22,9 +21,7 @@ export type ConversationEvent =
   | 'USER_SPEAKING_DONE'
   | 'RESEND_STARTED'
   | 'AI_RESPONSE_READY'
-  | 'AI_RESPONSE_SKIPPED'
-  | 'AI_RESPONSE_FAILED'
-  | 'INNER_THOUGHT_DONE';
+  | 'AI_RESPONSE_FAILED';
 
 /** 규칙표가 기억하는 전부 — 현재 단계와 몇 번째 턴인지. 둘은 항상 함께 갱신된다. */
 export interface ConversationState {
@@ -69,7 +66,7 @@ const finishAiSpeaking: Transition = (state, completed) => {
 const interruptSpeech: Transition = (state, completed) =>
   completed ? state : { ...state, phase: 'USER_SPEAKING' };
 
-/** 속마음까지 끝난 순간의 전이 — 다음 발화를 재생하는 새 턴을 시작한다. */
+/** 대답이 온 순간의 전이 — 다음 발화를 재생하는 새 턴을 시작한다. 속마음은 그 말풍선 맨 위에 따로 붙는다 */
 const startNextTurn: Transition = (state) => ({
   phase: 'AI_SPEAKING',
   turnIndex: state.turnIndex + 1,
@@ -98,12 +95,8 @@ const TRANSITIONS: Record<
     USER_SPEAKING_DONE: moveTo('AI_THINKING'),
   },
   AI_THINKING: {
-    AI_RESPONSE_READY: moveTo('AI_INNER_THOUGHT'),
-    AI_RESPONSE_SKIPPED: startNextTurn,
+    AI_RESPONSE_READY: startNextTurn,
     AI_RESPONSE_FAILED: moveTo('USER_READY'),
-  },
-  AI_INNER_THOUGHT: {
-    INNER_THOUGHT_DONE: startNextTurn,
   },
   DONE: {},
 };

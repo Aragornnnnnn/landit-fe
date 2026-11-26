@@ -12,10 +12,11 @@ import { innerThoughtMaxPolls, innerThoughtPollMs } from './pacing';
 const delay = (ms: number) =>
   new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-// 노출할 속마음 — 텍스트와 종류(백엔드 문자열 그대로, 좁히기는 소비 지점에서)
+// 노출할 속마음 — 텍스트·종류·감정(백엔드 문자열 그대로, 좁히기는 소비 지점에서)
 export interface ResolvedThought {
   text: string;
   type: string | null;
+  emotion: string | null;
 }
 
 export const useInnerThought = () => {
@@ -39,6 +40,7 @@ export const useInnerThought = () => {
       return {
         text: submitted.innerThought ?? '',
         type: submitted.innerThoughtType,
+        emotion: submitted.emotion ?? null,
       };
     }
     let fallbackReason: 'timeout' | 'failed' = 'timeout';
@@ -50,7 +52,11 @@ export const useInnerThought = () => {
       try {
         const res = await getInnerThought(sessionId, submitted.messageId);
         if (res.processingStatus === 'COMPLETED') {
-          return { text: res.innerThought ?? '', type: res.innerThoughtType };
+          return {
+            text: res.innerThought ?? '',
+            type: res.innerThoughtType,
+            emotion: res.emotion ?? null,
+          };
         }
         if (res.processingStatus === 'FAILED') {
           fallbackReason = 'failed';
@@ -71,6 +77,7 @@ export const useInnerThought = () => {
     return {
       text: submitted.innerThought ?? '',
       type: submitted.innerThoughtType,
+      emotion: submitted.emotion ?? null,
     };
   };
 
@@ -79,5 +86,8 @@ export const useInnerThought = () => {
     activeRef.current = false;
   };
 
-  return { resolve, cancel };
+  // 아직 이 화면에서 속마음을 기다리는 중인가 — 떠났거나 접었으면 false. 기다림 상한 타이머가 떠난 화면을 건드리지 않게 묻는다
+  const isActive = () => activeRef.current;
+
+  return { resolve, cancel, isActive };
 };

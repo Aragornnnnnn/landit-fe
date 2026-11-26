@@ -1,4 +1,5 @@
 // Deepgram STT 전송 계층 — 미지원 폴백 유도·트랜스크립트 누적·턴 종료 갈림길 검증
+// @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { startDeepgramStt } from './deepgram-stt';
@@ -13,7 +14,7 @@ class FakeWebSocket {
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   onerror: (() => void) | null = null;
-  onclose: (() => void) | null = null;
+  onclose: ((event: { code: number }) => void) | null = null;
 
   constructor(public url: string) {
     FakeWebSocket.instances.push(this);
@@ -320,6 +321,7 @@ describe('startDeepgramStt', () => {
     const { ws, onError } = await startWithFakes();
 
     ws.onerror?.();
+    ws.onclose?.({ code: 1006 });
 
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({ reason: 'connect_failed' }),
@@ -478,11 +480,131 @@ describe('startDeepgramStt', () => {
     const { ws, onError, onFinal } = await startWithFakes();
     ws.open();
 
-    ws.onclose?.();
+    ws.onclose?.({ code: 1006 });
 
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({ reason: 'closed' }),
     );
     expect(onFinal).not.toHaveBeenCalled();
+  });
+
+  it('도중에 끊기면 그때까지 확정된 글자를 오류에 실어 넘긴다', async () => {
+    // 확정 전 말은 끊기면서 사라지므로 싣지 않는다
+    const { ws, onError } = await startWithFakes({ stopOnSilence: false });
+    ws.open();
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: 'I went to' }] },
+    });
+    ws.receive({
+      type: 'Results',
+      is_final: false,
+      channel: { alternatives: [{ transcript: 'the park' }] },
+    });
+
+    ws.onclose?.({ code: 1006 });
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason: 'closed',
+        detail: expect.objectContaining({ transcript: 'I went to' }),
+      }),
+    );
+  });
+
+  describe('끊긴 원인 단서', () => {
+    afterEach(() => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+    });
+
+    const hidePage = () => {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'hidden',
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    };
+
+    it('오류 신호 뒤에 닫힘이 오면 닫힘 코드를 실어 한 번만 알린다', async () => {
+      // 브라우저는 오류 신호를 먼저 보내고 종료 코드는 닫힘에만 싣는다 — 오류에서 바로 끝내면 코드를 잃는다
+      const { ws, onError } = await startWithFakes();
+      ws.open();
+
+      ws.onerror?.();
+      ws.onclose?.({ code: 1011 });
+
+      expect(onError).toHaveBeenCalledTimes(1);
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: 'STT 연결 오류',
+          detail: expect.objectContaining({ closeCode: 1011 }),
+        }),
+      );
+    });
+
+    it('오류 신호 뒤에 닫힘이 끝내 안 오면 잠시 뒤 코드 없이 알린다', async () => {
+      // 닫힘만 기다리다 마이크가 켜진 채 멈춰 있지 않게
+      vi.useFakeTimers();
+      const { ws, onError } = await startWithFakes();
+      ws.open();
+
+      ws.onerror?.();
+      vi.advanceTimersByTime(1000);
+
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: expect.objectContaining({ closeCode: null }),
+        }),
+      );
+    });
+
+    it('연결이 열린 뒤 끊기기까지 걸린 시간을 싣는다', async () => {
+      vi.useFakeTimers();
+      const { ws, onError } = await startWithFakes();
+      ws.open();
+
+      vi.advanceTimersByTime(26000);
+      ws.onclose?.({ code: 1006 });
+
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: expect.objectContaining({ aliveMs: 26000 }),
+        }),
+      );
+    });
+
+    it('듣는 동안 화면이 한 번이라도 숨겨졌으면 돌아온 뒤 끊겨도 그 사실을 싣는다', async () => {
+      const { ws, onError } = await startWithFakes();
+      ws.open();
+      hidePage();
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        value: 'visible',
+      });
+
+      ws.onclose?.({ code: 1006 });
+
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          detail: expect.objectContaining({ wasHidden: true }),
+        }),
+      );
+    });
+
+    it('끝난 세션은 화면 숨김을 더 듣지 않는다', async () => {
+      const remove = vi.spyOn(document, 'removeEventListener');
+      const { session } = await startWithFakes();
+
+      session.abort();
+
+      expect(remove).toHaveBeenCalledWith(
+        'visibilitychange',
+        expect.any(Function),
+      );
+    });
   });
 });

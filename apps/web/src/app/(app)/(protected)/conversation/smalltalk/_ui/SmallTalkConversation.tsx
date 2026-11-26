@@ -4,7 +4,6 @@
 
 import { useState } from 'react';
 import { EVENTS } from '@landit/analytics';
-import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import type { Partner } from '@/features/conversation/model/character-look';
@@ -30,7 +29,6 @@ export const SmallTalkConversation = ({
   remainingSpeakingTimeMs,
   endSession,
 }: SmallTalkConversationProps) => {
-  const t = useTranslations('conversation.smallTalkConversation');
   const router = useRouter();
   const goHome = () => router.replace(SMALLTALK_PATH);
   const summaryPath = smallTalkSummaryPath(session.sessionId);
@@ -60,7 +58,6 @@ export const SmallTalkConversation = ({
         setGoodbyePhrase(pickGoodbyePhrase());
         setShowExitSheet(true);
       }}
-      userFirstHint={t('userFirstHint')}
     >
       <SmallTalkExitSheet
         open={showExitSheet}

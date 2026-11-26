@@ -1,4 +1,4 @@
-// QuestionCard — 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
+// PartnerBubble — 지금 차례 상대 말풍선의 속마음 줄, 해석 펼쳐보기와 다시 듣기 버튼의 기본 접힘·토글·질문 전환 계약을 검증한다
 import {
   cleanup,
   fireEvent,
@@ -8,14 +8,15 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { QuestionCard } from './QuestionCard';
+import { ConversationLog } from './ConversationLog';
+import { PartnerBubble } from './PartnerBubble';
 
 afterEach(() => cleanup());
 
-describe('QuestionCard', () => {
+describe('PartnerBubble', () => {
   it('마지막 질문이면 질문 위에 머리말이 보인다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="Anything else?"
         translation={null}
         speaking={false}
@@ -28,7 +29,7 @@ describe('QuestionCard', () => {
 
   it('마지막 질문이 아니면 머리말이 없다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -41,7 +42,7 @@ describe('QuestionCard', () => {
   it('발화가 끝나도 해석은 접힌 채로 시작한다', () => {
     // Given 해석이 있는 발화가 끝난 상태에서
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -54,7 +55,7 @@ describe('QuestionCard', () => {
 
   it('해석 보기를 누르면 해석이 펼쳐진다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -69,7 +70,7 @@ describe('QuestionCard', () => {
   it('펼친 해석은 다시 눌러 접는다', async () => {
     // Given 해석을 펼쳐 둔 카드에서
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -85,10 +86,34 @@ describe('QuestionCard', () => {
     );
   });
 
+  it('해석을 펼친 채 지난 대화가 된 말풍선은 펼친 채로 나타나 부드럽게 접힌다 — 툭 사라지지 않게', async () => {
+    // Given 펼친 해석을 접으며 지난 대화로 넘어온 말풍선
+    render(
+      <PartnerBubble
+        past
+        collapseTranslation
+        question="How was your day?"
+        translation="오늘 하루 어땠어요?"
+        speaking={false}
+      />,
+    );
+
+    // Then 처음엔 해석이 보이고
+    expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
+
+    // 곧 접힌다
+    await waitFor(() =>
+      expect(screen.queryByText('오늘 하루 어땠어요?')).not.toBeInTheDocument(),
+    );
+    expect(
+      screen.getByRole('button', { name: '해석 보기' }),
+    ).toBeInTheDocument();
+  });
+
   it('다음 질문으로 넘어가면 해석이 다시 접힌 상태로 시작한다', () => {
     // Given 앞 질문에서 해석을 펼쳐 뒀어도
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -98,7 +123,7 @@ describe('QuestionCard', () => {
 
     // When 다음 질문이 오면
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="What did you eat?"
         translation="뭘 드셨어요?"
         speaking={false}
@@ -112,7 +137,7 @@ describe('QuestionCard', () => {
   it('펼치고 접을 때마다 그 상태를 바깥에 알린다', () => {
     const onTranslationToggled = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -126,33 +151,10 @@ describe('QuestionCard', () => {
     expect(onTranslationToggled.mock.calls).toEqual([[true], [false]]);
   });
 
-  it('선발화 안내 카드에는 해석·다시 듣기 자리를 두지 않는다', () => {
-    // 선발화 안내는 상대 발화가 아니다 — 해석·다시 듣기를 줘도 카드가 자리를 내주지 않는다
-    render(
-      <QuestionCard
-        question="먼저 인사를 건네보세요"
-        translation="Say hello first"
-        speaking={false}
-        instruction
-        replay={{ toggle: vi.fn(), playing: false, enabled: true }}
-      />,
-    );
-
-    expect(
-      screen.queryByRole('button', { name: '해석 보기' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '다시 듣기' }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '영어 문장 가리기' }),
-    ).not.toBeInTheDocument();
-  });
-
   it('다시 듣기를 누르면 그 발화를 다시 재생한다', () => {
     const toggle = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -169,7 +171,7 @@ describe('QuestionCard', () => {
     // Given 상대 발화·내 녹음처럼 enabled가 꺼진 구간 — 버튼은 자리만 지킨다
     const toggle = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -184,7 +186,7 @@ describe('QuestionCard', () => {
 
   it('다시 듣기가 없는 카드에는 버튼도 두지 않는다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -199,7 +201,7 @@ describe('QuestionCard', () => {
   it('해석이 없는 발화도 다시 듣기는 누를 수 있다', () => {
     const toggle = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -214,7 +216,7 @@ describe('QuestionCard', () => {
 
   it('글자를 가린 카드는 영어 문장을 흐리게 가리고, 화면 낭독기에도 읽히지 않게 한다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -235,7 +237,7 @@ describe('QuestionCard', () => {
     // Given 글자를 가린 카드에서
     const onTextToggled = vi.fn();
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -256,7 +258,7 @@ describe('QuestionCard', () => {
 
     // When 다음 질문이 오면 Then 다시 가려진다
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="What did you eat?"
         translation={null}
         speaking={false}
@@ -280,7 +282,7 @@ describe('QuestionCard', () => {
   it('보이는 카드에서 눈 버튼을 누르면 그 카드만 다시 가려진다', () => {
     const onTextToggled = vi.fn();
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -301,7 +303,7 @@ describe('QuestionCard', () => {
 
   it('글자를 늘 보이게 둔 대화도 눈 버튼으로 그 카드만 가릴 수 있다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation={null}
         speaking={false}
@@ -318,7 +320,7 @@ describe('QuestionCard', () => {
 
   it('가린 채 발화 중이면 전문을 흐리게 두고, 해석 버튼은 발화가 끝나야 나온다', () => {
     render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking
@@ -338,7 +340,7 @@ describe('QuestionCard', () => {
   it('해석 펼침 기본값이 늦게 들어와도 아직 손대지 않은 카드엔 반영된다', () => {
     // Given 저장값을 읽기 전(서버 렌더 값)으로 먼저 그려진 카드
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -348,7 +350,7 @@ describe('QuestionCard', () => {
 
     // When 저장된 기본값(펼침)이 들어오면
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -362,7 +364,7 @@ describe('QuestionCard', () => {
 
   it('해석을 펼쳐 두기로 하면 새 질문마다 해석이 펼쳐진 채로 나온다', () => {
     const { rerender } = render(
-      <QuestionCard
+      <PartnerBubble
         question="How was your day?"
         translation="오늘 하루 어땠어요?"
         speaking={false}
@@ -372,7 +374,7 @@ describe('QuestionCard', () => {
     expect(screen.getByText('오늘 하루 어땠어요?')).toBeInTheDocument();
 
     rerender(
-      <QuestionCard
+      <PartnerBubble
         question="What did you eat?"
         translation="뭘 드셨어요?"
         speaking={false}
@@ -383,35 +385,134 @@ describe('QuestionCard', () => {
     expect(screen.getByText('뭘 드셨어요?')).toBeInTheDocument();
   });
 
-  it('발화 중에는 아직 나오지 않은 글자 끝이 아니라 지금 말하는 줄로 스크롤한다', async () => {
-    // Given 카드를 넘치는 긴 발화 — jsdom엔 레이아웃이 없어 카드·커서의 위치를 심어 준다.
-    // 카드 아래끝은 200, 커서는 그보다 80 아래, 안 나온 글자까지 합친 전체 높이는 1000이다
-    const scrollTo = vi.fn();
-    Element.prototype.scrollTo = scrollTo;
+  it('발화 중에는 안 나온 글자 끝이 아니라 지금 말하는 줄까지만 대화 칸이 따라 내려간다', async () => {
+    // Given 칸(높이 200)을 넘치는 긴 발화 — jsdom엔 레이아웃이 없어 위치를 심어 준다.
+    // 커서 줄은 260~280, 안 나온 글자까지 합친 전체 높이는 1000이다
+    Element.prototype.scrollTo = vi.fn();
     vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
       1000,
     );
     vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(200);
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
       function (this: HTMLElement) {
-        const bottom = this.className.includes('animate-pulse') ? 280 : 200;
-        return { top: 0, bottom, height: bottom } as DOMRect;
+        // 커서는 260~280 줄에, 칸은 0~200에 있다
+        return (
+          this.className.includes('animate-pulse')
+            ? { top: 260, bottom: 280, height: 20 }
+            : { top: 0, bottom: 200, height: 200 }
+        ) as DOMRect;
       },
     );
 
     // When 발화가 시작돼 한 프레임이 흐르면
     render(
-      <QuestionCard
-        question={'A long opening line. '.repeat(40)}
-        translation="아주 긴 발화"
-        speaking
-      />,
+      <ConversationLog entries={[]} latestKey={0}>
+        <PartnerBubble
+          question={'A long opening line. '.repeat(40)}
+          translation="아주 긴 발화"
+          speaking
+        />
+      </ConversationLog>,
     );
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    // Then 커서가 카드 안으로 들어오는 만큼만 내려간다 — 스크롤 최대치(800)로 뛰지 않는다
-    const tops = scrollTo.mock.calls.map(([option]) => option.top);
-    expect(Math.max(...tops)).toBeGreaterThanOrEqual(80);
-    expect(Math.max(...tops)).toBeLessThan(800);
+    // Then 커서가 칸 안으로 들어오는 만큼(80)만 내려간다 — 스크롤 최대치(800)로 뛰지 않는다
+    expect(Element.prototype.scrollTo).toHaveBeenLastCalledWith({
+      top: 80,
+      behavior: 'instant',
+    });
+  });
+
+  it('발화가 끝나면 대화 칸이 그 말풍선 첫 줄로 돌아간다', () => {
+    // Given 칸(높이 300)보다 긴 말풍선이 위끝 500에서 시작한다
+    Element.prototype.scrollTo = vi.fn();
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
+      1000,
+    );
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockReturnValue(500);
+    const bubble = (speaking: boolean) => (
+      <ConversationLog entries={[]} latestKey={0}>
+        <PartnerBubble
+          question="How was your day?"
+          translation={null}
+          speaking={speaking}
+        />
+      </ConversationLog>
+    );
+    const now = vi.spyOn(performance, 'now').mockReturnValue(0);
+    const { rerender } = render(bubble(true));
+    vi.mocked(Element.prototype.scrollTo).mockClear();
+
+    // When 몇 초 말한 뒤 발화가 끝나면
+    now.mockReturnValue(5000);
+    rerender(bubble(false));
+
+    // Then 첫 줄이 칸 위 흐림 띠(36) 바로 아래에 오게 올린다
+    expect(Element.prototype.scrollTo).toHaveBeenCalledWith({
+      top: 464,
+      behavior: 'smooth',
+    });
+  });
+});
+
+describe('PartnerBubble 속마음 줄', () => {
+  it('속마음이 오면 말풍선 맨 위에 그 글을 둔다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking={false}
+        thought={{ status: 'shown', text: '서울 사는구나!', type: 'GOOD' }}
+      />,
+    );
+
+    expect(screen.getByText('서울 사는구나!')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('속마음을 기다리는 동안엔 그 자리를 뼈대로 잡아 둔다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking
+        thought={{ status: 'pending' }}
+      />,
+    );
+
+    expect(
+      screen.getByRole('status', { name: '속마음을 떠올리는 중' }),
+    ).toBeInTheDocument();
+  });
+
+  it('속마음이 없으면 줄 자체를 두지 않는다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking={false}
+        thought={null}
+      />,
+    );
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+  });
+
+  it('영어 문장을 가려도 속마음은 그대로 읽힌다 — 가리기는 영어 듣기 연습용이다', () => {
+    render(
+      <PartnerBubble
+        question="Oh, Seoul! Which part?"
+        translation={null}
+        speaking={false}
+        textHidden
+        thought={{ status: 'shown', text: '서울 사는구나!', type: 'GOOD' }}
+      />,
+    );
+
+    expect(screen.getByText('서울 사는구나!')).not.toHaveAttribute(
+      'aria-hidden',
+    );
   });
 });

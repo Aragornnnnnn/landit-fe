@@ -1,5 +1,12 @@
 // 시나리오 대화의 안드로이드 뒤로가기 — 화면을 떠나지 않고 X와 같은 나가기 시트를 열고 닫는지 검증
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Scenario } from '@/features/scenario/lib/to-scenario';
@@ -13,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   postToNative: vi.fn(),
   replace: vi.fn(),
   phase: 'USER_READY',
+  stopReplaying: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -41,17 +49,19 @@ vi.mock('../_model/useScenarioTalkFlow', () => ({
   useScenarioTalkFlow: () => ({
     phase: mocks.phase,
     turnIndex: 1,
+    log: [],
     turn: {
       aiMessage: 'Hi',
       aiTranslation: null,
       isUserOpening: false,
-      innerThought: '',
-      innerThoughtType: 'NORMAL',
+      thought: null,
     },
     partner: 'teddy',
-    finishedThought: null,
+    expressedThought: null,
     speech: {},
     replay: undefined,
+    replayPast: () => undefined,
+    stopReplaying: mocks.stopReplaying,
     input: { transcript: '', keyboardMode: false },
     resend: null,
     leave: vi.fn(),
@@ -106,16 +116,16 @@ describe('ScenarioTalkFlow 뒤로가기', () => {
     back.mockRestore();
   });
 
-  it('답을 기다리는 연출이 X를 가린 동안은 뒤로가기로 시트를 열지 않는다', () => {
-    // Given 답을 기다리는 중 — 연출이 화면 전체를 덮어 X를 누를 수 없다
+  it('답을 기다리는 동안에도 뒤로가기는 X처럼 나가기 시트를 연다 — 화면을 덮지 않아 X가 그대로 보인다', () => {
+    // Given 답을 기다리는 중
     mocks.phase = 'AI_THINKING';
     renderTalk();
 
     // When 뒤로가기를 누르면
     pressBack();
 
-    // Then 나가기 시트를 열지 않는다
-    expect(track).not.toHaveBeenCalledWith('Confirm Sheet Opened', {
+    // Then 나가기 시트를 연다
+    expect(track).toHaveBeenCalledWith('Confirm Sheet Opened', {
       sheet: 'conversation_exit',
     });
   });
@@ -138,5 +148,18 @@ describe('ScenarioTalkFlow 뒤로가기', () => {
     expect(mocks.postToNative).not.toHaveBeenCalled();
     expect(mocks.replace).not.toHaveBeenCalled();
     back.mockRestore();
+  });
+});
+
+describe('ScenarioTalkFlow 피드백으로 넘어가기', () => {
+  it('피드백으로 넘어가면 어느 말풍선 것이든 다시 듣던 소리를 끊는다', () => {
+    mocks.phase = 'DONE';
+    renderTalk();
+
+    fireEvent.click(
+      screen.getByRole('button', { name: '상세 분석 보러갈래요' }),
+    );
+
+    expect(mocks.stopReplaying).toHaveBeenCalledTimes(1);
   });
 });

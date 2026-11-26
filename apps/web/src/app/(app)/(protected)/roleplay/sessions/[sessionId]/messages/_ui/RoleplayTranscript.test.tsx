@@ -39,6 +39,7 @@ const detail: RoleplayHistoryDetail = {
       translatedContent: '안녕하세요! 오늘 새로운 거 찾으세요?',
       emotion: null,
       correction: null,
+      sentences: [],
       reusedExpression: null,
     },
     {
@@ -49,21 +50,27 @@ const detail: RoleplayHistoryDetail = {
       content: 'Yes, can you recommend me new menu?',
       translatedContent: null,
       emotion: null,
-      correction: {
-        status: 'COMPLETED',
-        sentence: {
-          originalSentence: 'Yes, can you recommend me new menu?',
-          betterSentence: 'Could you recommend something new?',
-          reason: "'recommend me'는 어색해요.",
-          mistakePattern: 'WORD_CHOICE',
-          memoryObservedOn: null,
-          memoryLabel: null,
+      // 옛 앱 호환용 sentence는 화면이 읽지 않는다
+      correction: { status: 'COMPLETED', sentence: null },
+      sentences: [
+        {
+          text: 'Yes, can you recommend me new menu?',
+          strikes: [{ start: 5, end: 34 }],
+          correction: {
+            fixed: 'Could you recommend something new?',
+            changes: [{ start: 0, end: 5 }],
+            tip: "'recommend me'는 어색해요.",
+            memory: null,
+          },
         },
-      },
+      ],
       reusedExpression: null,
     },
   ],
 };
+
+// 교정이 없거나 만드는 중·실패면 원문이 교정 없는 한 문장으로 온다
+const plainOf = (text: string) => ({ text, strikes: [], correction: null });
 
 beforeAll(() => {
   // jsdom엔 스크롤이 없다 — 첫 교정으로 데려가는 동작은 여기 관심사가 아니다
@@ -90,13 +97,12 @@ describe('RoleplayTranscript', () => {
     expect(
       screen.getByText('안녕하세요! 오늘 새로운 거 찾으세요?'),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('Could you recommend something new?'),
-    ).toBeInTheDocument();
+    expect(screen.getByText("'recommend me'는 어색해요.")).toBeInTheDocument();
   });
 
-  it('장기기억을 근거로 고쳤으면 그 날짜와 내용을 태그로 보여 준다', () => {
+  it('장기기억을 근거로 고쳤으면 서버가 준 근거 문구를 그대로 보여 준다', () => {
     const [partner, mine] = detail.messages;
+    const [sentence] = mine.sentences;
     vi.mocked(useRoleplaySessionQuery).mockReturnValue({
       session: {
         ...detail,
@@ -104,14 +110,18 @@ describe('RoleplayTranscript', () => {
           partner,
           {
             ...mine,
-            correction: {
-              status: 'COMPLETED',
-              sentence: {
-                ...mine.correction!.sentence!,
-                memoryObservedOn: '2026-09-03',
-                memoryLabel: '헬스장',
+            sentences: [
+              {
+                ...sentence,
+                correction: {
+                  ...sentence.correction!,
+                  memory: {
+                    label: '9/3 스몰톡에서 말한 헬스장',
+                    sourceDate: '2026-09-03',
+                  },
+                },
               },
-            },
+            ],
           },
         ],
       },
@@ -132,7 +142,11 @@ describe('RoleplayTranscript', () => {
         ...detail,
         messages: [
           partner,
-          { ...mine, correction: { status: 'PREPARING', sentence: null } },
+          {
+            ...mine,
+            correction: { status: 'PREPARING', sentence: null },
+            sentences: [plainOf(mine.content)],
+          },
         ],
       },
       error: null,
@@ -161,7 +175,11 @@ describe('RoleplayTranscript', () => {
         ...detail,
         messages: [
           partner,
-          { ...mine, correction: { status, sentence: null } },
+          {
+            ...mine,
+            correction: { status, sentence: null },
+            sentences: [plainOf(mine.content)],
+          },
         ],
       },
       error: null,

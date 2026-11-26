@@ -10,9 +10,11 @@ const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
 
 // slices 정의 순서가 곧 z순서(문서 순서)라 임의로 바꾸면 그림이 달라진다.
 // headParts는 head > head-inner 래퍼 안에 들어갈 슬라이스로, slices에서 연속이어야 한다.
-// viewBox는 대화 무대에 맞춘 상체 크롭이다 — 허리 위(y 650)에서 끊어 얼굴을 키운다.
+// viewBox는 상반신 크롭이다 — 아바타·초상화처럼 viewBox를 따로 안 주는 소비처의 기본 영역이다.
 // 두 캐릭터가 같은 크롭을 쓰는 이유는 머리 크기·위치가 거의 같아서다(마르코 81~446, 클로이 84~442).
-// 크롭 밖으로 나가는 하반신은 slices에서 아예 뺐다.
+// 그림은 전신을 다 담는다 — 대화 무대는 전신을 face 기준점으로 맞춰 그린다(stage-frame.ts).
+// face는 원본 좌표의 얼굴 기준점이다. 눈 두 개 중심 높이(eyeY)·턱 끝(chinY)·얼굴 가운데(centerX)를
+// 헤드리스 크롬 getBBox로 재고 턱은 그림을 눈으로 확인해 정했다. 테디는 턱이 없어 주둥이 아래 끝을 턱으로 본다
 const CHARACTERS = {
   marco: {
     src: 'male.svg',
@@ -21,9 +23,11 @@ const CHARACTERS = {
     label: '마르코',
     base: 124,
     viewBox: '292 40 440 610',
+    face: { eyeY: 292, chinY: 403, centerX: 500 },
     // 목(208)은 머리가 아니라 몸통에 붙인다 — 머리 회전 시 목이 따라가면 잘린 것처럼 보인다.
-    // 하반신(125~153)은 벨트부터 시작해 전부 크롭 밖이라 뺐다
+    // 하반신(125~153)은 문서 순서상 몸통보다 먼저라 몸통 층 맨 아래에 깔린다
     slices: [
+      ['legs', range(125, 153)],
       ['torso', [...range(154, 184), 208]],
       ['hair', range(185, 206)],
       ['face', range(207, 219).filter((n) => n !== 208 && n !== 214)],
@@ -71,6 +75,7 @@ const CHARACTERS = {
     // 머리를 따로 못 움직인다 — 얼굴 클러스터를 head-inner로 묶어 끄덕임을 얼굴 움직임으로 낸다
     byIndex: true,
     viewBox: '40 20 865 790',
+    face: { eyeY: 341, chinY: 537, centerX: 454.5 },
     slices: [
       ['torso', range(0, 8)],
       ['muzzle', [9]],
@@ -101,6 +106,7 @@ const CHARACTERS = {
     label: '클로이',
     base: 458,
     viewBox: '292 40 440 610',
+    face: { eyeY: 257, chinY: 360, centerX: 500.5 },
     // 몸통·팔·바지가 한 덩어리로 트레이스됐다. 목은 턱 음영이 깊게 겹쳐 head에 둬도 안전하다
     slices: [
       ['torso', range(459, 508)],
@@ -161,17 +167,81 @@ const toJsx = (tag) =>
     )
     .replace(/\bclass=/g, 'className=');
 
+// 층 영역 — 층 상자는 합성 레이어라 상자 크기가 곧 GPU 메모리다. 상자를 제 그림만큼만 잡도록 그림 영역을 구워 둔다.
+// path의 끝점·제어점을 모두 덮는 영역을 쓴다 — 베지어 곡선은 제어점 안에 들므로 실제 그림보다 작아지지 않는다.
+// 여유는 SVG 안에서 움직이는 조각 몫이다 — 눈썹이 들리고(최대 약 9단위) 찡그리면 내려온다(10단위). 상자를 벗어나면 매 프레임 레이어가 커졌다 줄어든다
+const AREA_PADDING = 16;
+
+/** path의 끝점·제어점(원본 좌표). 상대 좌표·호 명령은 점을 그대로 읽을 수 없어 멈춘다 */
+const pointsOf = (name, tag) => {
+  const d = tag.match(/\sd="([^"]*)"/)?.[1];
+  if (!d) return [];
+  const points = [];
+  let x = 0;
+  let y = 0;
+  for (const [, command, args] of d.matchAll(/([A-Za-z])([^A-Za-z]*)/g)) {
+    const numbers = (args.match(/-?\d*\.?\d+/g) ?? []).map(Number);
+    if (command === 'Z') continue;
+    if (command === 'H' || command === 'V') {
+      for (const value of numbers) {
+        if (command === 'H') x = value;
+        else y = value;
+        points.push([x, y]);
+      }
+      continue;
+    }
+    if (!'MLCQST'.includes(command))
+      throw new Error(`${name}: 영역을 못 재는 path 명령 ${command}`);
+    for (let i = 0; i < numbers.length; i += 2) {
+      [x, y] = [numbers[i], numbers[i + 1]];
+      points.push([x, y]);
+    }
+  }
+  return points;
+};
+
+/** 구운 회전(rotate(각 cx cy))을 점에 적용한다 — 그룹에 걸린 그대로 그려지는 자리다 */
+const rotatePoints = (points, bake) => {
+  const [deg, cx, cy] = bake.match(/-?\d*\.?\d+/g).map(Number);
+  const rad = (deg * Math.PI) / 180;
+  return points.map(([x, y]) => [
+    cx + (x - cx) * Math.cos(rad) - (y - cy) * Math.sin(rad),
+    cy + (x - cx) * Math.sin(rad) + (y - cy) * Math.cos(rad),
+  ]);
+};
+
+const areaOf = (shapes) => {
+  let [left, top, right, bottom] = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const { points, stroke } of shapes)
+    for (const [x, y] of points) {
+      left = Math.min(left, x - stroke);
+      top = Math.min(top, y - stroke);
+      right = Math.max(right, x + stroke);
+      bottom = Math.max(bottom, y + stroke);
+    }
+  const [x, y] = [
+    Math.floor(left - AREA_PADDING),
+    Math.floor(top - AREA_PADDING),
+  ];
+  return {
+    x,
+    y,
+    width: Math.ceil(right + AREA_PADDING) - x,
+    height: Math.ceil(bottom + AREA_PADDING) - y,
+  };
+};
+
 for (const [name, cfg] of Object.entries(CHARACTERS)) {
+  // 무대가 얼굴 기준점으로 캐릭터를 맞추므로 빠지면 생성하지 않는다
+  if (!cfg.face) throw new Error(`${name}: face 기준점이 없다`);
   const src = readFileSync(
     new URL(`../assets/character/${cfg.src}`, import.meta.url),
     'utf8',
   );
-  // 좌표를 소수 둘째 자리로 줄인다 — 눈에 안 보이는 차이로 파일이 꽤 작아진다
+  // 좌표를 소수 첫째 자리로 줄인다 — 0.05단위 오차는 가장 크게 그려도 0.05px이 안 돼 눈에 안 보이고, 파일은 꽤 작아진다
   const paths = (src.match(/<path\b[^>]*?(?:\/>|>\s*<\/path>)/g) ?? []).map(
     (p) =>
-      p.replace(/-?\d+\.\d+/g, (m) =>
-        String(Math.round(Number(m) * 100) / 100),
-      ),
+      p.replace(/-?\d+\.\d+/g, (m) => String(Math.round(Number(m) * 10) / 10)),
   );
 
   const sliceOf = new Map();
@@ -306,16 +376,37 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
     if (at === mouthAt) return 'mouth';
     return 'head-front';
   };
+  // 층마다 그 층에 그려지는 도형(점·선 굵기 절반) — 층 영역을 재는 재료다
+  const shapesOf = new Map();
+  const measure = (layer, tag, bake) => {
+    if (!shapesOf.has(layer)) shapesOf.set(layer, []);
+    const points = pointsOf(name, tag);
+    const stroke = Number(tag.match(/stroke-width="([\d.]+)"/)?.[1] ?? 0) / 2;
+    shapesOf
+      .get(layer)
+      .push({ points: bake ? rotatePoints(points, bake) : points, stroke });
+  };
   let headSeen = false;
   for (const [sliceName] of cfg.slices) {
     if (cfg.headParts.includes(sliceName)) headSeen = true;
     const layer = layerOf(sliceName, headSeen);
     pushTo(layer, groupOf(sliceName, '', layer));
+    for (const p of buckets.get(sliceName))
+      measure(layer, p, cfg.bake?.[sliceName]);
     // 표정 교체용 벡터는 CSS가 숨겨준다는 전제로 넣는다 — 스타일이 없는 곳에서 이 SVG를 쓰면
     // 눈웃음 아크가 눈 위에 그대로 그려진다. 찡그린 입은 입 앞 층으로 보낸다 — 립싱크를 타면 안 된다
-    for (const extra of cfg.extras?.[sliceName] ?? [])
-      pushTo(sliceName === 'mouth' ? 'head-front' : layer, extra);
+    for (const extra of cfg.extras?.[sliceName] ?? []) {
+      const extraLayer = sliceName === 'mouth' ? 'head-front' : layer;
+      pushTo(extraLayer, extra);
+      measure(extraLayer, extra);
+    }
   }
+  const areas = [...shapesOf]
+    .map(([layer, shapes]) => {
+      const { x, y, width, height } = areaOf(shapes);
+      return `  '${layer}': { x: ${x}, y: ${y}, width: ${width}, height: ${height} },`;
+    })
+    .join('\n');
   const HEAD = ['head-back', 'mouth', 'head-front'];
   const limbs = [...layers.keys()].filter(
     (layer) => layer !== 'torso' && !HEAD.includes(layer),
@@ -361,10 +452,20 @@ for (const [name, cfg] of Object.entries(CHARACTERS)) {
   const component =
     toJsx(`import { ${masks.size ? 'useId, ' : ''}type ReactElement, type SVGProps } from 'react';
 
+import type { Area } from './layer-box';
 import type { PartLayer } from './part-layer';
+import type { FaceLandmarks } from './stage-frame';
 
-/** 원래 그림 영역 — 층 상자의 크기와 단위 환산의 기준이다 */
+/** 상반신 크롭 — viewBox를 따로 안 주는 소비처의 기본 영역이다 */
 export const ${name.toUpperCase()}_VIEWBOX = '${cfg.viewBox}';
+
+/** 얼굴 기준점(원본 좌표) — 대화 무대가 세 캐릭터의 얼굴 크기·턱 높이를 맞출 때 쓴다 */
+export const ${name.toUpperCase()}_FACE: FaceLandmarks = { eyeY: ${cfg.face.eyeY}, chinY: ${cfg.face.chinY}, centerX: ${cfg.face.centerX} };
+
+/** 층마다 그림이 차지하는 영역(원본 좌표, 여유 포함) — 층 상자를 이만큼만 잡아 레이어 메모리를 줄인다 */
+export const ${name.toUpperCase()}_LAYER_AREAS: Partial<Record<PartLayer, Area>> = {
+${areas}
+};
 
 /** 머리 다음에 얹히는 층 — 팔처럼 제 축으로 움직이는 조각이다 */
 export const ${limbsName}: readonly PartLayer[] = [${limbs.map((l) => `'${l}'`).join(', ')}];

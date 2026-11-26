@@ -59,6 +59,8 @@ export const useConversationInput = ({
     original: string;
     utteranceDurationMs: number;
     reviewedAt: number; // 확인 화면에 올라온 시각 — 머문 시간 계측용
+    // 말한 답(VOICE)인가, 키보드로 쓰다 입력창을 닫아 남긴 글(TEXT)인가 — 보낼 때 입력 수단이 이걸 따른다
+    inputType: 'VOICE' | 'TEXT';
   } | null>(null);
   // 이번 확인에서 고치기 입력창을 한 번이라도 열었는가 — 열었다 닫고 그대로 보낸 경우도 센다
   const editOpenedRef = useRef(false);
@@ -121,10 +123,14 @@ export const useConversationInput = ({
       onInputCancel();
       return;
     }
-    retryFromRef.current = null;
     // 들었다는 표시 — 화면을 안 봐도 내 말이 들어간 걸 손으로 안다 (녹음이 끝난 뒤라 녹음에 섞이지 않는다)
     haptic('tick');
-    // 보내기 전에 한 번 보여 준다 — 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게
+    showForReview(content, utteranceDurationMs);
+  };
+
+  // 들은 말을 확인 단계에 올린다 — 보내기 전에 한 번 보여 줘야 발음 때문에 잘못 알아들은 문장이 그대로 가지 않는다
+  const showForReview = (content: string, utteranceDurationMs: number) => {
+    retryFromRef.current = null;
     setTranscript(content);
     setSpeechPending(false);
     editOpenedRef.current = false;
@@ -132,13 +138,25 @@ export const useConversationInput = ({
       original: content,
       utteranceDurationMs,
       reviewedAt: Date.now(),
+      inputType: 'VOICE',
     });
   };
 
-  // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
+  // 인식 오류 — 권한 거부는 설정 유도 안내를, 도중 끊김은 받아 적은 데까지 확인에 올리고, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
   const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
     // 좁히기(never) 전에 읽어둔다 — 계측 사유는 SttError면 그 사유(연결 실패·도중 끊김), 그 밖엔 에러 이름
     const failReason = error instanceof SttError ? error.reason : error.name;
+    // 소켓이 끝난 순간의 기록 — 권한 거부·브라우저 인식 오류엔 없다
+    const socketEnd = error instanceof SttError ? error.detail : null;
+    // 끊기기 전까지 받아 적은 말
+    const heard = clampAnswer(socketEnd?.transcript.trim() ?? '');
+    // 끊긴 원인을 가르는 단서 — 받아 적은 말은 개인 정보라 글자 수로만 남긴다
+    const dropClues = socketEnd && {
+      charCount: heard.length,
+      closeCode: socketEnd.closeCode,
+      aliveMs: socketEnd.aliveMs,
+      wasHidden: socketEnd.wasHidden,
+    };
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
       if (!micDeniedTrackedRef.current) {
@@ -149,13 +167,24 @@ export const useConversationInput = ({
         });
       }
     } else {
-      showToast(t('sttErrorToast'), 'error');
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
         session_id: trackContext().sessionId ?? undefined,
         engine: meta.engine,
         reason: failReason,
+        char_count: heard.length,
+        close_code: socketEnd?.closeCode ?? undefined,
+        alive_ms: socketEnd?.aliveMs,
+        was_hidden: socketEnd?.wasHidden,
       });
-      reportWarning(error);
+      reportWarning(error, dropClues ?? undefined);
+      if (heard) {
+        // 받아 적은 데까지는 살렸으니 실패가 아니라 이어 가면 되는 막힘이다
+        haptic('warning');
+        showToast(t('sttDroppedToast'), 'warning');
+        showForReview(heard, takeUtteranceDuration());
+        return;
+      }
+      showToast(t('sttErrorToast'), 'error');
     }
     haptic('error');
     // 다시 말하던 중이면 이미 있던 답을 버리지 않는다
@@ -191,11 +220,13 @@ export const useConversationInput = ({
   };
 
   // 확인 단계의 마무리를 남긴다 — 다시 말하기와 고친 비율로 잘못 알아들은 빈도를, 머문 시간과 나간 비율로 늘어난 단계의 부담을 본다
+  // 키보드로 쓴 글은 잘못 알아들을 일이 없어 남기지 않는다 — 음성 인식 확인의 뜻을 그대로 지킨다
   const trackReview = (
     action: 'send' | 'retry' | 'leave',
     edited: boolean,
-    reviewedAt: number,
+    review: NonNullable<typeof reviewed>,
   ) => {
+    if (review.inputType === 'TEXT') return;
     const { sessionId, turnIndex } = trackContext();
     track(EVENTS.TRANSCRIPT_REVIEWED, {
       session_id: sessionId ?? undefined,
@@ -203,7 +234,7 @@ export const useConversationInput = ({
       action,
       edited,
       edit_opened: editOpenedRef.current,
-      review_ms: Date.now() - reviewedAt,
+      review_ms: Date.now() - review.reviewedAt,
     });
   };
 
@@ -237,7 +268,7 @@ export const useConversationInput = ({
   // 확인 단계에서 다시 말하기 — 인식된 문장을 버리고 말하는 중 그대로 마이크를 다시 켠다
   const speakAgain = () => {
     if (!reviewed) return;
-    trackReview('retry', false, reviewed.reviewedAt);
+    trackReview('retry', false, reviewed);
     const previous = reviewed;
     resetToVoiceInput();
     retryFromRef.current = previous;
@@ -253,7 +284,7 @@ export const useConversationInput = ({
     setKeyboardMode(true);
   };
 
-  // 확인한 답을 보낸다 — 고쳤어도 말한 답이라 VOICE·말한 시간 그대로. 다 지웠으면 보내지 않는다
+  // 확인한 답을 보낸다 — 고쳤어도 말한 답이면 VOICE·말한 시간 그대로, 키보드로 쓴 글이면 TEXT·0초. 다 지웠으면 보내지 않는다
   const submitReviewed = () => {
     if (!reviewed) return;
     // 고쳐 쓴 입력창이 조합을 끝내기 전에 보낼 수 있다 — 키보드 전송과 같은 거름망을 거친다
@@ -261,8 +292,8 @@ export const useConversationInput = ({
     if (!content) return;
     // 처음 문장도 같은 거름망을 거친 값과 견준다 — 손대지 않았는데 걸러졌다고 고친 것으로 세지 않게
     const original = removeNonEnglish(reviewed.original).trim();
-    trackReview('send', content !== original, reviewed.reviewedAt);
-    onContent(content, 'VOICE', reviewed.utteranceDurationMs);
+    trackReview('send', content !== original, reviewed);
+    onContent(content, reviewed.inputType, reviewed.utteranceDurationMs);
     // 보냈으면 확인은 끝났다 — 세션을 못 잡아 대기로 돌아오는 길은 다음 턴 준비를 거치지 않아 여기서 닫는다.
     // 보낸 문장은 남겨 둔다(전송 실패 때 다시 보낼 답으로 보인다)
     setReviewed(null);
@@ -317,7 +348,7 @@ export const useConversationInput = ({
   // 취소(cancelInput)와 달리 앞 답으로 돌아가지 않고, 입력 수단을 바꾼 것으로 세지 않는다
   const abandonInput = () => {
     if (reviewed) {
-      trackReview('leave', false, reviewed.reviewedAt);
+      trackReview('leave', false, reviewed);
     } else if (!keyboardMode) {
       const { sessionId, turnIndex } = trackContext();
       stt.abort();
@@ -354,14 +385,22 @@ export const useConversationInput = ({
     onContent(content, 'TEXT', 0);
   };
 
-  // 입력창 닫기(X) — 확인 단계에서 열었으면 고친 내용을 버리고 처음 인식된 문장으로 확인에 돌아간다
+  // 입력창 닫기 — 닫기 버튼 없이 위쪽을 누르거나 키보드를 내리면 닫힌다.
+  // 쓴 글이 있으면 확인 단계에 남기고(고치던 답은 고친 채로, 새로 쓰던 글은 키보드로 쓴 답으로), 비었으면 말하기 대기로 돌아간다
   const closeTyping = () => {
-    if (!reviewed) {
+    const content = removeNonEnglish(transcript).trim();
+    if (!content) {
       cancelInput();
       return;
     }
     setKeyboardMode(false);
-    setTranscript(reviewed.original);
+    if (reviewed) return;
+    setReviewed({
+      original: content,
+      utteranceDurationMs: 0,
+      reviewedAt: Date.now(),
+      inputType: 'TEXT',
+    });
   };
 
   return {
@@ -376,6 +415,8 @@ export const useConversationInput = ({
     finishListening,
     submitText,
     reviewing,
+    // 확인 중인 답이 말한 답인가 키보드로 쓴 답인가 — 화면이 고치기 안내 문구를 고른다
+    reviewedInputType: reviewed?.inputType ?? null,
     // 확인 중인 답이 말한 시간 — 남은 시간 눈금이 이 답 하나만 깎은 값으로 맞춘다
     reviewedDurationMs: reviewed?.utteranceDurationMs ?? null,
     listenCount,
