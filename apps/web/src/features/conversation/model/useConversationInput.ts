@@ -123,10 +123,14 @@ export const useConversationInput = ({
       onInputCancel();
       return;
     }
-    retryFromRef.current = null;
     // 들었다는 표시 — 화면을 안 봐도 내 말이 들어간 걸 손으로 안다 (녹음이 끝난 뒤라 녹음에 섞이지 않는다)
     haptic('tick');
-    // 보내기 전에 한 번 보여 준다 — 발음 때문에 잘못 알아들은 문장이 그대로 가지 않게
+    showForReview(content, utteranceDurationMs);
+  };
+
+  // 들은 말을 확인 단계에 올린다 — 보내기 전에 한 번 보여 줘야 발음 때문에 잘못 알아들은 문장이 그대로 가지 않는다
+  const showForReview = (content: string, utteranceDurationMs: number) => {
+    retryFromRef.current = null;
     setTranscript(content);
     setSpeechPending(false);
     editOpenedRef.current = false;
@@ -138,10 +142,21 @@ export const useConversationInput = ({
     });
   };
 
-  // 인식 오류 — 권한 거부는 설정 유도 안내를, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
+  // 인식 오류 — 권한 거부는 설정 유도 안내를, 도중 끊김은 받아 적은 데까지 확인에 올리고, 그 외에는 토스트로 알리고 마이크 대기로 되돌린다
   const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
     // 좁히기(never) 전에 읽어둔다 — 계측 사유는 SttError면 그 사유(연결 실패·도중 끊김), 그 밖엔 에러 이름
     const failReason = error instanceof SttError ? error.reason : error.name;
+    // 소켓이 끝난 순간의 기록 — 권한 거부·브라우저 인식 오류엔 없다
+    const socketEnd = error instanceof SttError ? error.detail : null;
+    // 끊기기 전까지 받아 적은 말
+    const heard = clampAnswer(socketEnd?.transcript.trim() ?? '');
+    // 끊긴 원인을 가르는 단서 — 받아 적은 말은 개인 정보라 글자 수로만 남긴다
+    const dropClues = socketEnd && {
+      charCount: heard.length,
+      closeCode: socketEnd.closeCode,
+      aliveMs: socketEnd.aliveMs,
+      wasHidden: socketEnd.wasHidden,
+    };
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
       if (!micDeniedTrackedRef.current) {
@@ -152,13 +167,24 @@ export const useConversationInput = ({
         });
       }
     } else {
-      showToast(t('sttErrorToast'), 'error');
       track(EVENTS.SPEECH_RECOGNITION_FAILED, {
         session_id: trackContext().sessionId ?? undefined,
         engine: meta.engine,
         reason: failReason,
+        char_count: heard.length,
+        close_code: socketEnd?.closeCode ?? undefined,
+        alive_ms: socketEnd?.aliveMs,
+        was_hidden: socketEnd?.wasHidden,
       });
-      reportWarning(error);
+      reportWarning(error, dropClues ?? undefined);
+      if (heard) {
+        // 받아 적은 데까지는 살렸으니 실패가 아니라 이어 가면 되는 막힘이다
+        haptic('warning');
+        showToast(t('sttDroppedToast'), 'warning');
+        showForReview(heard, takeUtteranceDuration());
+        return;
+      }
+      showToast(t('sttErrorToast'), 'error');
     }
     haptic('error');
     // 다시 말하던 중이면 이미 있던 답을 버리지 않는다
