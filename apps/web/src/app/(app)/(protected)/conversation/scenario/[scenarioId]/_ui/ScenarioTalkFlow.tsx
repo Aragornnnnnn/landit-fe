@@ -298,7 +298,7 @@ export const ScenarioTalkFlow = ({
               typed={reviewedInputType === 'TEXT'}
             />
           )}
-          {preparingAnswer && <ThinkingBubble />}
+          <ThinkingBubble shown={preparingAnswer} />
         </ConversationLog>
 
         {/* 키보드 입력바는 대화 칸 밖, 화면 폭으로 둔다 — 키보드가 올라와 자리가 모자라면 무대가 줄고, 입력바는 그대로 키보드 위에 선다.

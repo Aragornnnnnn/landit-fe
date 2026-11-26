@@ -3,6 +3,8 @@ import type { Variants } from 'motion/react';
 
 export const DURATION = {
   base: 0.25,
+  // 대화의 새 차례가 화면에 오르는 길이 — 상대 말풍선이 자라 나오는 것과 진행 게이지가 차는 것이 같은 박자로 움직인다
+  turnReveal: 0.45,
 } as const;
 
 // 코드 전반에서 이미 사실상 표준이던 ease. 부드럽게 감속하는 out 곡선.

@@ -268,7 +268,7 @@ export const TalkScreen = ({
               typed={reviewedInputType === 'TEXT'}
             />
           )}
-          {preparingAnswer && <ThinkingBubble />}
+          <ThinkingBubble shown={preparingAnswer} />
         </ConversationLog>
 
         {/* 끝난 뒤엔 대화 칸 아래에 이 대화의 기록을 붙인다 — 작별 인사 바로 밑이라 이 대화의 결과로 읽힌다 */}
