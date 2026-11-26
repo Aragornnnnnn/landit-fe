@@ -77,6 +77,7 @@
   "conversationInput": {
     "notRecognizedToast": "말이 인식되지 않았어요. 다시 말해볼까요?",
     "sttErrorToast": "음성 인식에 문제가 생겼어요. 다시 시도해 주세요",
+    "sttDroppedToast": "연결이 끊겨서 여기까지 받았어요",
     "limitReachedToast": "답변이 길어서 여기까지 받았어요"
   },
   "smallTalkFlow": {

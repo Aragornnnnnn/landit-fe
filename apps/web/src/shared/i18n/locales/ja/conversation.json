@@ -77,6 +77,7 @@
   "conversationInput": {
     "notRecognizedToast": "うまく聞き取れませんでした。もう一度話してみましょうか？",
     "sttErrorToast": "音声認識に問題が発生しました。もう一度お試しください",
+    "sttDroppedToast": "接続が切れたため、ここまで受け取りました",
     "limitReachedToast": "回答が長いため、ここまで受け取りました"
   },
   "smallTalkFlow": {
