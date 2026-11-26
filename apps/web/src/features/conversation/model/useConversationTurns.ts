@@ -413,6 +413,11 @@ export const useConversationTurns = ({
   return {
     phase: state.phase,
     turnIndex: state.turnIndex,
+    // 화면에 말풍선이 떠 있는 차례 — 대답이 와 차례는 넘어갔어도 소리가 나기 전엔 새 말풍선이 안 떠 이전 차례가 떠 있다.
+    // 게이지·대화 칸 스크롤처럼 화면에 보이는 것을 따라야 하는 곳은 이 값을 쓴다
+    shownTurnIndex: aiSpeech.waitingForSound
+      ? Math.max(0, state.turnIndex - 1)
+      : state.turnIndex,
     turn,
     log,
     expressedThought: faceThought,

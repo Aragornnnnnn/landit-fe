@@ -36,6 +36,7 @@ const toFlow = (
     waitingForSound,
     preparingAnswer: phase === 'AI_THINKING' || waitingForSound,
     turnIndex: 1,
+    shownTurnIndex: 1,
     log,
     turn: {
       aiMessage: 'How was your day?',
@@ -285,5 +286,68 @@ describe('TalkScreen 뒤로가기', () => {
     // Then 다음 화면의 뒤로가기 처리로 넘어간다
     expect(consumed).toBe(false);
     expect(onExitRequested).not.toHaveBeenCalled();
+  });
+});
+
+describe('TalkScreen 대화 칸 스크롤', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  // jsdom엔 레이아웃이 없다 — 칸 높이 300, 내용 높이 1000, 지금 차례 위끝 900으로 심어 새 말풍선 자리가 맨 아래(700)가 되게 한다
+  const layOut = () => {
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(300);
+    vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(
+      1000,
+    );
+    vi.spyOn(HTMLElement.prototype, 'offsetTop', 'get').mockReturnValue(900);
+    Element.prototype.scrollTo = vi.fn();
+  };
+  // 칸은 같은 자리로 굴러가는 중이면 다시 굴리지 않는다 — 차례마다 그 기다림이 지난 뒤로 시계를 넘긴다
+  let now = 0;
+  const passScrollSettle = () => {
+    now += 1000;
+  };
+
+  const talkAt = (turnIndex: number, waitingForSound: boolean) => (
+    <TalkScreen
+      sessionId={1}
+      partner="teddy"
+      flow={{
+        ...toFlow('AI_SPEAKING', waitingForSound),
+        turnIndex,
+        shownTurnIndex: waitingForSound ? turnIndex - 1 : turnIndex,
+      }}
+      summaryPath="/summary"
+      onShowSummary={vi.fn()}
+      onExitRequested={vi.fn()}
+    />
+  );
+
+  const smoothScrolls = () =>
+    vi
+      .mocked(Element.prototype.scrollTo)
+      .mock.calls.filter(
+        ([options]) => (options as ScrollToOptions).behavior === 'smooth',
+      ).length;
+
+  it('대답이 와도 소리가 나기 전엔 굴리지 않고, 새 말풍선이 뜰 때 한 번만 굴린다', () => {
+    // Given 첫 차례의 말풍선이 떠 있다
+    layOut();
+    vi.spyOn(performance, 'now').mockImplementation(() => now);
+    const { rerender } = render(talkAt(1, false));
+    vi.mocked(Element.prototype.scrollTo).mockClear();
+
+    // When 다음 대답이 와 차례는 넘어갔지만 소리가 아직 안 났다
+    passScrollSettle();
+    rerender(talkAt(2, true));
+
+    // Then 아직 굴리지 않는다 — 화면엔 점 말풍선뿐이다
+    expect(smoothScrolls()).toBe(0);
+
+    // When 소리가 나 새 말풍선이 뜨면
+    passScrollSettle();
+    rerender(talkAt(2, false));
+
+    // Then 그때 새 말풍선 자리로 한 번 굴린다
+    expect(smoothScrolls()).toBe(1);
   });
 });

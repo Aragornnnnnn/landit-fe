@@ -43,6 +43,7 @@ export type TalkScreenFlow = Pick<
   ReturnType<typeof useConversationTurns>,
   | 'phase'
   | 'turnIndex'
+  | 'shownTurnIndex'
   | 'turn'
   | 'log'
   | 'expressedThought'
@@ -96,6 +97,7 @@ export const TalkScreen = ({
   const {
     phase,
     turnIndex,
+    shownTurnIndex,
     turn,
     log,
     expressedThought,
@@ -185,7 +187,8 @@ export const TalkScreen = ({
       >
         <ConversationLog
           entries={log}
-          latestKey={turnIndex}
+          // 새 말풍선이 실제로 뜬 순간에 한 번만 굴린다 — 대답이 온 순간에 굴리면 말풍선이 뜰 때 한 번 더 튄다
+          latestKey={shownTurnIndex}
           latestOnly={keyboardLifted}
           // 내가 먼저 거는 대화의 첫 턴, 칸에 상황 카드뿐이면 칸 가운데에 둔다. 말을 시작하면 내 말풍선과 함께 아래에 쌓인다
           latestCentered={turn.isUserOpening && !myBubble && !preparingAnswer}
