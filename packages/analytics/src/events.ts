@@ -708,11 +708,13 @@ export type EventProps = {
     finalize_wait_ms?: number; // 완료를 누른 뒤 결과가 나오기까지
     char_count: number;
   };
-  // reason은 connect_failed(연결 실패)·closed(도중 끊김), 그 밖엔 에러 이름
+  // reason은 connect_failed(연결 실패)·closed(도중 끊김), 그 밖엔 에러 이름.
+  // char_count는 도중 끊김에서 살려 확인 단계에 올린 글자 수 — 0이면 살릴 말이 없었다
   'Speech Recognition Failed': {
     session_id?: number;
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
+    char_count?: number;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
   // synthesized = 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
