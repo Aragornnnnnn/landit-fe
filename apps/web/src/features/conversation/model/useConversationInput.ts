@@ -146,9 +146,17 @@ export const useConversationInput = ({
   const recoverFromSttError = (error: Error, meta: SttErrorMeta) => {
     // 좁히기(never) 전에 읽어둔다 — 계측 사유는 SttError면 그 사유(연결 실패·도중 끊김), 그 밖엔 에러 이름
     const failReason = error instanceof SttError ? error.reason : error.name;
-    // 끊기기 전까지 받아 적은 말 — 연결 실패·권한 거부·브라우저 인식 오류엔 없다
-    const heard =
-      error instanceof SttError ? clampAnswer(error.transcript.trim()) : '';
+    // 소켓이 끝난 순간의 기록 — 권한 거부·브라우저 인식 오류엔 없다
+    const socketEnd = error instanceof SttError ? error.detail : null;
+    // 끊기기 전까지 받아 적은 말
+    const heard = clampAnswer(socketEnd?.transcript.trim() ?? '');
+    // 끊긴 원인을 가르는 단서 — 받아 적은 말은 개인 정보라 글자 수로만 남긴다
+    const dropClues = socketEnd && {
+      charCount: heard.length,
+      closeCode: socketEnd.closeCode,
+      aliveMs: socketEnd.aliveMs,
+      wasHidden: socketEnd.wasHidden,
+    };
     if (isMicPermissionDeniedError(error)) {
       setMicPermissionDenied(true);
       if (!micDeniedTrackedRef.current) {
@@ -164,8 +172,11 @@ export const useConversationInput = ({
         engine: meta.engine,
         reason: failReason,
         char_count: heard.length,
+        close_code: socketEnd?.closeCode ?? undefined,
+        alive_ms: socketEnd?.aliveMs,
+        was_hidden: socketEnd?.wasHidden,
       });
-      reportWarning(error);
+      reportWarning(error, dropClues ?? undefined);
       if (heard) {
         // 받아 적은 데까지는 살렸으니 실패가 아니라 이어 가면 되는 막힘이다
         haptic('warning');

@@ -437,7 +437,8 @@ describe('useConversationInput', () => {
     act(() => result.current.pressMic());
     act(() => sttMock.callbacks.onError?.(error, ERROR_META));
 
-    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error);
+    // 소켓 실패가 아니면 원인 단서가 없다
+    expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error, undefined);
   });
 
   it('마이크 권한 거부는 Sentry에 보고하지 않는다 — 유저의 선택이지 결함이 아니다', () => {
@@ -469,7 +470,12 @@ describe('useConversationInput', () => {
 
   describe('말하다 연결이 끊김', () => {
     const dropped = (transcript: string) =>
-      new SttError('STT 연결이 끊겼습니다.', 'closed', transcript);
+      new SttError('STT 연결이 끊겼습니다.', 'closed', {
+        transcript,
+        closeCode: 1006,
+        aliveMs: 26000,
+        wasHidden: true,
+      });
 
     it('끊기기 전에 받아 적은 글자가 있으면 지우지 않고 확인 단계에 올린다', () => {
       const { result, onInputCancel } = renderInput();
@@ -495,7 +501,7 @@ describe('useConversationInput', () => {
       vi.useRealTimers();
     });
 
-    it('끊김을 계측할 때 살린 글자 수를 함께 남긴다', () => {
+    it('끊김을 계측할 때 살린 글자 수와 끊긴 원인 단서를 함께 남긴다', () => {
       const { result } = renderInput();
 
       act(() => result.current.pressMic());
@@ -506,6 +512,25 @@ describe('useConversationInput', () => {
         engine: 'deepgram',
         reason: 'closed',
         char_count: 9,
+        close_code: 1006,
+        alive_ms: 26000,
+        was_hidden: true,
+      });
+    });
+
+    it('Sentry에는 원인 단서만 보내고 받아 적은 말은 보내지 않는다', () => {
+      // 사용자가 한 말은 개인 정보다 — 글자 수로만 남긴다
+      const { result } = renderInput();
+      const error = dropped('I went to');
+
+      act(() => result.current.pressMic());
+      act(() => sttMock.callbacks.onError?.(error, ERROR_META));
+
+      expect(monitoringMock.reportWarning).toHaveBeenCalledWith(error, {
+        charCount: 9,
+        closeCode: 1006,
+        aliveMs: 26000,
+        wasHidden: true,
       });
     });
 

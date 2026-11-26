@@ -1,6 +1,6 @@
 // Deepgram 실시간 STT 전송 계층 — getUserMedia 오디오를 WebSocket으로 보내고 트랜스크립트를 콜백으로 전달 (React 무관)
 
-import { SttError } from './errors';
+import { SttError, type SttSocketEnd } from './errors';
 
 // 결과가 어떻게 나왔는지 — 빈 결과·늦은 응답을 문의와 대조하려고 계측에 싣는다
 export interface SttResultMeta {
@@ -35,6 +35,8 @@ const TOKEN_ENDPOINT = '/api/stt/token';
 const DEEPGRAM_WS_URL = 'wss://api.deepgram.com/v1/listen';
 // 완료 뒤 확정 응답을 기다리는 상한 — 넘기면 받은 데까지 제출한다
 const FINALIZE_TIMEOUT_MS = 2000;
+// 오류 신호 뒤 닫힘을 기다리는 상한 — 종료 코드는 닫힘에만 실리지만, 닫힘이 안 오면 마이크가 켜진 채 멈춘다
+const CLOSE_AFTER_ERROR_WAIT_MS = 1000;
 
 const pickMimeType = () => {
   if (MediaRecorder.isTypeSupported('audio/webm')) return 'audio/webm';
@@ -154,10 +156,22 @@ export const startDeepgramStt = async (
   let openedAt: number | null = null;
   let stoppedAt: number | null = null; // 완료를 누른 시각 — null이면 아직 듣는 중
   let recorderDone = false; // 녹음기가 마지막 조각까지 내보냈는가
+  let sawSocketError = false; // 닫힘 전에 오류 신호가 왔는가 — 보고 문구를 기존 이슈 묶음과 맞춘다
+  let closeWaitTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // 듣는 동안 화면이 숨겨졌는가 — iOS는 숨겨진 앱을 멈춰, 소켓 끊김이 앱으로 돌아온 뒤에야 드러난다
+  let wasHidden = document.visibilityState === 'hidden';
+  const markHidden = () => {
+    if (document.visibilityState === 'hidden') wasHidden = true;
+  };
+  document.addEventListener('visibilitychange', markHidden);
 
   const cleanup = () => {
     if (finalizeTimer) clearTimeout(finalizeTimer);
     finalizeTimer = null;
+    if (closeWaitTimer) clearTimeout(closeWaitTimer);
+    closeWaitTimer = null;
+    document.removeEventListener('visibilitychange', markHidden);
     releaseMic();
     // 연결 중(CONNECTING)에 파기돼도 소켓이 백그라운드에 살아남지 않게 함께 닫는다
     if (
@@ -229,16 +243,31 @@ export const startDeepgramStt = async (
     onError(error);
   };
 
-  // 소켓을 만든 뒤의 실패 — 열리기 전이면 연결 실패, 열린 뒤면 도중 끊김으로 나눈다.
-  // 도중 끊김엔 그때까지 확정된 글자를 싣는다 — 확정 전 말은 끊기면서 사라진다
-  const failSocket = (closedMessage: string) =>
-    fail(
-      openedAt === null
-        ? new SttError('STT 연결 실패', 'connect_failed')
-        : new SttError(closedMessage, 'closed', finalTranscript.trim()),
+  // 소켓을 만든 뒤의 실패 — 열리기 전이면 연결 실패, 열린 뒤면 도중 끊김으로 나누고 끝난 순간의 기록을 싣는다
+  const failSocket = (closeCode: number | null) => {
+    const end: SttSocketEnd = {
+      transcript: finalTranscript.trim(),
+      closeCode,
+      aliveMs: openedAt === null ? 0 : Date.now() - openedAt,
+      wasHidden,
+    };
+    if (openedAt === null) {
+      fail(new SttError('STT 연결 실패', 'connect_failed', end));
+      return;
+    }
+    const message = sawSocketError ? 'STT 연결 오류' : 'STT 연결이 끊겼습니다.';
+    fail(new SttError(message, 'closed', end));
+  };
+  // 브라우저는 오류 신호를 먼저, 종료 코드를 실은 닫힘을 뒤에 보낸다 — 오류에서 바로 끝내면 코드를 잃어 닫힘을 기다린다
+  socket.onerror = () => {
+    if (finished || sawSocketError) return;
+    sawSocketError = true;
+    closeWaitTimer = setTimeout(
+      () => failSocket(null),
+      CLOSE_AFTER_ERROR_WAIT_MS,
     );
-  socket.onerror = () => failSocket('STT 연결 오류');
-  socket.onclose = () => failSocket('STT 연결이 끊겼습니다.');
+  };
+  socket.onclose = (event) => failSocket(event.code);
 
   return {
     stop: () => {
