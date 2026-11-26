@@ -709,12 +709,17 @@ export type EventProps = {
     char_count: number;
   };
   // reason은 connect_failed(연결 실패)·closed(도중 끊김), 그 밖엔 에러 이름.
-  // char_count는 도중 끊김에서 살려 확인 단계에 올린 글자 수 — 0이면 살릴 말이 없었다
+  // char_count는 도중 끊김에서 살려 확인 단계에 올린 글자 수 — 0이면 살릴 말이 없었다.
+  // 끊긴 원인 단서(소켓 실패에만) — close_code는 소켓 종료 코드(닫힘이 안 오면 없음),
+  // alive_ms는 연결이 열린 뒤 끊기기까지, was_hidden은 듣는 동안 화면이 숨겨진 적이 있는가
   'Speech Recognition Failed': {
     session_id?: number;
     engine?: 'deepgram' | 'web_speech';
     reason?: string;
     char_count?: number;
+    close_code?: number;
+    alive_ms?: number;
+    was_hidden?: boolean;
   };
   // AI 발화 재생 실패 — 실패 비율을 본다. 스몰톡 탭의 캐릭터 인사도 같은 재생 훅이라 포함된다.
   // synthesized = 합성(분리 재생이면 질문 음원으로 폴백, 아니면 발화가 통째로 건너뛰어진다),
