@@ -494,6 +494,29 @@
   }
 }
 
+/* 동작 줄이기용 듣는 중 점 — 떠오르지 않고 밝아졌다 흐려지기만 한다 */
+@keyframes listening-blink {
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* 동작 줄이기용 스켈레톤 — 빛이 흐르지 않고 제자리에서 은은하게 깜빡인다 */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 @keyframes skeleton-flow {
   from {
     background-position: 150% 0;
@@ -796,9 +819,10 @@
     animation-delay: calc(var(--i, 0) * 150ms);
   }
 
+  /* 동작 줄이기여도 점은 멈추지 않는다 — 멈추면 생각 중인지 화면이 멈춘 건지 알 수 없다. 떠오르는 움직임만 빼고 깜빡임은 남긴다 */
   @media (prefers-reduced-motion: reduce) {
     .animate-listening-wave {
-      animation: none;
+      animation-name: listening-blink;
     }
   }
 
@@ -842,9 +866,10 @@
     animation: skeleton-flow 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
   }
 
+  /* 동작 줄이기면 흐르는 빛 대신 제자리 깜빡임으로 — 아예 멈추면 불러오는 중이라는 신호가 사라진다 */
   @media (prefers-reduced-motion: reduce) {
     .animate-skeleton-flow {
-      animation: none;
+      animation: skeleton-pulse 1.6s ease-in-out infinite;
       background-image: none;
     }
   }
