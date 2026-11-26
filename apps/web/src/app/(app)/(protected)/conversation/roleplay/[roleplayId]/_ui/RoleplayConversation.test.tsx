@@ -40,6 +40,7 @@ vi.mock('../_model/useRoleplayTalkFlow', () => ({
 const flow = {
   phase: 'USER_READY',
   turnIndex: 1,
+  shownTurnIndex: 1,
   log: [],
   turn: { aiMessage: 'Hi', aiTranslation: null, isUserOpening: false },
   expressedThought: null,

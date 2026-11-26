@@ -49,6 +49,7 @@ vi.mock('../_model/useScenarioTalkFlow', () => ({
   useScenarioTalkFlow: () => ({
     phase: mocks.phase,
     turnIndex: 1,
+    shownTurnIndex: 1,
     log: [],
     turn: {
       aiMessage: 'Hi',

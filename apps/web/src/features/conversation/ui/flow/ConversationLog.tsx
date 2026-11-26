@@ -231,10 +231,11 @@ export const ConversationLog = ({
               ),
             )}
           </div>
-          {/* 지금 차례의 말(상대 말풍선·상황 카드·예시·내 말풍선·점)도 지난 대화와 같은 간격으로 쌓는다 */}
+          {/* 지금 차례의 말(상대 말풍선·상황 카드·예시·내 말풍선·점)도 지난 대화와 같은 간격으로 쌓는다.
+              relative는 빠지는 점 말풍선을 제자리에 띄워 두는(popLayout) 기준이다 */}
           <div
             ref={latestRef}
-            className={`flex flex-col gap-2.5 ${latestCentered ? 'flex-1 justify-center' : ''}`}
+            className={`relative flex flex-col gap-2.5 ${latestCentered ? 'flex-1 justify-center' : ''}`}
           >
             <ChatScrollContext value={scroll}>{children}</ChatScrollContext>
           </div>

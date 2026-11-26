@@ -7,10 +7,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { useTranslations } from 'next-intl';
 
 import { getSpeechRate } from '@/shared/lib/speech-rate';
+import { DURATION, EASE_STANDARD } from '@/shared/motion';
 import { EyeIcon, SpeakerIcon, TranslateIcon } from '@/shared/ui/Icons';
 
 import { speechTypingMs } from '../../model/pacing';
@@ -18,6 +19,7 @@ import type { BubbleThought } from '../../model/thought';
 import type { ReplayControl } from '../../model/useConversationTurns';
 import { PartnerBubbleShell } from './ChatBubbles';
 import { useChatScroll } from './ConversationLog';
+import { THINKING_BUBBLE_HEIGHT_PX } from './ThinkingBubble';
 import { TypingCursor } from './TypingCursor';
 
 interface PartnerBubbleProps {
@@ -117,6 +119,7 @@ export const PartnerBubble = ({
   onTranslationCollapsed,
 }: PartnerBubbleProps) => {
   const t = useTranslations('conversation.partnerBubble');
+  const reducedMotion = useReducedMotion();
   // 대화 칸 스크롤 — 말하는 줄과 펼친 해석을 보이게 하고, 다 말하면 첫 줄로 돌려 달라고 부탁한다
   const scroll = useChatScroll();
   // 진행값이 어느 질문 것인지 함께 저장한다 — 질문이 바뀐 첫 프레임에 이전 값이 새어 나오지 않도록
@@ -203,13 +206,35 @@ export const PartnerBubble = ({
   // 가린 동안엔 글자가 나타나는 모습이 안 보이니 전문을 한 번에 흐리게 둔다 — 흐림을 매 프레임 다시 그리지 않게
   const visibleCount = blurred ? question.length : spokenCount;
   const typing = speaking && visibleCount < question.length;
+  // 방금 빠진 점 말풍선 자리에서 그 높이부터 자라 나온다 — 높이가 한 번에 늘면 위의 지난 대화가 툭 밀려 올라간다.
+  // 동작 줄이기면 자라거나 커지지 않고 제자리에서 나타나기만 한다. 지난 말풍선은 이미 있던 말이라 나타나지 않는다
+  const enterFrom = () => {
+    if (past) return false;
+    if (reducedMotion) return { opacity: 0 };
+    return {
+      opacity: 0,
+      scale: 0.92,
+      height: THINKING_BUBBLE_HEIGHT_PX,
+      overflow: 'hidden',
+    };
+  };
 
   return (
     <motion.div
       key={question}
-      initial={past ? false : { opacity: 0, y: 16, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      initial={enterFrom()}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        height: 'auto',
+        // 다 자라면 잘라 두던 것을 푼다 — 해석·버튼 그림자가 말풍선 밖으로 나와야 한다
+        transitionEnd: { overflow: 'visible' },
+      }}
+      transition={{
+        duration: DURATION.turnReveal,
+        ease: EASE_STANDARD,
+        opacity: { duration: 0.25, ease: 'easeOut' },
+      }}
       // 왼쪽 위 꼬리 쪽에서 커져 나온다 — 상대가 말을 꺼내는 쪽
       style={{ transformOrigin: 'top left' }}
       className="self-start"
