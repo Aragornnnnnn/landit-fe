@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>설문 저장 경로</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root { --bg:#fff; --ink:#191f28; --sub:#8b95a1; --line:#d1d6db; --tile:#f2f4f6; --icon:#4e5968; --accent:#e8743b; --accent-tile:#fdf0e8; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:Pretendard,-apple-system,sans-serif; -webkit-font-smoothing:antialiased; }
+  .page { width:820px; padding:40px 44px 40px; }
+  h1 { font-size:24px; font-weight:700; margin:0 0 36px; letter-spacing:-0.03em; }
+  .lane + .lane { margin-top:36px; padding-top:32px; border-top:1px solid #f2f4f6; }
+  .lane-h { font-size:15px; font-weight:600; color:var(--sub); margin-bottom:20px; }
+  .row { display:grid; grid-template-columns:110px 1fr 110px 1fr 110px; align-items:start; }
+  .actor { display:flex; flex-direction:column; align-items:center; text-align:center; }
+  .logo { width:72px; height:72px; border-radius:22px; background:var(--tile); display:flex; align-items:center; justify-content:center; }
+  .logo svg { width:34px; height:34px; }
+  .stroke { stroke:var(--icon); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .logo.on { background:var(--accent-tile); }
+  .logo.on .stroke { stroke:var(--accent); }
+  .name { font-size:15px; font-weight:700; margin-top:10px; letter-spacing:-0.02em; }
+  .link { height:72px; display:flex; flex-direction:column; justify-content:center; padding:0 12px; }
+  .link .what { font-size:13px; font-weight:600; text-align:center; margin-bottom:6px; display:flex; gap:4px; justify-content:center; align-items:center; }
+  .link .what svg { width:16px; height:16px; }
+  .link .line { position:relative; border-top:1.5px solid var(--line); }
+  .link .line::after { content:""; position:absolute; right:-1px; top:-5px; width:8px; height:8px; border-top:1.5px solid var(--line); border-right:1.5px solid var(--line); transform:rotate(45deg); }
+  .link.dash .line { border-top-style:dashed; }
+  .link.dash .what { color:var(--sub); font-weight:500; }
+  .link.on .line, .link.on .line::after { border-color:var(--accent); }
+  .link.on .what { color:var(--accent); }
+  .link.on .what .stroke { stroke:var(--accent); }
+  .sub-row { margin-top:18px; }
+  .link .url { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11.5px; color:var(--sub); text-align:center; margin-top:6px; }
+  .wide { grid-column:2 / 5; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>설문 답을 백엔드가 바로 저장해요</h1>
+
+  <div class="lane">
+    <div class="lane-h">지금까지</div>
+    <div class="row">
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></g></svg></div>
+        <div class="name">앱</div>
+      </div>
+      <div class="link">
+        <div class="what">설문 답</div>
+        <div class="line"></div>
+        <div class="url">/api/survey</div>
+      </div>
+      <div class="actor">
+        <div class="logo" style="background:#000"><svg viewBox="0 0 24 24"><path d="M12 2.5L23 21.5H1z" fill="#fff"/></svg></div>
+        <div class="name">웹 서버</div>
+      </div>
+      <div class="link">
+        <div class="what">저장</div>
+        <div class="line"></div>
+        <div class="url">survey_responses</div>
+      </div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 109 113"><path d="M63.7 110.3c-2.9 3.6-8.7 1.6-8.8-3l-1-67.4h45.4c8.2 0 12.8 9.5 7.7 15.9z" fill="#249361"/><path d="M45.3 2.1c2.9-3.6 8.7-1.6 8.8 3l.4 67.4H9.8c-8.2 0-12.8-9.5-7.7-15.9z" fill="#3ECF8E"/></svg></div>
+        <div class="name">Supabase</div>
+      </div>
+    </div>
+    <div class="row sub-row">
+      <div></div><div></div><div></div>
+      <div class="link dash">
+        <div class="what">로그인 확인</div>
+        <div class="line"></div>
+      </div>
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></g></svg></div>
+        <div class="name">백엔드</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lane">
+    <div class="lane-h">이제</div>
+    <div class="row">
+      <div class="actor">
+        <div class="logo"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></g></svg></div>
+        <div class="name">앱</div>
+      </div>
+      <div class="link on">
+        <div class="what">설문 답</div>
+        <div class="line"></div>
+        <div class="url">/api/v1/surveys</div>
+      </div>
+      <div class="actor">
+        <div class="logo on"><svg viewBox="0 0 24 24"><g class="stroke"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></g></svg></div>
+        <div class="name">백엔드</div>
+      </div>
+      <div class="link on">
+        <div class="what">저장</div>
+        <div class="line"></div>
+        <div class="url">survey_responses</div>
+      </div>
+      <div class="actor">
+        <div class="logo on"><svg viewBox="0 0 24 24"><g class="stroke"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></g></svg></div>
+        <div class="name">RDS</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
