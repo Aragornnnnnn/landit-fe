@@ -420,7 +420,7 @@ describe('useScenarioTalkFlow', async () => {
     expect(result.current.phase).toBe('USER_READY');
   });
 
-  it('질문이 넘어가면 게이지가 찬다 — 답을 낸 순간이 아니라 다음 질문이 뜬 순간이다', async () => {
+  it('질문이 넘어가면 게이지가 찬다 — 답을 낸 순간이 아니라 다음 질문 말풍선이 뜬 순간이다', async () => {
     // Given 총 3문항 시나리오의 첫 질문에서
     const { result } = await renderAiFirstReady();
     const atFirstQuestion = result.current.gauge.ratio;
@@ -430,9 +430,16 @@ describe('useScenarioTalkFlow', async () => {
     await speakAndSubmit(result, 'First answer.');
     expect(result.current.gauge.ratio).toBe(atFirstQuestion);
 
-    // Then 다음 질문이 뜨는 순간 함께 찬다
+    // 다음 대답이 와도 소리가 나기 전엔 말풍선이 안 떠 그대로다
     await act(async () => {
       await vi.advanceTimersByTimeAsync(thoughtWaitMs);
+    });
+    expect(result.current.waitingForSound).toBe(true);
+    expect(result.current.gauge.ratio).toBe(atFirstQuestion);
+
+    // Then 소리가 나 다음 질문 말풍선이 뜨는 순간 함께 찬다
+    act(() => {
+      ttsMock.state.onStart?.({ progress: () => 0, source: 'blob:voice' });
     });
     expect(result.current.gauge.ratio).toBeGreaterThan(atFirstQuestion);
   });
@@ -451,9 +458,13 @@ describe('useScenarioTalkFlow', async () => {
     // Then 머리말은 아직 붙지 않는다
     expect(result.current.gauge.lastQuestion).toBe(false);
 
-    // 세 번째 질문이 화면에 뜨면 그때 붙는다
+    // 세 번째 질문이 화면에 뜨면(소리가 나기 시작하면) 그때 붙는다
     await act(async () => {
       await vi.advanceTimersByTimeAsync(thoughtWaitMs);
+    });
+    expect(result.current.gauge.lastQuestion).toBe(false);
+    act(() => {
+      ttsMock.state.onStart?.({ progress: () => 0, source: 'blob:voice' });
     });
     expect(result.current.gauge.lastQuestion).toBe(true);
   });

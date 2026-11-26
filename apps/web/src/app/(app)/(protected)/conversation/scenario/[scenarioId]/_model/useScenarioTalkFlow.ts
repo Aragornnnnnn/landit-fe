@@ -205,9 +205,9 @@ export const useScenarioTalkFlow = (scenario: Scenario) => {
     partner,
     leave,
     markGuideViewed,
-    // 게이지는 화면에 떠 있는 카드를 따른다 — 답한 횟수를 따로 세면 카드보다 먼저 움직인다
+    // 게이지는 화면에 떠 있는 카드를 따른다 — 답한 횟수나 엔진 차례를 따르면 말풍선보다 먼저 움직인다
     gauge: toTalkGauge({
-      turnIndex: engine.turnIndex,
+      turnIndex: engine.shownTurnIndex,
       firstSpeaker: scenario.firstSpeaker,
       totalQuestionCount: session.totalQuestionCount,
     }),

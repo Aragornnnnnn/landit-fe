@@ -1,5 +1,5 @@
 // ThinkingBubble — 점 말풍선이 대화 칸 밖에 붙으면 칸이 따라 내려가 보이게 하는지 검증한다
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { ConversationLog } from './ConversationLog';
@@ -43,5 +43,26 @@ describe('ThinkingBubble', () => {
       top: 740,
       behavior: 'instant',
     });
+  });
+
+  it('꺼지면 점 말풍선이 빠진다', async () => {
+    // Given 점 말풍선이 떠 있다
+    Element.prototype.scrollTo = vi.fn();
+    const { rerender } = render(
+      <ConversationLog entries={[]} latestKey={0}>
+        <ThinkingBubble shown />
+      </ConversationLog>,
+    );
+    expect(screen.getByRole('status')).toBeInTheDocument();
+
+    // When 대답의 소리가 나 꺼지면
+    rerender(
+      <ConversationLog entries={[]} latestKey={1}>
+        <ThinkingBubble shown={false} />
+      </ConversationLog>,
+    );
+
+    // Then 흐려지며 빠진 뒤 칸에서 사라진다
+    await waitFor(() => expect(screen.queryByRole('status')).toBeNull());
   });
 });
