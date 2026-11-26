@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --blue: #3182f6;
+    --blue-bg: #e8f3ff;
+    --red: #f04452;
+    --red-bg: #ffeeee;
+    --green: #03b26c;
+    --green-bg: #e5f8ef;
+    --gray-900: #191f28;
+    --gray-700: #4e5968;
+    --gray-500: #8b95a1;
+    --gray-200: #e5e8eb;
+    --gray-100: #f2f4f6;
+    --gray-50: #f9fafb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 760px;
+    background: #fff;
+    font-family: "Pretendard", -apple-system, "Apple SD Gothic Neo", sans-serif;
+    color: var(--gray-900);
+    padding: 0;
+    letter-spacing: -0.02em;
+  }
+  .eyebrow { font-size: 15px; font-weight: 600; color: var(--blue); margin-bottom: 10px; }
+  h1 { font-size: 30px; line-height: 1.35; font-weight: 700; }
+  .lead { margin-top: 14px; font-size: 17px; line-height: 1.6; color: var(--gray-700); }
+
+  .stats { display: flex; gap: 12px; margin-top: 28px; }
+  .stat { flex: 1; background: var(--gray-50); border-radius: 18px; padding: 20px 22px; }
+  .stat .label { font-size: 14px; color: var(--gray-500); }
+  .stat .value { margin-top: 6px; font-size: 26px; font-weight: 700; }
+  .stat .value small { font-size: 15px; font-weight: 600; color: var(--gray-500); margin-left: 4px; }
+
+  section { margin-top: 52px; }
+  h2 { font-size: 22px; font-weight: 700; }
+  .sub { margin-top: 6px; font-size: 15px; color: var(--gray-500); }
+
+  .cause { margin-top: 18px; border: 1px solid var(--gray-200); border-radius: 20px; padding: 22px 24px; }
+  .cause-head { display: flex; align-items: center; justify-content: space-between; }
+  .cause-title { font-size: 18px; font-weight: 700; }
+  .count { font-size: 15px; font-weight: 600; color: var(--gray-700); }
+  .bar { margin-top: 12px; height: 10px; border-radius: 5px; background: var(--gray-100); overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 5px; background: var(--blue); }
+  .bar.gray i { background: #b0b8c1; }
+  .cause p { margin-top: 12px; font-size: 15px; line-height: 1.6; color: var(--gray-700); }
+
+  .timeline { margin-top: 16px; display: flex; align-items: flex-start; }
+  .tl { flex: 1; position: relative; text-align: center; }
+  .tl .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--blue); margin: 0 auto; position: relative; z-index: 1; }
+  .tl.bad .dot { background: var(--red); }
+  .tl:not(:last-child)::after { content: ""; position: absolute; top: 5px; left: 50%; width: 100%; height: 2px; background: var(--gray-200); }
+  .tl .t { margin-top: 10px; font-size: 13px; color: var(--gray-500); }
+  .tl .d { margin-top: 2px; font-size: 14px; font-weight: 600; color: var(--gray-900); }
+  .tl.bad .d { color: var(--red); }
+
+  .callout { margin-top: 18px; background: var(--blue-bg); border-radius: 16px; padding: 16px 20px; font-size: 15px; line-height: 1.6; color: #1b64da; font-weight: 600; }
+
+  .flow { margin-top: 18px; border-radius: 20px; padding: 22px 24px; }
+  .flow.before { background: var(--gray-50); }
+  .flow.after { background: var(--green-bg); margin-top: 12px; }
+  .tag { display: inline-block; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 8px; }
+  .before .tag { background: var(--red-bg); color: var(--red); }
+  .after .tag { background: #fff; color: var(--green); }
+  .steps { margin-top: 14px; display: flex; align-items: center; gap: 8px; }
+  .step { background: #fff; border-radius: 12px; padding: 12px 14px; font-size: 14px; font-weight: 600; line-height: 1.4; white-space: nowrap; }
+  .step .s { display: block; font-size: 12px; font-weight: 500; color: var(--gray-500); margin-top: 2px; }
+  .step.red { color: var(--red); }
+  .step.green { color: var(--green); }
+  .arrow { color: #b0b8c1; font-size: 16px; font-weight: 700; }
+  .quote { font-family: ui-monospace, Menlo, monospace; font-size: 13px; color: var(--gray-700); }
+  .shot { padding: 32px 40px; }
+  .shot > .stats, .shot > .cause:first-child, .shot > .flow:first-child { margin-top: 0; }
+</style>
+</head>
+<body>
+<div class="shot" id="s1"><div class="stats">
+    <div class="stat"><div class="label">도중에 끊긴 녹음</div><div class="value">46번<small>/ 6,117번</small></div></div>
+    <div class="stat"><div class="label">한 번 이상 겪은 사람</div><div class="value">27명<small>/ 317명</small></div></div>
+    <div class="stat"><div class="label">녹음 대비</div><div class="value">0.75%<small>iOS·Android</small></div></div>
+  </div></div>
+<div class="shot" id="s2"><div class="cause">
+      <div class="cause-head"><span class="cause-title">앱이 화면에서 사라졌어요</span><span class="count">3건</span></div>
+      <div class="bar"><i style="width:37.5%"></i></div>
+      <p>마이크를 켠 채 홈으로 나가거나 화면이 잠기면 iOS가 앱을 멈춰요. 그동안 연결이 죽고, 돌아오면 끊김으로 잡혀요.</p>
+      <div class="timeline">
+        <div class="tl"><div class="dot"></div><div class="t">0초</div><div class="d">마이크 켬</div></div>
+        <div class="tl"><div class="dot"></div><div class="t">26초</div><div class="d">화면 사라짐</div></div>
+        <div class="tl"><div class="dot"></div><div class="t">30초</div><div class="d">앱으로 돌아옴</div></div>
+        <div class="tl bad"><div class="dot"></div><div class="t">37초</div><div class="d">연결 끊김</div></div>
+      </div>
+    </div>
+
+    <div class="cause">
+      <div class="cause-head"><span class="cause-title">네트워크가 잠깐 멈췄어요</span><span class="count">1건</span></div>
+      <div class="bar"><i style="width:12.5%"></i></div>
+      <p>같은 순간 다른 전송도 10초 동안 응답을 못 받았어요.</p>
+    </div>
+
+    <div class="cause">
+      <div class="cause-head"><span class="cause-title">아직 몰라요</span><span class="count">4건</span></div>
+      <div class="bar gray"><i style="width:50%"></i></div>
+      <p>화면을 보고 있는데 4초·10초·30초 만에 끊겼어요. 끊길 때 이유(종료 코드)를 남기지 않아서 지금은 가를 수 없어요.</p>
+    </div>
+
+    <div class="callout">원인이 여러 갈래라 끊김을 막기보다, 끊겨도 받아 적은 말을 살리기로 했어요.</div></div>
+<div class="shot" id="s3"><div class="flow before">
+      <span class="tag">지금</span>
+      <div class="steps">
+        <div class="step">말하는 중<span class="s quote">"I went to the…"</span></div>
+        <span class="arrow">→</span>
+        <div class="step red">연결 끊김</div>
+        <span class="arrow">→</span>
+        <div class="step red">받아 적은 글자 버림</div>
+        <span class="arrow">→</span>
+        <div class="step">마이크 대기<span class="s">처음부터 다시</span></div>
+      </div>
+    </div>
+
+    <div class="flow after">
+      <span class="tag">바뀐 뒤</span>
+      <div class="steps">
+        <div class="step">말하는 중<span class="s quote">"I went to the…"</span></div>
+        <span class="arrow">→</span>
+        <div class="step red">연결 끊김</div>
+        <span class="arrow">→</span>
+        <div class="step green">글자 그대로 남김</div>
+        <span class="arrow">→</span>
+        <div class="step">확인 단계<span class="s">보내기 · 다시 말하기</span></div>
+      </div>
+    </div>
+  </div>
+</body></html>
