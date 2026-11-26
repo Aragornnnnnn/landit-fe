@@ -229,12 +229,13 @@ export const startDeepgramStt = async (
     onError(error);
   };
 
-  // 소켓을 만든 뒤의 실패 — 열리기 전이면 연결 실패, 열린 뒤면 도중 끊김으로 나눈다
+  // 소켓을 만든 뒤의 실패 — 열리기 전이면 연결 실패, 열린 뒤면 도중 끊김으로 나눈다.
+  // 도중 끊김엔 그때까지 확정된 글자를 싣는다 — 확정 전 말은 끊기면서 사라진다
   const failSocket = (closedMessage: string) =>
     fail(
       openedAt === null
         ? new SttError('STT 연결 실패', 'connect_failed')
-        : new SttError(closedMessage, 'closed'),
+        : new SttError(closedMessage, 'closed', finalTranscript.trim()),
     );
   socket.onerror = () => failSocket('STT 연결 오류');
   socket.onclose = () => failSocket('STT 연결이 끊겼습니다.');

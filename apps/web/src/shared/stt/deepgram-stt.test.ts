@@ -485,4 +485,26 @@ describe('startDeepgramStt', () => {
     );
     expect(onFinal).not.toHaveBeenCalled();
   });
+
+  it('도중에 끊기면 그때까지 확정된 글자를 오류에 실어 넘긴다', async () => {
+    // 확정 전 말은 끊기면서 사라지므로 싣지 않는다
+    const { ws, onError } = await startWithFakes({ stopOnSilence: false });
+    ws.open();
+    ws.receive({
+      type: 'Results',
+      is_final: true,
+      channel: { alternatives: [{ transcript: 'I went to' }] },
+    });
+    ws.receive({
+      type: 'Results',
+      is_final: false,
+      channel: { alternatives: [{ transcript: 'the park' }] },
+    });
+
+    ws.onclose?.();
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'closed', transcript: 'I went to' }),
+    );
+  });
 });

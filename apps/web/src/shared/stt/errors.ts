@@ -13,6 +13,8 @@ export class SttError extends Error {
   constructor(
     message: string,
     readonly reason: SttErrorReason,
+    // 끊기기 전까지 확정된 글자 — 도중 끊김이어도 이미 받아 적은 말은 살릴 수 있게 싣는다
+    readonly transcript = '',
   ) {
     super(message);
     this.name = 'SttError';
